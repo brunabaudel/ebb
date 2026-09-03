@@ -1,0 +1,24 @@
+---
+description: Branch policy — main holds the Ebb iOS app; feature work uses cursor/* branches.
+alwaysApply: true
+---
+
+# Repository branch policy
+
+This repo (`brunabaudel/ebb`) is the **dedicated Ebb iOS app repository**.
+
+## `main` — Ebb iOS app
+
+- Contains the full app: `Ebb/`, `docs/`, `.github/workflows/`, CI, and Cursor skills.
+- TestFlight deploys run from pushes to `main` (when `Ebb/**` changes).
+
+## Feature branches
+
+- Branch feature work from `main` (e.g. `cursor/my-feature-2c92`).
+- Open PRs **into `main`**.
+
+## Agent checklist
+
+1. Confirm which branch you are on before editing.
+2. App changes → branch off `main`, PR base = `main`.
+3. Preserve app identity (bundle ID, entitlements, assets) unless explicitly asked to change them.

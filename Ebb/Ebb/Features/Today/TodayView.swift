@@ -1,0 +1,275 @@
+import SwiftData
+import SwiftUI
+
+struct TodayView: View {
+    let schema: SchemaConfig
+
+    @Environment(\.theme) private var theme
+    @Environment(CycleService.self) private var cycleService
+    @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
+
+    @State private var showTapLog = false
+    @State private var showCalendar = false
+    @State private var editingEntry: SymptomEntry?
+    @State private var selectedIntensityBlock: Int? = TodayIntensityStrip.blockIndex(containing: .now)
+
+    private var cycleSnapshot: CycleSnapshot {
+        cycleService.snapshot(for: .now, entries: entries)
+    }
+
+    private var todaysEntries: [SymptomEntry] {
+        let calendar = Calendar.current
+        return entries
+            .filter { calendar.isDate($0.timestamp, inSameDayAs: .now) }
+            .sorted { $0.timestamp > $1.timestamp }
+    }
+
+    private var displayedEntries: [SymptomEntry] {
+        guard let selectedIntensityBlock else { return todaysEntries }
+        return TodayIntensityStrip.entries(todaysEntries, inBlock: selectedIntensityBlock)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 20) {
+                    header
+                    cycleRing
+                    TodayIntensityStrip(
+                        entries: todaysEntries,
+                        selectedBlockIndex: $selectedIntensityBlock
+                    )
+                }
+                .padding(20)
+
+                ScrollView {
+                    entriesSection
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
+                }
+                .scrollIndicators(.hidden)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+            .background(theme.base)
+            .foregroundStyle(theme.text)
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(isPresented: $showCalendar) {
+                CalendarView(schema: schema)
+            }
+            .sheet(isPresented: $showTapLog) {
+                TapLogView(
+                    schema: schema,
+                    openTalkOnAppear: ProcessInfo.processInfo.hasLaunchArgumentAutoTalkLog,
+                    openConfirmOnAppear: ProcessInfo.processInfo.hasLaunchArgumentAutoConfirmLog,
+                    launchTranscript: ProcessInfo.processInfo.mockTranscriptText
+                )
+            }
+            .sheet(item: $editingEntry) { entry in
+                TapLogView(schema: schema, entry: entry)
+            }
+            .onAppear {
+                selectedIntensityBlock = TodayIntensityStrip.blockIndex(containing: .now)
+                if ProcessInfo.processInfo.hasLaunchArgumentOpenCalendar {
+                    showCalendar = true
+                }
+                if ProcessInfo.processInfo.hasLaunchArgumentAutoTapLog
+                    || ProcessInfo.processInfo.hasLaunchArgumentAutoTalkLog
+                    || ProcessInfo.processInfo.hasLaunchArgumentAutoConfirmLog {
+                    showTapLog = true
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var cycleRing: some View {
+        if let phase = cycleSnapshot.phase, let cycleDay = cycleSnapshot.cycleDay {
+            CyclePhaseRing(
+                phase: phase,
+                cycleDay: cycleDay,
+                cycleLength: cycleSnapshot.cycleLength,
+                summary: cycleSnapshot.summary
+            )
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Cycle")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(theme.cycle)
+                Text(cycleSnapshot.summary)
+                    .font(.caption)
+                    .foregroundStyle(theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(theme.surface, in: RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .strokeBorder(theme.line, lineWidth: 1)
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Today")
+                    .font(.system(.title, design: .serif))
+                Button { showCalendar = true } label: {
+                    HStack(spacing: 5) {
+                        Text(Date.now.formatted(date: .complete, time: .omitted))
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(theme.cycle)
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(theme.muted)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Browse calendar history")
+            }
+            Spacer(minLength: 12)
+            HStack(spacing: 8) {
+                Button { showCalendar = true } label: {
+                    Image(systemName: "square.grid.2x2")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(theme.cycle)
+                        .frame(width: 34, height: 34)
+                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(theme.cycleDim, lineWidth: 1)
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Browse calendar history")
+
+                Button { showTapLog = true } label: {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.light))
+                        .foregroundStyle(theme.text)
+                        .frame(width: 34, height: 34)
+                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(theme.line, lineWidth: 1)
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Log symptoms")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var entriesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let selectedIntensityBlock {
+                filteredSlotHeader(for: selectedIntensityBlock)
+            }
+
+            if todaysEntries.isEmpty {
+                emptyState
+            } else if displayedEntries.isEmpty {
+                filteredEmptyState
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(displayedEntries) { entry in
+                        Button { editingEntry = entry } label: {
+                            TodayEntryRow(entry: entry, schema: schema)
+                        }
+                        .buttonStyle(.plain)
+
+                        if entry.id != displayedEntries.last?.id {
+                            Divider().overlay(theme.line)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func filteredSlotHeader(for index: Int) -> some View {
+        let range = TodayIntensityStrip.blockTimeRangeLabel(index: index)
+        return HStack(spacing: 8) {
+            Text(range)
+                .font(.caption.monospaced().weight(.semibold))
+                .foregroundStyle(theme.text)
+            Spacer(minLength: 8)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedIntensityBlock = nil
+                }
+            } label: {
+                Text("Show all")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(theme.muted)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Show all logs")
+        }
+    }
+
+    private var emptyState: some View {
+        Text("Nothing logged yet today. Tap + to log how you're feeling.")
+            .font(.subheadline)
+            .foregroundStyle(theme.muted)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel("Nothing logged yet today. Tap plus to log how you're feeling.")
+    }
+
+    private var filteredEmptyState: some View {
+        Text("No logs in this time window.")
+            .font(.subheadline)
+            .foregroundStyle(theme.muted)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+#Preview("Empty") {
+    TodayView(schema: try! SchemaConfig.load())
+        .modelContainer(for: SymptomEntry.self, inMemory: true)
+        .environment(\.theme, .plumEmber)
+        .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .environment(SpeechCapture(provider: MockSpeechRecognizer(transcript: "")))
+        .environment(MedicationPreferences())
+        .environment(\.symptomClassifier, SynonymSymptomClassifier())
+}
+
+#Preview("With entries") {
+    let schema = try! SchemaConfig.load()
+    let container = try! ModelContainer(for: SymptomEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let calendar = Calendar.current
+    let migraine = SymptomEntry(
+        timestamp: calendar.date(bySettingHour: 21, minute: 8, second: 0, of: .now)!,
+        schemaVersion: schema.schemaVersion,
+        fieldValues: [
+            "migraine_present": .boolean(true),
+            "severity": .scale(4),
+            "location": .choices(["right"]),
+            "associated_symptoms": .choices(["nausea"]),
+            "relief_taken": .choices(["ibuprofen"]),
+        ]
+    )
+    let spotting = SymptomEntry(
+        timestamp: calendar.date(bySettingHour: 14, minute: 15, second: 0, of: .now)!,
+        schemaVersion: schema.schemaVersion,
+        fieldValues: [
+            "migraine_present": .boolean(false),
+            "bleeding": .choice("spotting"),
+            "cramps_severity": .scale(2),
+        ],
+        cyclePhase: .luteal
+    )
+    container.mainContext.insert(migraine)
+    container.mainContext.insert(spotting)
+    return TodayView(schema: schema)
+        .modelContainer(container)
+        .environment(\.theme, .plumEmber)
+        .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .environment(SpeechCapture(provider: MockSpeechRecognizer(transcript: "")))
+        .environment(MedicationPreferences())
+        .environment(\.symptomClassifier, SynonymSymptomClassifier())
+}

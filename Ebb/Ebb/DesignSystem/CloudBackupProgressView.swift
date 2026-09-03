@@ -1,0 +1,88 @@
+import SwiftUI
+
+/// Step-based backup progress. CloudKit does not expose byte-level upload progress.
+struct CloudBackupProgressView: View {
+    @Environment(\.theme) private var theme
+
+    let phaseLabel: String
+    let progress: Double
+    let verificationStep: Int
+    let verificationStepCount: Int
+    let isIndeterminate: Bool
+    var isExtendedConfirmation: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "icloud.and.arrow.up")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(theme.ok)
+                    .accessibilityHidden(true)
+
+                Text(phaseLabel)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(theme.text)
+
+                Spacer(minLength: 8)
+
+                if verificationStep > 0, verificationStepCount > 0, !isIndeterminate {
+                    Text("Step \(verificationStep) of \(verificationStepCount)")
+                        .font(.caption)
+                        .foregroundStyle(theme.muted)
+                }
+            }
+
+            if isIndeterminate {
+                ProgressView()
+                    .tint(theme.ok)
+            } else {
+                ProgressView(value: progress)
+                    .tint(theme.ok)
+                    .animation(.easeInOut(duration: 0.35), value: progress)
+            }
+
+            Text(progressCaption)
+                .font(.caption)
+                .foregroundStyle(theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(phaseLabel). \(progressCaption)")
+    }
+
+    private var progressCaption: String {
+        if isIndeterminate {
+            return "Waiting for iCloud to start the upload."
+        }
+        if isExtendedConfirmation {
+            return "Almost there — iCloud can take a few minutes to confirm. Stay on Wi‑Fi and keep Ebb open."
+        }
+        let percent = Int((progress * 100).rounded())
+        return "\(percent)% — stay on Wi‑Fi until this reaches 100%."
+    }
+}
+
+#Preview("Uploading") {
+    CloudBackupProgressView(
+        phaseLabel: "Uploading to iCloud…",
+        progress: 0.45,
+        verificationStep: 0,
+        verificationStepCount: 5,
+        isIndeterminate: false
+    )
+    .padding()
+    .environment(\.theme, .plumEmber)
+}
+
+#Preview("Confirming") {
+    CloudBackupProgressView(
+        phaseLabel: "Confirming in iCloud…",
+        progress: 0.92,
+        verificationStep: 4,
+        verificationStepCount: 5,
+        isIndeterminate: false
+    )
+    .padding()
+    .environment(\.theme, .plumEmber)
+}

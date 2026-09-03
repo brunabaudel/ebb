@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Log symptoms · merged I + L + J + K</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0E0B12;--ink:#1A1620;--surface:#241E2C;--raised:#2C2533;--line:#3A3242;
+    --text:#EDE6F0;--muted:#A99FB0;--faint:#776E80;
+    --coral:#E89B8B;--coral-dim:#2E2229;--coral-border:#7d4f48;
+    --lav:#9D8FC7;--lav-dim:#241f33;--lav-border:#4c4466;--sage:#8FB1A0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+  body{background:var(--page);color:var(--text);font-family:"Figtree",system-ui,sans-serif;line-height:1.45;padding:56px 28px 100px;}
+
+  .board-head{max-width:1180px;margin:0 auto 44px;}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--lav);margin-bottom:18px;}
+  .board-head h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(32px,5vw,52px);line-height:1.05;max-width:26ch;}
+  .board-head h1 em{font-style:italic;color:var(--coral);}
+  .board-head p{color:var(--muted);max-width:68ch;margin-top:18px;font-size:16px;}
+
+  /* flow diagram */
+  .flow{max-width:1180px;margin:0 auto 52px;padding:24px 28px;border:1px solid var(--line);border-radius:18px;background:var(--ink);}
+  .flow h3{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:16px;}
+  .flow-steps{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .flow-step{font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .flow-step.l{background:var(--lav-dim);border-color:var(--lav-border);color:var(--lav);}
+  .flow-step.i{background:var(--coral-dim);border-color:var(--coral-border);color:var(--coral);}
+  .flow-step.j{background:#2a2431;border-color:#5a5060;color:var(--text);}
+  .flow-step.k{background:#1f2a24;border-color:#3d5a4a;color:var(--sage);}
+  .flow-arrow{color:var(--faint);font-size:14px;}
+
+  .legend{max-width:1180px;margin:0 auto 48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+  .leg-item{padding:14px 16px;background:var(--ink);border:1px solid var(--line);border-radius:14px;font-size:13px;color:var(--muted);line-height:1.5;}
+  .leg-item b{color:var(--text);font-weight:600;display:block;margin-bottom:4px;font-size:14px;}
+  .leg-item .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
+  .leg-item .tag.l{color:var(--lav)}.leg-item .tag.i{color:var(--coral)}.leg-item .tag.j{color:var(--muted)}.leg-item .tag.k{color:var(--sage)}
+
+  .screens-head{max-width:1180px;margin:0 auto 28px;}
+  .screens-head h2{font-family:"Fraunces",serif;font-size:28px;font-weight:500;}
+  .screens-head p{color:var(--muted);font-size:14px;margin-top:8px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,330px));gap:42px 36px;justify-content:center;max-width:1180px;margin:0 auto;}
+  .frame-wrap{display:flex;flex-direction:column;gap:14px;}
+  .step-num{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);}
+  .step-title{font-size:14px;font-weight:600;color:var(--text);padding-left:4px;}
+  .step-note{font-size:12.5px;color:var(--faint);padding-left:4px;max-width:330px;line-height:1.5;}
+
+  .phone{width:330px;height:715px;border-radius:46px;background:var(--ink);border:1px solid #312938;box-shadow:0 0 0 9px #16121b,0 30px 70px -30px #000,inset 0 0 0 1px #00000040;position:relative;overflow:hidden;}
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:18px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;z-index:30;}
+  .screen{position:absolute;inset:0;padding:58px 0 0;display:flex;flex-direction:column;}
+
+  .nav-bar{display:flex;align-items:center;justify-content:space-between;padding:0 18px 8px;border-bottom:1px solid var(--line);flex:0 0 auto;}
+  .nav-bar .cancel,.nav-bar .save{font-size:15px;font-weight:500;}
+  .nav-bar .cancel{color:var(--muted);}
+  .nav-bar .save{color:var(--coral);font-weight:600;}
+  .nav-bar .title{font-family:"Fraunces",serif;font-size:16px;font-weight:500;}
+
+  /* J · sentence strip — persistent */
+  .sentence-strip{background:#221b2a;border-bottom:1px solid var(--line);padding:10px 16px 12px;flex:0 0 auto;}
+  .sentence-strip .tag{font-family:"JetBrains Mono",monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:5px;}
+  .sentence-strip .line{font-family:"Fraunces",serif;font-size:13.5px;line-height:1.55;color:var(--muted);}
+  .sentence-strip .slot{display:inline;color:var(--coral);font-weight:600;border-bottom:1px dashed var(--coral-border);cursor:pointer;}
+  .sentence-strip .slot.lav{color:var(--lav);border-color:var(--lav-border);}
+  .sentence-strip .slot.dim{color:var(--faint);font-weight:400;border-bottom-style:dotted;border-color:var(--line);}
+  .sentence-strip .slot.active{background:var(--coral-dim);border-radius:4px;padding:0 3px;border-bottom:none;box-shadow:0 0 0 1px var(--coral-border);}
+
+  .scr-main{flex:1;display:flex;flex-direction:column;padding:0 18px;overflow:hidden;}
+
+  /* L · smart banner */
+  .smart-banner{background:linear-gradient(135deg,var(--lav-dim),var(--coral-dim));border:1px solid var(--lav-border);border-radius:16px;padding:14px;margin:14px 0 4px;}
+  .smart-banner .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--lav);margin-bottom:6px;}
+  .smart-banner .txt{font-size:13px;line-height:1.5;}
+  .smart-banner .txt b{color:var(--coral);font-weight:600;}
+  .suggest-row{display:flex;gap:8px;margin-top:12px;}
+  .suggest-btn{flex:1;padding:11px 8px;border-radius:12px;font-size:12px;font-weight:600;text-align:center;border:1px solid var(--line);color:var(--text);background:var(--surface);}
+  .suggest-btn.primary{background:var(--coral);border-color:var(--coral);color:#2a1714;}
+  .talk-row{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:10px 0 14px;}
+  .talk-row .mic{width:40px;height:40px;border-radius:50%;background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;}
+  .talk-row .t{font-size:13px;font-weight:600;}
+  .talk-row .s{font-size:11px;color:var(--muted);}
+
+  /* I · focus question */
+  .focus-area{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:16px 4px 8px;}
+  .prog-row{width:100%;display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .prog-bar{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .prog-bar .fill{height:100%;background:var(--coral);border-radius:2px;}
+  .prog-label{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);white-space:nowrap;}
+  .focus-q{font-family:"Fraunces",serif;font-size:24px;font-weight:500;line-height:1.2;margin-bottom:6px;}
+  .focus-sub{font-size:12.5px;color:var(--muted);margin-bottom:24px;max-width:26ch;}
+  .big-choice{display:flex;gap:11px;width:100%;}
+  .big-btn{flex:1;padding:20px 10px;border-radius:16px;border:1px solid var(--line);font-size:15px;font-weight:600;color:var(--muted);}
+  .big-btn.on{background:var(--coral);border-color:var(--coral);color:#2a1714;}
+  .big-btn.no-on{background:var(--surface);border-color:var(--line);color:var(--muted);}
+
+  /* K · body map */
+  .body-map{display:flex;justify-content:center;margin:0 0 8px;}
+  .head-svg{width:130px;height:150px;}
+  .head-zone{fill:transparent;stroke:var(--line);stroke-width:1.5;cursor:pointer;}
+  .head-zone.on{fill:var(--coral-dim);stroke:var(--coral);stroke-width:2;}
+  .zone-label{font-size:10px;fill:var(--faint);font-family:Figtree,sans-serif;text-anchor:middle;}
+  .zone-label.on{fill:var(--coral);font-weight:600;}
+
+  /* K · slider */
+  .slider-wrap{width:100%;margin:8px 0 4px;}
+  .slider-track{height:10px;background:var(--line);border-radius:5px;position:relative;}
+  .slider-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,var(--coral-dim),var(--coral));border-radius:5px;}
+  .slider-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--coral);box-shadow:0 0 16px var(--coral);border:3px solid #2a1714;}
+  .slider-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:10px;font-family:"JetBrains Mono",monospace;}
+  .sev-readout{font-family:"Fraunces",serif;font-size:48px;color:var(--coral);line-height:1;margin:8px 0 2px;}
+  .sev-word{font-size:13px;color:var(--muted);font-style:italic;}
+
+  /* pills for non-map steps */
+  .pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%;}
+  .pill{font-size:12px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .pill.on{color:#2a1714;background:var(--coral);border-color:var(--coral);font-weight:600;}
+
+  .focus-nav{width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding:14px 0 18px;}
+  .focus-nav .back{font-size:14px;color:var(--faint);}
+  .focus-nav .skip{font-size:13px;color:var(--faint);}
+  .focus-nav .next{background:var(--coral);color:#2a1714;padding:12px 20px;border-radius:12px;font-weight:700;font-size:14px;}
+
+  /* Review */
+  .review-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;text-align:left;}
+  .review-card .full-sentence{font-family:"Fraunces",serif;font-size:16px;line-height:1.6;margin-bottom:14px;}
+  .review-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13px;}
+  .review-row:first-of-type{border-top:none;padding-top:0;}
+  .review-row .lbl{color:var(--muted);}
+  .review-row .val{color:var(--coral);font-weight:600;}
+  .review-row .val.lav{color:var(--lav);}
+  .edit-hint{font-size:11px;color:var(--faint);text-align:center;margin-top:8px;}
+
+  .save-bar{padding:12px 18px 22px;border-top:1px solid var(--line);flex:0 0 auto;}
+  .save-btn{background:var(--coral);color:#2a1714;border-radius:14px;padding:14px;text-align:center;font-weight:700;font-size:15px;}
+  .save-btn .k{font-weight:400;font-size:11px;opacity:.7;margin-top:2px;}
+
+  .part-links{max-width:1180px;margin:0 auto 32px;font-size:14px;color:var(--muted);}
+  .part-links a{color:var(--coral);font-weight:600;text-decoration:none;}
+
+  .footer{max-width:1180px;margin:64px auto 0;padding-top:28px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;}
+  .footer .fm{font-family:"JetBrains Mono",monospace;}
+</style>
+</head>
+<body>
+
+  <header class="board-head">
+    <div class="kicker">Merged concept · I + L + J + K</div>
+    <h1>Talk, pre-fill, <em>one question</em>, read it back.</h1>
+    <p>Combines pattern shortcut (L), one-question focus (I), live sentence preview (J), and body map + slider (K) into a single logging flow. Same schema — just a calmer path through it.</p>
+    <p class="part-links"><a href="symptom-tracker-log-symptoms-options.html">Part 1</a> · <a href="symptom-tracker-log-symptoms-options-v2.html">Part 2</a></p>
+  </header>
+
+  <section class="flow">
+    <h3>Flow</h3>
+    <div class="flow-steps">
+      <span class="flow-step l">L · Smart entry</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step i">I · One question steps</span>
+      <span class="flow-arrow">+</span>
+      <span class="flow-step j">J · Sentence strip</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step k">K · Map &amp; slider steps</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step i">I · Review &amp; save</span>
+    </div>
+  </section>
+
+  <div class="legend">
+    <div class="leg-item"><div class="tag l">L</div><b>Smart entry</b>“Log like last time” when Patterns has data. Pre-fills the sentence and skips to the first empty step — or start blank.</div>
+    <div class="leg-item"><div class="tag i">I</div><b>One question</b>Each step is full-screen focus: one prompt, big controls, Skip always available. Progress bar shows where you are.</div>
+    <div class="leg-item"><div class="tag j">J</div><b>Sentence strip</b>Live preview pinned under the nav. Tap any filled slot to jump back to that step. Empty slots show as dim placeholders.</div>
+    <div class="leg-item"><div class="tag k">K</div><b>Map &amp; slider</b>Location uses a head diagram (not 8 pills). Severity uses one slider + big number (not 5 segments).</div>
+  </div>
+
+  <div class="screens-head">
+    <h2>The merged flow — 6 screens</h2>
+    <p>Sentence strip (J) persists on every step after entry. Tap a slot anytime to re-edit.</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- 1 · L entry -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 0</div>
+      <div class="step-title">Smart entry (L)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save" style="visibility:hidden">Save</span></div>
+          <div class="scr-main">
+            <div class="smart-banner">
+              <div class="tag">Luteal · day 24</div>
+              <div class="txt">Your last 3 migraines here were <b>right-sided, throbbing, ~3/5</b> — often after poor sleep.</div>
+              <div class="suggest-row">
+                <div class="suggest-btn primary">Log like last time</div>
+                <div class="suggest-btn">Start blank</div>
+              </div>
+            </div>
+            <div class="talk-row"><div class="mic">🎙</div><div><div class="t">Talk instead</div><div class="s">Say it — I'll fill the chart</div></div></div>
+            <p style="font-size:12px;color:var(--faint);text-align:center;margin-top:auto;padding-bottom:24px;">No history yet? You'll see Talk + Start blank only.</p>
+          </div>
+        </div>
+      </div>
+      <div class="step-note"><b>Log like last time</b> pre-fills the sentence strip and lands on the first step you'd want to change (usually severity or triggers).</div>
+    </div>
+
+    <!-- 2 · I headache yes/no + J strip -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 1 · 1 of 6</div>
+      <div class="step-title">Headache? (I + J)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+          <div class="sentence-strip">
+            <div class="tag">Building entry · tap a word to edit</div>
+            <div class="line"><span class="slot active dim">headache?</span> <span class="slot dim">—</span> · Bleeding: <span class="slot lav dim">—</span></div>
+          </div>
+          <div class="scr-main">
+            <div class="focus-area">
+              <div class="prog-row"><div class="prog-bar"><div class="fill" style="width:16%"></div></div><span class="prog-label">1 / 6</span></div>
+              <div class="focus-q">Any headache right now?</div>
+              <div class="focus-sub">Skip if not — cycle and context come later.</div>
+              <div class="big-choice">
+                <div class="big-btn on">Yes</div>
+                <div class="big-btn">No</div>
+              </div>
+              <div class="focus-nav"><span class="skip">Skip</span><span class="next">Next →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-note">If pre-filled from L, this step shows <b>Yes</b> already selected — user taps Next to confirm or change.</div>
+    </div>
+
+    <!-- 3 · K severity slider -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 2 · 2 of 6</div>
+      <div class="step-title">Severity (I + J + K)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+          <div class="sentence-strip">
+            <div class="tag">Building entry</div>
+            <div class="line"><span class="slot active">3/5</span> headache · Bleeding: <span class="slot lav dim">—</span></div>
+          </div>
+          <div class="scr-main">
+            <div class="focus-area">
+              <div class="prog-row"><div class="prog-bar"><div class="fill" style="width:33%"></div></div><span class="prog-label">2 / 6</span></div>
+              <div class="focus-q">How bad is it?</div>
+              <div class="sev-readout">3</div>
+              <div class="sev-word">moderate</div>
+              <div class="slider-wrap">
+                <div class="slider-track"><div class="slider-fill" style="width:50%"></div><div class="slider-thumb" style="left:50%"></div></div>
+                <div class="slider-labels"><span>barely there</span><span>disabling</span></div>
+              </div>
+              <div class="focus-nav"><span class="back">← Back</span><span class="next">Next →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-note">Slider replaces the 5-segment stepper. Sentence slot updates live as you drag.</div>
+    </div>
+
+    <!-- 4 · K body map -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 3 · 3 of 6</div>
+      <div class="step-title">Location (I + J + K)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+          <div class="sentence-strip">
+            <div class="tag">Building entry</div>
+            <div class="line"><span class="slot">3/5</span> headache on my <span class="slot active">right side</span>, <span class="slot dim">throbbing</span>.</div>
+          </div>
+          <div class="scr-main">
+            <div class="focus-area">
+              <div class="prog-row"><div class="prog-bar"><div class="fill" style="width:50%"></div></div><span class="prog-label">3 / 6</span></div>
+              <div class="focus-q">Where does it hurt?</div>
+              <div class="focus-sub">Tap one or more zones. Pinch optional for neck/jaw.</div>
+              <div class="body-map">
+                <svg class="head-svg" viewBox="0 0 130 150">
+                  <ellipse cx="65" cy="82" rx="48" ry="55" fill="#2a2431" stroke="#3A3242" stroke-width="1.5"/>
+                  <ellipse class="head-zone on" cx="88" cy="72" rx="16" ry="20"/>
+                  <ellipse class="head-zone" cx="42" cy="72" rx="16" ry="20"/>
+                  <ellipse class="head-zone" cx="65" cy="48" rx="20" ry="14"/>
+                  <ellipse class="head-zone" cx="54" cy="62" rx="9" ry="9"/>
+                  <ellipse class="head-zone" cx="76" cy="62" rx="9" ry="9"/>
+                  <path class="head-zone" d="M52 102 Q65 118 78 102" fill="none"/>
+                  <text class="zone-label on" x="88" y="76">R</text>
+                  <text class="zone-label" x="42" y="76">L</text>
+                  <text class="zone-label" x="65" y="52">forehead</text>
+                </svg>
+              </div>
+              <div class="focus-nav"><span class="back">← Back</span><span class="next">Next →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-note">Multi-select on the map. Bilateral = tap both sides. Sentence reads “both sides” automatically.</div>
+    </div>
+
+    <!-- 5 · I quality (compact pills) -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 4 · 4 of 6</div>
+      <div class="step-title">Quality &amp; movement (I + J)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+          <div class="sentence-strip">
+            <div class="tag">Building entry</div>
+            <div class="line"><span class="slot">3/5</span> headache on my <span class="slot">right side</span>, <span class="slot active">throbbing</span>. Worse with movement: <span class="slot dim">—</span></div>
+          </div>
+          <div class="scr-main">
+            <div class="focus-area">
+              <div class="prog-row"><div class="prog-bar"><div class="fill" style="width:66%"></div></div><span class="prog-label">4 / 6</span></div>
+              <div class="focus-q">What does it feel like?</div>
+              <div class="focus-sub">Pick one or more. Skip if you're not sure.</div>
+              <div class="pills"><span class="pill on">Throbbing</span><span class="pill">Dull</span><span class="pill">Sharp</span><span class="pill">Pressure</span></div>
+              <div style="width:100%;margin-top:20px;text-align:left;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;">Worse with movement?</div>
+                <div class="big-choice"><div class="big-btn" style="padding:14px;">Yes</div><div class="big-btn" style="padding:14px;">No</div></div>
+              </div>
+              <div class="focus-nav"><span class="back">← Back</span><span class="next">Next →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-note">Short enums stay as pills — only 4 options here. Two related questions can share one step to reduce taps.</div>
+    </div>
+
+    <!-- 6 · Cycle + context (combined step) -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 5 · 5 of 6</div>
+      <div class="step-title">Cycle &amp; context (I + J)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+          <div class="sentence-strip">
+            <div class="tag">Building entry</div>
+            <div class="line"><span class="slot">3/5</span> <span class="slot">throbbing</span> headache on my <span class="slot">right side</span>. Bleeding: <span class="slot lav active dim">—</span> · Triggers: <span class="slot">poor sleep</span></div>
+          </div>
+          <div class="scr-main">
+            <div class="focus-area" style="align-items:stretch;text-align:left;">
+              <div class="prog-row"><div class="prog-bar"><div class="fill" style="width:83%"></div></div><span class="prog-label">5 / 6</span></div>
+              <div class="focus-q" style="text-align:center;">Anything else today?</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--lav);margin:16px 0 8px;">Bleeding</div>
+              <div class="pills"><span class="pill">None</span><span class="pill">Spotting</span><span class="pill">Light</span><span class="pill">Medium</span><span class="pill">Heavy</span></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:18px 0 8px;">Triggers</div>
+              <div class="pills"><span class="pill on">Poor sleep</span><span class="pill">Stress</span><span class="pill">Skipped meal</span><span class="pill">Weather</span></div>
+              <div class="focus-nav"><span class="skip">Skip all</span><span class="next">Review →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-note">Cycle + top triggers on one step. “Show all triggers” expands if needed — not shown by default.</div>
+    </div>
+
+    <!-- 7 · Review -->
+    <div class="frame-wrap">
+      <div class="step-num">Step 6 · Review</div>
+      <div class="step-title">Read it back (J + I)</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+        <div class="screen">
+          <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+          <div class="scr-main">
+            <div style="flex:1;overflow-y:auto;padding-top:14px;">
+              <div class="focus-q" style="text-align:center;font-size:22px;margin-bottom:14px;">Ready to save?</div>
+              <div class="review-card">
+                <div class="full-sentence">I'm having a <span style="color:var(--coral)">3/5 throbbing</span> headache on my <span style="color:var(--coral)">right side</span>. Triggered by <span style="color:var(--coral)">poor sleep</span>.</div>
+                <div class="review-row"><span class="lbl">Aura</span><span class="val" style="color:var(--faint);font-weight:400;font-style:italic">Not set</span></div>
+                <div class="review-row"><span class="lbl">Bleeding</span><span class="val lav" style="color:var(--faint);font-weight:400;font-style:italic">Not set</span></div>
+                <div class="review-row"><span class="lbl">Relief taken</span><span class="val" style="color:var(--faint);font-weight:400;font-style:italic">Not set</span></div>
+              </div>
+              <div class="edit-hint">Tap the sentence or any row to jump back</div>
+            </div>
+            <div class="save-bar"><div class="save-btn">Save entry<div class="k">5 fields · all optional blanks kept</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="step-note">Final screen is the full sentence (J) plus unset fields listed quietly. Save always available from toolbar too.</div>
+    </div>
+
+  </div>
+
+  <section class="flow" style="margin-top:56px;">
+    <h3>Implementation notes</h3>
+    <div style="font-size:14px;color:var(--muted);line-height:1.65;max-width:68ch;">
+      <p style="margin-bottom:12px;"><b style="color:var(--text)">Step order</b> is fixed but skippable: Headache → Severity → Location → Quality → Cycle/Context → Review. If migraine = No, skip to Cycle/Context.</p>
+      <p style="margin-bottom:12px;"><b style="color:var(--text)">L only shows</b> when PatternStatsEngine has ≥2 similar entries in the current cycle phase. Otherwise Step 0 is just Talk + Start blank.</p>
+      <p style="margin-bottom:12px;"><b style="color:var(--text)">J sentence strip</b> maps 1:1 to schema fields — tapping “right side” opens Step 3 (location map).</p>
+      <p><b style="color:var(--text)">K map</b> writes the same <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text)">location</code> multi_enum keys as pills would. Slider writes <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text)">severity</code> scale 1–5.</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span class="fm">EBB · merged I+L+J+K · v0.1</span>
+  </footer>
+
+</body>
+</html>
