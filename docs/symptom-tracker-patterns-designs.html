@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Patterns tab · design explorations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0E0B12;--ink:#1A1620;--surface:#241E2C;--raised:#2C2533;--line:#3A3242;
+    --text:#EDE6F0;--muted:#A99FB0;--faint:#776E80;
+    --coral:#E89B8B;--coral-dim:#2E2229;--coral-glow:#7d4f48;
+    --lav:#9D8FC7;--lav-dim:#241F33;--lav-glow:#4c4466;--sage:#8FB1A0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+  body{background:var(--page);color:var(--text);font-family:"Figtree",system-ui,sans-serif;line-height:1.45;padding:56px 28px 100px;}
+
+  .board-head{max-width:1180px;margin:0 auto 40px;}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--lav);margin-bottom:18px;}
+  .board-head h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(32px,5vw,52px);line-height:1.05;max-width:28ch;}
+  .board-head h1 em{font-style:italic;color:var(--coral);}
+  .board-head p{color:var(--muted);max-width:68ch;margin-top:18px;font-size:16px;}
+  .part-link{margin-top:20px;font-size:14px;}
+  .part-link a{color:var(--coral);text-decoration:none;font-weight:600;}
+  .part-link a:hover{text-decoration:underline;}
+
+  .nav-strip{max-width:1180px;margin:0 auto 48px;display:flex;flex-wrap:wrap;gap:8px;}
+  .nav-strip a{font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--ink);}
+  .nav-strip a:hover{color:var(--text);border-color:var(--lav);}
+
+  .legend{max-width:1180px;margin:0 auto 56px;padding:22px 26px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--ink),transparent);display:flex;flex-wrap:wrap;gap:24px 40px;}
+  .legend h4{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;}
+  .legend ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);}
+
+  .option{max-width:1180px;margin:0 auto 80px;scroll-margin-top:24px;}
+  .opt-head{margin-bottom:28px;}
+  .opt-tag{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+  .opt-tag.rec{color:var(--coral);}
+  .opt-title{font-family:"Fraunces",serif;font-size:clamp(24px,3vw,32px);font-weight:500;line-height:1.1;}
+  .opt-sub{color:var(--muted);font-size:14.5px;margin-top:10px;max-width:58ch;line-height:1.55;}
+  .pros-cons{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .chip{font-size:12px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .chip.good{border-color:#3d5a4a;color:var(--sage);}
+  .chip.warn{border-color:var(--coral-glow);color:var(--coral);}
+
+  .phones-row{display:flex;flex-wrap:wrap;gap:38px;justify-content:center;align-items:flex-start;}
+  .frame-wrap{display:flex;flex-direction:column;gap:14px;width:330px;}
+  .state-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding-left:4px;}
+  .annot{font-size:13px;color:var(--faint);padding-left:4px;max-width:360px;line-height:1.45;}
+
+  .phone{width:330px;border-radius:46px;background:var(--ink);border:1px solid #312938;box-shadow:0 0 0 9px #16121b,0 30px 70px -30px #000;position:relative;overflow:hidden;}
+  .phone.std{height:715px;}
+  .phone.tall{height:860px;}
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:18px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;color:var(--text);z-index:30;}
+  .statusbar .dots{opacity:.8;font-size:11px;}
+  .screen{position:absolute;inset:0;padding:58px 0 0;display:flex;flex-direction:column;}
+  .screen-scroll{flex:1;overflow:hidden;padding:0 20px 8px;}
+  .screen-scroll.tall{overflow:visible;padding-bottom:22px;}
+
+  .nav-title{font-family:"Figtree",sans-serif;font-size:17px;font-weight:600;text-align:center;padding:0 20px 10px;}
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:78px;background:#16121bcc;border-top:1px solid var(--line);backdrop-filter:blur(12px);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 8px 0;z-index:30;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--faint);min-width:64px;}
+  .tab.on{color:var(--coral);}
+  .tab .ic{font-size:20px;line-height:1;}
+
+  /* Shared patterns components */
+  .pat-h{font-family:"Fraunces",serif;font-size:23px;font-weight:500;padding-top:6px;}
+  .pat-sub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.45;}
+  .sec{margin-top:18px;}
+  .sec .lbl{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px;}
+  .timeline-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 16px 14px;}
+  .timeline-card .cap{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px;}
+  .timeline-card .cap b{color:var(--lav);font-weight:600;}
+  .tl{position:relative;height:72px;}
+  .tl .axis{position:absolute;left:0;right:0;top:54px;height:2px;background:var(--line);border-radius:2px;}
+  .tl .luteal{position:absolute;top:48px;height:14px;border-radius:7px;background:var(--lav-dim);opacity:.55;}
+  .tl .mk{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--coral);top:48px;box-shadow:0 0 10px -1px var(--coral);border:2px solid var(--ink);}
+  .tl .day0{position:absolute;top:0;font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);}
+  .tl-labels{display:flex;margin-top:6px;}
+  .tl-labels span{text-align:center;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);line-height:1.2;padding:0 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tl-labels span.accent{color:var(--lav);}
+
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .bar .nm{font-size:13px;width:88px;flex:0 0 auto;color:var(--text);}
+  .bar .track{flex:1;height:8px;border-radius:5px;background:#2a2431;overflow:hidden;}
+  .bar .fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--coral-dim),var(--coral));}
+  .bar .n{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);width:22px;text-align:right;}
+
+  .insight-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;font-size:14px;line-height:1.45;}
+  .insight-card b{font-weight:600;}
+  .insight-card.hero{background:linear-gradient(145deg,#2a2433,var(--surface));border-color:#4a3f52;padding:20px 18px;font-family:"Fraunces",serif;font-size:17px;line-height:1.35;}
+  .insight-card.hero .eyebrow{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);margin-bottom:10px;font-weight:400;}
+
+  .relief-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:13px;}
+  .relief-row .stat{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);}
+
+  /* A · Current (reference) */
+  .stat-row{display:flex;gap:8px;margin-top:16px;}
+  .stat-pill{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 10px;text-align:center;}
+  .stat-pill .num{font-family:"Fraunces",serif;font-size:22px;font-weight:500;color:var(--coral);}
+  .stat-pill .lbl{font-family:"JetBrains Mono",monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:4px;}
+
+  /* B · Insight-first */
+  .insight-first .insight-card.hero{margin-top:14px;border-left:3px solid var(--coral);}
+
+  /* C · Phase columns */
+  .phase-cols{display:flex;align-items:flex-end;gap:6px;height:100px;margin-top:8px;}
+  .phase-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .phase-col .col{flex:1;width:100%;border-radius:8px 8px 4px 4px;background:var(--raised);position:relative;min-height:20px;}
+  .phase-col .col.luteal{background:linear-gradient(180deg,var(--lav-dim),#342d4a);}
+  .phase-col .col .dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:4px;align-items:center;}
+  .phase-col .col .dot{width:10px;height:10px;border-radius:50%;background:var(--coral);box-shadow:0 0 8px -1px var(--coral);}
+  .phase-col .nm{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);text-align:center;}
+  .phase-col .nm.accent{color:var(--lav);}
+  .phase-col .cnt{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--text);}
+
+  /* D · Cycle ring */
+  .ring-wrap{display:flex;align-items:center;gap:16px;margin-top:8px;}
+  .ring{position:relative;width:120px;height:120px;flex:0 0 auto;}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .ring .track{fill:none;stroke:var(--line);stroke-width:10;}
+  .ring .luteal-arc{fill:none;stroke:var(--lav-dim);stroke-width:10;stroke-linecap:round;}
+  .ring .prog{fill:none;stroke:var(--coral);stroke-width:10;stroke-linecap:round;opacity:.35;}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring-center .big{font-family:"Fraunces",serif;font-size:28px;font-weight:500;color:var(--coral);line-height:1;}
+  .ring-center .sm{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);margin-top:4px;text-transform:uppercase;letter-spacing:.1em;}
+  .ring-legend{flex:1;font-size:12.5px;color:var(--muted);line-height:1.55;}
+  .ring-legend b{color:var(--lav);font-weight:600;}
+  .ring-dots{display:flex;gap:6px;margin-top:10px;}
+  .ring-dots i{width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 6px var(--coral);}
+
+  /* E · Compact dashboard */
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+  .dash-cell{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;}
+  .dash-cell.wide{grid-column:1/-1;}
+  .dash-cell .k{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;}
+  .dash-cell .v{font-size:13px;line-height:1.4;}
+  .dash-cell .v b{color:var(--lav);font-weight:600;}
+  .mini-tl{position:relative;height:28px;margin-top:8px;}
+  .mini-tl .axis{position:absolute;left:0;right:0;top:14px;height:2px;background:var(--line);}
+  .mini-tl .luteal{position:absolute;top:11px;height:8px;border-radius:4px;background:var(--lav-dim);opacity:.6;}
+  .mini-tl .mk{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--coral);top:11px;border:1px solid var(--ink);}
+
+  /* F · Narrative */
+  .narrative .chapter{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .narrative .chapter:first-of-type{border-top:none;padding-top:0;margin-top:14px;}
+  .narrative .ch-num{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--coral);margin-bottom:8px;}
+  .narrative .ch-title{font-family:"Fraunces",serif;font-size:18px;font-weight:500;margin-bottom:8px;line-height:1.2;}
+  .narrative .ch-body{font-size:13.5px;color:var(--muted);line-height:1.55;}
+  .narrative .ch-body b{color:var(--text);font-weight:600;}
+  .narrative .ch-body em{color:var(--lav);font-style:normal;font-weight:500;}
+  .narrative .inline-tl{margin-top:12px;height:36px;position:relative;}
+  .narrative .inline-tl .axis{position:absolute;left:0;right:0;top:18px;height:2px;background:var(--line);}
+  .narrative .inline-tl .luteal{position:absolute;top:15px;height:8px;border-radius:4px;background:var(--lav-dim);left:52%;right:0;opacity:.55;}
+  .narrative .inline-tl .mk{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--coral);top:15px;box-shadow:0 0 6px var(--coral);}
+
+  /* G · Segmented sections */
+  .seg-tabs{display:flex;gap:6px;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .seg-tab{flex:1;text-align:center;font-size:11px;font-weight:600;color:var(--faint);padding:8px 6px;border-radius:9px;}
+  .seg-tab.on{background:var(--coral-dim);color:var(--coral);}
+  .seg-panel{margin-top:14px;}
+  .trigger-chip{display:inline-flex;align-items:center;gap:6px;background:var(--coral-dim);border:1px solid var(--coral-glow);border-radius:999px;padding:6px 12px;font-size:12px;margin:0 6px 8px 0;}
+  .trigger-chip .n{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--coral);}
+
+  .footer{max-width:1180px;margin:64px auto 0;padding-top:28px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;}
+</style>
+</head>
+<body>
+
+<header class="board-head">
+  <div class="kicker">Patterns tab · design board</div>
+  <h1>Seven ways to show <em>cycle insights</em>.</h1>
+  <p>Layout and hierarchy explorations for the Patterns tab. All options use the same data (timeline, triggers, insight, relief) and Plum &amp; Ember tokens. The app ships <b style="color:var(--text);font-weight:500;">Today · Patterns · Settings</b> — three tabs only.</p>
+  <p class="part-link">Current implementation reference → <a href="symptom-tracker-patterns-mocks.html">symptom-tracker-patterns-mocks.html</a></p>
+</header>
+
+<nav class="nav-strip">
+  <a href="#a">A · Reference</a>
+  <a href="#b">B · Insight first</a>
+  <a href="#c">C · Phase columns</a>
+  <a href="#d">D · Cycle ring</a>
+  <a href="#e">E · Dashboard</a>
+  <a href="#f">F · Narrative</a>
+  <a href="#g">G · Segmented</a>
+</nav>
+
+<section class="legend">
+  <div>
+    <h4>Shared content</h4>
+    <ul>
+      <li>3 migraines this cycle, all luteal</li>
+      <li>Top triggers: Poor sleep (3), Stress (2), Skipped meal (1)</li>
+      <li>Insight: poor sleep in luteal window</li>
+      <li>Relief: Ibuprofen 50%, Sumatriptan 100%</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Constraints</h4>
+    <ul>
+      <li>Synthesis only — no log history</li>
+      <li>Dim-first, low luminance</li>
+      <li>Warm = pain, cool = cycle</li>
+      <li>Deterministic stats, template copy</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Evaluation lens</h4>
+    <ul>
+      <li>Scannable during a migraine?</li>
+      <li>Does luteal clustering read instantly?</li>
+      <li>Room for 1–4 triggers + 2–3 meds?</li>
+    </ul>
+  </div>
+</section>
+
+<!-- A · REFERENCE -->
+<section class="option" id="a">
+  <div class="opt-head">
+    <div class="opt-tag rec">A · shipped baseline</div>
+    <h2 class="opt-title">Reference — current scroll order</h2>
+    <p class="opt-sub">Timeline card first, then triggers, insight, relief. Matches <code>PatternsView.swift</code>. Proven structure; insight can feel buried below the fold.</p>
+    <div class="pros-cons">
+      <span class="chip good">Matches app today</span>
+      <span class="chip good">Timeline gets full width</span>
+      <span class="chip warn">Insight is last-ish</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap">
+      <div class="state-label">Populated · Ebb+</div>
+      <div class="phone tall">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll tall">
+            <div class="pat-h">This cycle</div>
+            <div class="timeline-card" style="margin-top:16px;">
+              <div class="cap">Your migraines <b>cluster in the luteal phase</b> — the days estrogen drops before your period. All 3 this cycle, all luteal.</div>
+              <div class="tl">
+                <span class="day0">day 1</span>
+                <div class="axis"></div>
+                <div class="luteal" style="left:52%;right:0;"></div>
+                <div class="mk" style="left:58%"></div>
+                <div class="mk" style="left:68%"></div>
+                <div class="mk" style="left:86%"></div>
+              </div>
+              <div class="tl-labels">
+                <span style="width:17.86%">menstrual</span>
+                <span style="width:32.14%">follicular</span>
+                <span class="accent" style="width:50%">luteal</span>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="lbl">Most-logged triggers</div>
+              <div class="bar"><span class="nm">Poor sleep</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="n">3</span></div>
+              <div class="bar"><span class="nm">Stress</span><span class="track"><span class="fill" style="width:67%"></span></span><span class="n">2</span></div>
+              <div class="bar"><span class="nm">Skipped meal</span><span class="track"><span class="fill" style="width:33%"></span></span><span class="n">1</span></div>
+            </div>
+            <div class="insight-card" style="margin-top:20px;">All 3 attacks followed <b>poor sleep</b> in the luteal window.</div>
+            <div class="sec" style="margin-top:20px;">
+              <div class="lbl">Relief effectiveness</div>
+              <div class="relief-row"><span>Ibuprofen</span><span class="stat">1/2 helped (50%)</span></div>
+              <div class="relief-row"><span>Sumatriptan</span><span class="stat">2/2 helped (100%)</span></div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B · INSIGHT FIRST -->
+<section class="option" id="b">
+  <div class="opt-head">
+    <div class="opt-tag">B · insight first</div>
+    <h2 class="opt-title">Lead with the takeaway</h2>
+    <p class="opt-sub">The plain-language insight becomes the hero card at the top. Timeline and triggers support the headline instead of preceding it. Better for users who want the answer in one glance.</p>
+    <div class="pros-cons">
+      <span class="chip good">Fastest comprehension</span>
+      <span class="chip good">Doctor-conversation ready</span>
+      <span class="chip warn">Less visual drama on timeline</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap insight-first">
+      <div class="state-label">Insight → evidence</div>
+      <div class="phone tall">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll tall">
+            <div class="pat-h">This cycle</div>
+            <div class="pat-sub">3 migraines logged · day 18 of 28</div>
+            <div class="insight-card hero">
+              <div class="eyebrow">Your pattern</div>
+              All 3 attacks followed <b>poor sleep</b> during the <b>luteal phase</b>.
+            </div>
+            <div class="timeline-card" style="margin-top:18px;">
+              <div class="lbl" style="margin-bottom:10px;">When they happened</div>
+              <div class="tl" style="height:56px;">
+                <div class="axis" style="top:38px;"></div>
+                <div class="luteal" style="left:52%;right:0;top:32px;height:12px;"></div>
+                <div class="mk" style="left:58%;top:32px;width:11px;height:11px;"></div>
+                <div class="mk" style="left:68%;top:32px;width:11px;height:11px;"></div>
+                <div class="mk" style="left:86%;top:32px;width:11px;height:11px;"></div>
+              </div>
+              <div class="tl-labels">
+                <span style="width:17.86%">menstrual</span>
+                <span style="width:32.14%">follicular</span>
+                <span class="accent" style="width:50%">luteal</span>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="lbl">What preceded them</div>
+              <div class="bar"><span class="nm">Poor sleep</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="n">3</span></div>
+              <div class="bar"><span class="nm">Stress</span><span class="track"><span class="fill" style="width:67%"></span></span><span class="n">2</span></div>
+            </div>
+            <div class="sec">
+              <div class="lbl">What helped</div>
+              <div class="relief-row"><span>Sumatriptan</span><span class="stat">2/2 (100%)</span></div>
+              <div class="relief-row"><span>Ibuprofen</span><span class="stat">1/2 (50%)</span></div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- C · PHASE COLUMNS -->
+<section class="option" id="c">
+  <div class="opt-head">
+    <div class="opt-tag">C · phase columns</div>
+    <h2 class="opt-title">Migraines by cycle phase</h2>
+    <p class="opt-sub">Replaces the horizontal timeline with a three-column chart. Column height encodes count; dots stack inside the luteal column. Makes phase clustering obvious at a glance.</p>
+    <div class="pros-cons">
+      <span class="chip good">Phase comparison is instant</span>
+      <span class="chip good">Works when cycle length varies</span>
+      <span class="chip warn">Loses day-level precision</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap">
+      <div class="state-label">Column chart</div>
+      <div class="phone std">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll">
+            <div class="pat-h">This cycle</div>
+            <div class="timeline-card" style="margin-top:14px;">
+              <div class="cap">All 3 migraines landed in the <b>luteal phase</b> — none during menstrual or follicular.</div>
+              <div class="phase-cols">
+                <div class="phase-col">
+                  <div class="col" style="height:28px;"></div>
+                  <div class="cnt">0</div>
+                  <div class="nm">menstrual</div>
+                </div>
+                <div class="phase-col">
+                  <div class="col" style="height:28px;"></div>
+                  <div class="cnt">0</div>
+                  <div class="nm">follicular</div>
+                </div>
+                <div class="phase-col">
+                  <div class="col luteal" style="height:88px;">
+                    <div class="dots">
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                    </div>
+                  </div>
+                  <div class="cnt">3</div>
+                  <div class="nm accent">luteal</div>
+                </div>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="lbl">Most-logged triggers</div>
+              <div class="bar"><span class="nm">Poor sleep</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="n">3</span></div>
+              <div class="bar"><span class="nm">Stress</span><span class="track"><span class="fill" style="width:67%"></span></span><span class="n">2</span></div>
+            </div>
+            <div class="insight-card" style="margin-top:18px;">All 3 attacks followed <b>poor sleep</b> in the luteal window.</div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- D · CYCLE RING -->
+<section class="option" id="d">
+  <div class="opt-head">
+    <div class="opt-tag">D · cycle ring</div>
+    <h2 class="opt-title">Radial cycle progress</h2>
+    <p class="opt-sub">A ring shows where you are in the cycle; luteal arc is highlighted in lavender. Migraine count sits in the center. Compact and distinctive — good for above-the-fold summary.</p>
+    <div class="pros-cons">
+      <span class="chip good">Shows "you are here"</span>
+      <span class="chip good">Compact hero element</span>
+      <span class="chip warn">Harder to place individual attacks</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap">
+      <div class="state-label">Ring + triggers</div>
+      <div class="phone std">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll">
+            <div class="pat-h">This cycle</div>
+            <div class="timeline-card" style="margin-top:14px;">
+              <div class="ring-wrap">
+                <div class="ring">
+                  <svg viewBox="0 0 120 120">
+                    <circle class="track" cx="60" cy="60" r="48"/>
+                    <circle class="luteal-arc" cx="60" cy="60" r="48" stroke-dasharray="75 226" stroke-dashoffset="-151"/>
+                    <circle class="prog" cx="60" cy="60" r="48" stroke-dasharray="30 271" stroke-dashoffset="-121"/>
+                  </svg>
+                  <div class="ring-center">
+                    <div class="big">3</div>
+                    <div class="sm">migraines</div>
+                  </div>
+                </div>
+                <div class="ring-legend">
+                  You're on <b>day 18</b> — deep in the <b>luteal phase</b>. All 3 migraines clustered here this cycle.
+                  <div class="ring-dots"><i></i><i></i><i></i></div>
+                </div>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="lbl">Most-logged triggers</div>
+              <div class="bar"><span class="nm">Poor sleep</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="n">3</span></div>
+              <div class="bar"><span class="nm">Stress</span><span class="track"><span class="fill" style="width:67%"></span></span><span class="n">2</span></div>
+            </div>
+            <div class="insight-card" style="margin-top:18px;">All 3 attacks followed <b>poor sleep</b> in the luteal window.</div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- E · DASHBOARD -->
+<section class="option" id="e">
+  <div class="opt-head">
+    <div class="opt-tag">E · compact dashboard</div>
+    <h2 class="opt-title">Stats grid + mini timeline</h2>
+    <p class="opt-sub">Key numbers in a 2×2 grid at the top; timeline compresses to a single row. Fits more on screen without scrolling — useful for quick check-ins between attacks.</p>
+    <div class="pros-cons">
+      <span class="chip good">Everything above fold</span>
+      <span class="chip good">Numbers-first scanning</span>
+      <span class="chip warn">Timeline loses caption space</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap">
+      <div class="state-label">Grid layout</div>
+      <div class="phone std">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll">
+            <div class="pat-h">This cycle</div>
+            <div class="dash-grid">
+              <div class="dash-cell">
+                <div class="k">Migraines</div>
+                <div class="v"><span style="font-family:'Fraunces',serif;font-size:24px;color:var(--coral);">3</span></div>
+              </div>
+              <div class="dash-cell">
+                <div class="k">Phase</div>
+                <div class="v"><b>Luteal</b> · day 18</div>
+              </div>
+              <div class="dash-cell wide">
+                <div class="k">Timeline</div>
+                <div class="mini-tl">
+                  <div class="axis"></div>
+                  <div class="luteal" style="left:52%;right:0;"></div>
+                  <div class="mk" style="left:58%"></div>
+                  <div class="mk" style="left:68%"></div>
+                  <div class="mk" style="left:86%"></div>
+                </div>
+              </div>
+              <div class="dash-cell">
+                <div class="k">Top trigger</div>
+                <div class="v"><b>Poor sleep</b> · 3×</div>
+              </div>
+              <div class="dash-cell">
+                <div class="k">Best relief</div>
+                <div class="v"><b>Sumatriptan</b> · 100%</div>
+              </div>
+            </div>
+            <div class="insight-card" style="margin-top:16px;font-size:13px;">All 3 attacks followed <b>poor sleep</b> in the luteal window.</div>
+            <div class="sec">
+              <div class="lbl">All triggers</div>
+              <div class="bar"><span class="nm">Poor sleep</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="n">3</span></div>
+              <div class="bar"><span class="nm">Stress</span><span class="track"><span class="fill" style="width:67%"></span></span><span class="n">2</span></div>
+              <div class="bar"><span class="nm">Skipped meal</span><span class="track"><span class="fill" style="width:33%"></span></span><span class="n">1</span></div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- F · NARRATIVE -->
+<section class="option" id="f">
+  <div class="opt-head">
+    <div class="opt-tag">F · narrative scroll</div>
+    <h2 class="opt-title">Story chapters instead of sections</h2>
+    <p class="opt-sub">Each insight block reads like a short paragraph with a chapter number. Serif headings, muted body copy. Feels like the app is explaining your data to you — less dashboard, more letter.</p>
+    <div class="pros-cons">
+      <span class="chip good">Warm, human tone</span>
+      <span class="chip good">Natural reading order</span>
+      <span class="chip warn">More vertical space</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap narrative">
+      <div class="state-label">Chapter flow</div>
+      <div class="phone tall">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll tall">
+            <div class="pat-h">This cycle</div>
+            <div class="chapter">
+              <div class="ch-num">01 · Timing</div>
+              <div class="ch-title">They cluster in luteal</div>
+              <div class="ch-body">All 3 migraines this cycle happened in the <em>luteal phase</em> — the days before your period when estrogen drops.</div>
+              <div class="inline-tl">
+                <div class="axis"></div>
+                <div class="luteal"></div>
+                <div class="mk" style="left:58%"></div>
+                <div class="mk" style="left:68%"></div>
+                <div class="mk" style="left:86%"></div>
+              </div>
+            </div>
+            <div class="chapter">
+              <div class="ch-num">02 · Triggers</div>
+              <div class="ch-title">Poor sleep came first</div>
+              <div class="ch-body">Before each attack you logged <b>poor sleep</b> (3×), often alongside <b>stress</b> (2×).</div>
+            </div>
+            <div class="chapter">
+              <div class="ch-num">03 · Relief</div>
+              <div class="ch-title">Sumatriptan worked every time</div>
+              <div class="ch-body"><b>Sumatriptan</b> helped 2/2 times. <b>Ibuprofen</b> helped 1/2.</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G · SEGMENTED -->
+<section class="option" id="g">
+  <div class="opt-head">
+    <div class="opt-tag">G · segmented detail</div>
+    <h2 class="opt-title">Tabs for timing / triggers / relief</h2>
+    <p class="opt-sub">A segmented control lets users drill into one dimension at a time. Reduces scroll length; good if the screen feels crowded with four sections stacked.</p>
+    <div class="pros-cons">
+      <span class="chip good">Less scroll fatigue</span>
+      <span class="chip good">Focused detail views</span>
+      <span class="chip warn">Hides cross-section insight</span>
+    </div>
+  </div>
+  <div class="phones-row">
+    <div class="frame-wrap">
+      <div class="state-label">Triggers tab selected</div>
+      <div class="phone std">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll">
+            <div class="pat-h">This cycle</div>
+            <div class="insight-card" style="margin-top:12px;font-size:13px;">All 3 attacks followed <b>poor sleep</b> in the luteal window.</div>
+            <div class="seg-tabs">
+              <div class="seg-tab">Timing</div>
+              <div class="seg-tab on">Triggers</div>
+              <div class="seg-tab">Relief</div>
+            </div>
+            <div class="seg-panel">
+              <div class="lbl">Logged before migraines</div>
+              <div style="margin-top:10px;">
+                <span class="trigger-chip">Poor sleep <span class="n">3</span></span>
+                <span class="trigger-chip">Stress <span class="n">2</span></span>
+                <span class="trigger-chip">Skipped meal <span class="n">1</span></span>
+              </div>
+              <div class="bar" style="margin-top:16px;"><span class="nm">Poor sleep</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="n">3</span></div>
+              <div class="bar"><span class="nm">Stress</span><span class="track"><span class="fill" style="width:67%"></span></span><span class="n">2</span></div>
+              <div class="bar"><span class="nm">Skipped meal</span><span class="track"><span class="fill" style="width:33%"></span></span><span class="n">1</span></div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-wrap">
+      <div class="state-label">Timing tab (alternate)</div>
+      <div class="phone std">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="dots">●●●</span></div>
+        <div class="screen">
+          <div class="nav-title">Patterns</div>
+          <div class="screen-scroll">
+            <div class="pat-h">This cycle</div>
+            <div class="insight-card" style="margin-top:12px;font-size:13px;">All 3 attacks followed <b>poor sleep</b> in the luteal window.</div>
+            <div class="seg-tabs">
+              <div class="seg-tab on">Timing</div>
+              <div class="seg-tab">Triggers</div>
+              <div class="seg-tab">Relief</div>
+            </div>
+            <div class="seg-panel">
+              <div class="timeline-card" style="margin-top:0;border:none;background:transparent;padding:0;">
+                <div class="cap">Your migraines <b>cluster in the luteal phase</b> — all 3 this cycle.</div>
+                <div class="tl">
+                  <span class="day0">day 1</span>
+                  <div class="axis"></div>
+                  <div class="luteal" style="left:52%;right:0;"></div>
+                  <div class="mk" style="left:58%"></div>
+                  <div class="mk" style="left:68%"></div>
+                  <div class="mk" style="left:86%"></div>
+                </div>
+                <div class="tl-labels">
+                  <span style="width:17.86%">menstrual</span>
+                  <span style="width:32.14%">follicular</span>
+                  <span class="accent" style="width:50%">luteal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">☀</span>Today</div>
+            <div class="tab on"><span class="ic">◠</span>Patterns</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  Open in browser: <code style="font-family:'JetBrains Mono',monospace;color:var(--muted);">docs/symptom-tracker-patterns-designs.html</code>
+  · Implementation states (empty, waiting, paywall) in <a href="symptom-tracker-patterns-mocks.html" style="color:var(--coral);text-decoration:none;">symptom-tracker-patterns-mocks.html</a>
+  · 3-tab bar matches <code style="font-family:'JetBrains Mono',monospace;color:var(--muted);">MainTabView.swift</code>
+</footer>
+
+</body>
+</html>

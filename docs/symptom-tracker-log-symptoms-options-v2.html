@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Log symptoms · UI options (part 2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0E0B12;--ink:#1A1620;--surface:#241E2C;--raised:#2C2533;--line:#3A3242;
+    --text:#EDE6F0;--muted:#A99FB0;--faint:#776E80;
+    --coral:#E89B8B;--coral-dim:#2E2229;--coral-border:#7d4f48;
+    --lav:#9D8FC7;--lav-dim:#241f33;--lav-border:#4c4466;--sage:#8FB1A0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+  body{background:var(--page);color:var(--text);font-family:"Figtree",system-ui,sans-serif;line-height:1.45;padding:56px 28px 100px;}
+
+  .board-head{max-width:1180px;margin:0 auto 40px;}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--lav);margin-bottom:18px;}
+  .board-head h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(32px,5vw,52px);line-height:1.05;max-width:24ch;}
+  .board-head h1 em{font-style:italic;color:var(--coral);}
+  .board-head p{color:var(--muted);max-width:68ch;margin-top:18px;font-size:16px;}
+  .part-link{margin-top:20px;font-size:14px;}
+  .part-link a{color:var(--coral);text-decoration:none;font-weight:600;}
+  .part-link a:hover{text-decoration:underline;}
+
+  .nav-strip{max-width:1180px;margin:0 auto 48px;display:flex;flex-wrap:wrap;gap:8px;}
+  .nav-strip a{font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--ink);}
+  .nav-strip a.on{color:var(--text);border-color:var(--coral);background:var(--coral-dim);}
+
+  .option{max-width:1180px;margin:0 auto 72px;scroll-margin-top:24px;}
+  .opt-head{margin-bottom:28px;}
+  .opt-tag{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+  .opt-tag.rec{color:var(--coral);}
+  .opt-title{font-family:"Fraunces",serif;font-size:clamp(24px,3vw,32px);font-weight:500;line-height:1.1;}
+  .opt-sub{color:var(--muted);font-size:14.5px;margin-top:10px;max-width:54ch;line-height:1.55;}
+  .pros-cons{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;}
+  .chip{font-size:12px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .chip.good{border-color:#3d5a4a;color:var(--sage);}
+  .chip.warn{border-color:var(--coral-border);color:var(--coral);}
+
+  .phones-row{display:flex;flex-wrap:wrap;gap:38px;justify-content:center;}
+  .frame-wrap{display:flex;flex-direction:column;gap:14px;width:330px;}
+  .state-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding-left:4px;}
+
+  .phone{width:330px;height:715px;border-radius:46px;background:var(--ink);border:1px solid #312938;box-shadow:0 0 0 9px #16121b,0 30px 70px -30px #000,inset 0 0 0 1px #00000040;position:relative;overflow:hidden;}
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:18px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;z-index:30;}
+  .screen{position:absolute;inset:0;padding:58px 0 0;display:flex;flex-direction:column;overflow:hidden;}
+
+  .nav-bar{display:flex;align-items:center;justify-content:space-between;padding:0 18px 10px;border-bottom:1px solid var(--line);flex:0 0 auto;}
+  .nav-bar .cancel,.nav-bar .save{font-size:15px;font-weight:500;}
+  .nav-bar .cancel{color:var(--muted);}
+  .nav-bar .save{color:var(--coral);font-weight:600;}
+  .nav-bar .title{font-family:"Fraunces",serif;font-size:16px;font-weight:500;}
+
+  .scr-body{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:0 18px;position:relative;}
+  .scr-scroll{flex:1;overflow-y:auto;padding:14px 0 18px;}
+  .hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:14px;}
+  .fl{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+  .pills{display:flex;flex-wrap:wrap;gap:6px;}
+  .pill{font-size:12px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .pill.on{color:#2a1714;background:var(--coral);border-color:var(--coral);font-weight:600;}
+  .sev-meter{display:flex;gap:5px;}
+  .sev-meter .s{flex:1;height:32px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);}
+  .sev-meter .s.cur{background:var(--coral);border-color:var(--coral);color:#2a1714;font-weight:600;}
+  .save-bar{margin-top:auto;padding:12px 18px 22px;border-top:1px solid var(--line);background:var(--ink);flex:0 0 auto;z-index:10;}
+  .save-btn{background:var(--coral);color:#2a1714;border-radius:14px;padding:14px;text-align:center;font-weight:700;font-size:15px;}
+  .save-btn .k{font-weight:400;font-size:11px;opacity:.7;margin-top:2px;}
+  .talk-card{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;}
+  .talk-card .mic{width:44px;height:44px;border-radius:50%;background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;}
+  .talk-card .t{font-size:13.5px;font-weight:600;}
+  .talk-card .s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+  /* H · Bottom sheet */
+  .summary-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;}
+  .summary-card.filled{border-color:#4a3f52;}
+  .summary-card.ghost{border-style:dashed;opacity:.7;}
+  .summary-card .ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;background:var(--coral-dim);}
+  .summary-card .ic.lav{background:var(--lav-dim);}
+  .summary-card .meta{flex:1;min-width:0;}
+  .summary-card .meta .t{font-size:14px;font-weight:600;}
+  .summary-card .meta .s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .summary-card .chev{color:var(--faint);font-size:14px;}
+  .sheet-overlay{position:absolute;inset:0;background:#00000088;z-index:20;}
+  .bottom-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--raised);border-radius:20px 20px 0 0;border-top:1px solid var(--line);padding:10px 18px 24px;z-index:25;max-height:72%;}
+  .sheet-grab{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 14px;}
+  .sheet-title{font-family:"Fraunces",serif;font-size:18px;font-weight:500;margin-bottom:14px;}
+  .field{margin-bottom:14px;}
+
+  /* I · One question */
+  .focus-screen{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 8px 0;flex:1;}
+  .prog-bar{width:100%;height:3px;background:var(--line);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .prog-bar .fill{height:100%;width:35%;background:var(--coral);border-radius:2px;}
+  .focus-q{font-family:"Fraunces",serif;font-size:26px;font-weight:500;line-height:1.2;margin-bottom:8px;}
+  .focus-sub{font-size:13px;color:var(--muted);margin-bottom:32px;max-width:24ch;}
+  .big-choice{display:flex;gap:12px;width:100%;}
+  .big-btn{flex:1;padding:22px 12px;border-radius:16px;border:1px solid var(--line);font-size:16px;font-weight:600;color:var(--muted);}
+  .big-btn.on{background:var(--coral);border-color:var(--coral);color:#2a1714;}
+  .focus-nav{width:100%;margin-top:auto;padding-top:20px;display:flex;justify-content:space-between;align-items:center;}
+  .focus-nav .back{font-size:14px;color:var(--faint);}
+  .focus-nav .next{background:var(--coral);color:#2a1714;padding:12px 22px;border-radius:12px;font-weight:700;font-size:14px;}
+
+  /* J · Sentence builder */
+  .sentence{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 16px;font-family:"Fraunces",serif;font-size:17px;line-height:1.65;margin-bottom:16px;}
+  .sentence .slot{display:inline;background:var(--coral-dim);border:1px solid var(--coral-border);color:var(--coral);padding:2px 8px;border-radius:8px;font-weight:600;cursor:pointer;}
+  .sentence .slot.lav{background:var(--lav-dim);border-color:var(--lav-border);color:var(--lav);}
+  .sentence .slot.dim{color:var(--faint);border-color:var(--line);background:transparent;font-weight:400;font-style:italic;}
+  .slot-picker{margin-top:8px;}
+  .slot-picker .pills .pill{font-size:11.5px;padding:6px 11px;}
+
+  /* K · Body map */
+  .body-map{display:flex;justify-content:center;margin:8px 0 16px;}
+  .head-svg{position:relative;width:140px;height:160px;}
+  .head-outline{width:100%;height:100%;}
+  .head-zone{fill:transparent;stroke:var(--line);stroke-width:1.5;cursor:pointer;transition:fill .15s;}
+  .head-zone.on{fill:var(--coral-dim);stroke:var(--coral);}
+  .head-zone:hover{fill:#2e2229;}
+  .slider-wrap{margin:16px 0;}
+  .slider-track{height:8px;background:var(--line);border-radius:4px;position:relative;}
+  .slider-fill{position:absolute;left:0;top:0;height:100%;width:50%;background:linear-gradient(90deg,var(--coral-dim),var(--coral));border-radius:4px;}
+  .slider-thumb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--coral);box-shadow:0 0 12px var(--coral);}
+  .slider-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:8px;font-family:"JetBrains Mono",monospace;}
+
+  /* L · Smart suggestions */
+  .smart-banner{background:linear-gradient(135deg,var(--lav-dim),var(--coral-dim));border:1px solid var(--lav-border);border-radius:16px;padding:14px;margin-bottom:16px;}
+  .smart-banner .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--lav);margin-bottom:6px;}
+  .smart-banner .txt{font-size:13.5px;line-height:1.5;color:var(--text);}
+  .smart-banner .txt b{color:var(--coral);font-weight:600;}
+  .suggest-row{display:flex;gap:8px;margin-top:12px;}
+  .suggest-btn{flex:1;padding:10px 8px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:600;text-align:center;color:var(--text);}
+  .suggest-btn.primary{background:var(--coral);border-color:var(--coral);color:#2a1714;}
+  .mini-summary{font-size:12px;color:var(--muted);padding:10px 12px;background:#201a28;border-radius:10px;margin-bottom:12px;}
+
+  /* M · Settings rows */
+  .set-group{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px;}
+  .set-group .grp-label{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding:10px 14px 6px;}
+  .set-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-top:1px solid var(--line);font-size:14px;}
+  .set-row:first-of-type{border-top:none;}
+  .set-row .lbl{color:var(--text);}
+  .set-row .val{font-size:13px;color:var(--coral);display:flex;align-items:center;gap:6px;}
+  .set-row .val.empty{color:var(--faint);font-style:italic;}
+  .set-row .val.lav{color:var(--lav);}
+  .set-row .chev{color:var(--faint);font-size:13px;}
+
+  /* N · Chip builder */
+  .empty-state{text-align:center;padding:28px 12px;color:var(--muted);font-size:13.5px;line-height:1.55;}
+  .empty-state .em{font-size:32px;margin-bottom:10px;opacity:.6;}
+  .chip-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .add-chip{font-size:12px;padding:8px 14px;border-radius:999px;border:1px dashed var(--line);color:var(--muted);display:flex;align-items:center;gap:5px;}
+  .add-chip .plus{color:var(--coral);font-weight:700;}
+  .logged-chip{font-size:12px;padding:8px 14px;border-radius:999px;background:var(--coral-dim);border:1px solid var(--coral-border);color:var(--coral);font-weight:600;display:flex;align-items:center;gap:6px;}
+  .logged-chip.lav{background:var(--lav-dim);border-color:var(--lav-border);color:var(--lav);}
+  .logged-chip .x{opacity:.6;font-size:10px;}
+
+  /* O · Severity hero */
+  .hero-sev{text-align:center;padding:10px 0 20px;}
+  .hero-num{font-family:"Fraunces",serif;font-size:72px;line-height:1;color:var(--coral);}
+  .hero-label{font-size:14px;color:var(--muted);margin-top:4px;}
+  .hero-caption{font-size:12px;color:var(--faint);font-style:italic;margin-top:2px;}
+  .hero-slider{margin:0 8px;}
+  .hero-toggle{display:flex;justify-content:center;gap:10px;margin-bottom:20px;}
+  .hero-toggle .tg{padding:10px 20px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);}
+  .hero-toggle .tg.on{background:var(--coral-dim);border-color:var(--coral);color:var(--coral);}
+  .details-fab{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--muted);padding:12px;margin-top:auto;}
+
+  .footer{max-width:1180px;margin:64px auto 0;padding-top:28px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer .fm{font-family:"JetBrains Mono",monospace;}
+</style>
+</head>
+<body>
+
+  <header class="board-head">
+    <div class="kicker">Log symptoms · UI exploration · part 2</div>
+    <h1>Seven more ways to <em>breathe</em>.</h1>
+    <p>Round two — different interaction models: bottom sheets, one-question focus, sentence templates, a body map, pattern shortcuts, Settings-style rows, chip building, and a severity-first hero.</p>
+    <p class="part-link">← <a href="symptom-tracker-log-symptoms-options.html">Part 1</a> · <a href="symptom-tracker-log-symptoms-merged-ILJK.html" style="color:var(--sage)">Merged I+L+J+K ★</a></p>
+  </header>
+
+  <nav class="nav-strip">
+    <a href="#sheet">H · Sheets</a>
+    <a href="#focus" class="on">I · One question</a>
+    <a href="#sentence">J · Sentence</a>
+    <a href="#body">K · Body map</a>
+    <a href="#smart">L · Smart fill</a>
+    <a href="#settings">M · Settings rows</a>
+    <a href="#chips">N · Chip builder</a>
+    <a href="#hero">O · Severity hero</a>
+  </nav>
+
+  <!-- H · BOTTOM SHEET -->
+  <section class="option" id="sheet">
+    <div class="opt-head">
+      <div class="opt-tag rec">H · Summary cards + bottom sheet</div>
+      <h2 class="opt-title">Main screen is almost empty — edit in a sheet</h2>
+      <p class="opt-sub">Three tappable summary cards (Headache, Cycle, Context). Tap one → bottom sheet slides up with that field group. Zero pills on the main view until you choose to edit.</p>
+      <div class="pros-cons">
+        <span class="chip good">Calmest default surface</span>
+        <span class="chip good">Native iOS sheet pattern</span>
+        <span class="chip warn">Sheet + main = two layers of navigation</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Main · 3 cards only</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="talk-card"><div class="mic">🎙</div><div><div class="t">Talk</div><div class="s">Say how you feel</div></div></div>
+                <div class="hint">Tap a card to add or edit.</div>
+                <div class="summary-card filled"><div class="ic">🤕</div><div class="meta"><div class="t">Headache</div><div class="s">Right · throbbing · 3/5</div></div><span class="chev">›</span></div>
+                <div class="summary-card ghost"><div class="ic lav">🩸</div><div class="meta"><div class="t">Cycle</div><div class="s">Tap to add bleeding or cramps</div></div><span class="chev">›</span></div>
+                <div class="summary-card filled"><div class="ic">📝</div><div class="meta"><div class="t">Context</div><div class="s">Poor sleep · Ibuprofen</div></div><span class="chev">›</span></div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save<div class="k">5 fields</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-wrap">
+        <div class="state-label">Headache sheet open</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll" style="opacity:.35;">
+                <div class="summary-card filled"><div class="ic">🤕</div><div class="meta"><div class="t">Headache</div><div class="s">Right · 3/5</div></div></div>
+                <div class="summary-card ghost"><div class="ic lav">🩸</div><div class="meta"><div class="t">Cycle</div></div></div>
+              </div>
+              <div class="sheet-overlay"></div>
+              <div class="bottom-sheet">
+                <div class="sheet-grab"></div>
+                <div class="sheet-title">Headache</div>
+                <div class="field"><div class="fl">Migraine / headache</div><div class="pills"><span class="pill on">Yes</span><span class="pill">No</span></div></div>
+                <div class="field"><div class="fl">Severity</div><div class="sev-meter"><div class="s">1</div><div class="s">2</div><div class="s cur">3</div><div class="s">4</div><div class="s">5</div></div></div>
+                <div class="field"><div class="fl">Location</div><div class="pills"><span class="pill on">Right side</span><span class="pill">Left side</span><span class="pill">Temple</span><span class="pill">Behind eye</span></div></div>
+                <div class="field"><div class="fl">Pain quality</div><div class="pills"><span class="pill on">Throbbing</span><span class="pill">Dull</span><span class="pill">Sharp</span><span class="pill">Pressure</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- I · ONE QUESTION -->
+  <section class="option" id="focus">
+    <div class="opt-head">
+      <div class="opt-tag">I · One question at a time</div>
+      <h2 class="opt-title">Full-screen focus — like Talk, but for tap</h2>
+      <p class="opt-sub">Each schema field gets the whole screen: large question, two big answers or a scale. Thin progress bar at top. Back/Next at bottom. Maximum calm, minimum peripheral noise.</p>
+      <div class="pros-cons">
+        <span class="chip good">1–5 controls per screen</span>
+        <span class="chip good">Matches Talk’s “one thing at a time” energy</span>
+        <span class="chip warn">Slowest for power users</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Question 2 · Severity</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body focus-screen">
+              <div class="prog-bar"><div class="fill"></div></div>
+              <div class="focus-q">How bad is it?</div>
+              <div class="focus-sub">1 is barely there. 5 is disabling.</div>
+              <div class="sev-meter" style="width:100%;margin-bottom:8px;">
+                <div class="s">1</div><div class="s">2</div><div class="s cur">3</div><div class="s">4</div><div class="s">5</div>
+              </div>
+              <div style="font-size:12px;color:var(--faint);font-style:italic;">“moderate”</div>
+              <div class="focus-nav"><span class="back">← Back</span><span class="next">Next →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-wrap">
+        <div class="state-label">Question 1 · Headache?</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body focus-screen">
+              <div class="prog-bar"><div class="fill" style="width:12%"></div></div>
+              <div class="focus-q">Any headache right now?</div>
+              <div class="focus-sub">Skip if not — you can always come back.</div>
+              <div class="big-choice">
+                <div class="big-btn on">Yes</div>
+                <div class="big-btn">No</div>
+              </div>
+              <div class="focus-nav"><span class="back" style="visibility:hidden">←</span><span class="next">Next →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- J · SENTENCE -->
+  <section class="option" id="sentence">
+    <div class="opt-head">
+      <div class="opt-tag rec">J · Sentence builder</div>
+      <h2 class="opt-title">Fill in the blanks — one readable line</h2>
+      <p class="opt-sub">Natural-language template: tap a highlighted slot to change it. Pills appear only for the slot you’re editing. The entry reads like a sentence, not a form.</p>
+      <div class="pros-cons">
+        <span class="chip good">Feels conversational, not clinical</span>
+        <span class="chip good">Only one field’s pills visible at a time</span>
+        <span class="chip warn">Harder to map every schema field to grammar</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Editing location slot</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="talk-card"><div class="mic">🎙</div><div><div class="t">Talk</div><div class="s">Or build it below</div></div></div>
+                <div class="sentence">
+                  I'm having a <span class="slot">3/5</span> headache on my <span class="slot">right side</span>, <span class="slot">throbbing</span>.
+                  <br><br>
+                  Bleeding: <span class="slot lav dim">none</span>.
+                  Took <span class="slot dim">—</span>.
+                </div>
+                <div class="slot-picker">
+                  <div class="fl">Pick location</div>
+                  <div class="pills"><span class="pill on">Right side</span><span class="pill">Left side</span><span class="pill">Both sides</span><span class="pill">Temple</span><span class="pill">Behind eye</span></div>
+                </div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- K · BODY MAP -->
+  <section class="option" id="body">
+    <div class="opt-head">
+      <div class="opt-tag">K · Body map + slider</div>
+      <h2 class="opt-title">Tap your head — not eight location pills</h2>
+      <p class="opt-sub">Simple head diagram with tappable zones replaces the location pill grid. Severity is one slider instead of five segments. Quality and aura collapse behind “More about this headache.”</p>
+      <div class="pros-cons">
+        <span class="chip good">Spatial, intuitive for location</span>
+        <span class="chip good">Cuts ~10 pills from headache block</span>
+        <span class="chip warn">Custom illustration to maintain</span>
+        <span class="chip warn">Bilateral / neck less obvious</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Headache quick path</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="field"><div class="fl">Where does it hurt?</div>
+                  <div class="body-map">
+                    <svg class="head-svg" viewBox="0 0 140 160">
+                      <ellipse cx="70" cy="88" rx="52" ry="62" fill="#2a2431" stroke="#3A3242" stroke-width="1.5"/>
+                      <ellipse class="head-zone on" cx="92" cy="78" rx="18" ry="22" stroke="#E89B8B"/>
+                      <ellipse class="head-zone" cx="48" cy="78" rx="18" ry="22"/>
+                      <ellipse class="head-zone" cx="70" cy="52" rx="22" ry="16"/>
+                      <ellipse class="head-zone" cx="58" cy="68" rx="10" ry="10"/>
+                      <ellipse class="head-zone" cx="82" cy="68" rx="10" ry="10"/>
+                      <path class="head-zone" d="M55 108 Q70 128 85 108" fill="none"/>
+                      <text x="92" y="82" text-anchor="middle" fill="#E89B8B" font-size="9" font-family="Figtree">R</text>
+                    </svg>
+                  </div>
+                </div>
+                <div class="field"><div class="fl">Severity</div>
+                  <div class="slider-wrap hero-slider">
+                    <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div></div>
+                    <div class="slider-labels"><span>barely</span><span>disabling</span></div>
+                  </div>
+                </div>
+                <div style="text-align:center;font-size:13px;color:var(--coral);font-weight:600;padding:8px;">+ More about this headache</div>
+                <div class="field"><div class="fl lav">Bleeding</div><div class="pills"><span class="pill">None</span><span class="pill">Spotting</span><span class="pill">Light</span><span class="pill">Medium</span><span class="pill">Heavy</span></div></div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save<div class="k">Right · 3/5</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- L · SMART -->
+  <section class="option" id="smart">
+    <div class="opt-head">
+      <div class="opt-tag">L · Pattern shortcut</div>
+      <h2 class="opt-title">“Log like last time” — one tap to pre-fill</h2>
+      <p class="opt-sub">Banner at top uses your Patterns data: “Your last 3 luteal migraines looked like this.” One tap pre-fills; then edit anything. Empty users see Talk + manual cards instead.</p>
+      <div class="pros-cons">
+        <span class="chip good">Fastest repeat logging</span>
+        <span class="chip good">Connects logging to Patterns value</span>
+        <span class="chip warn">Needs enough history to be useful</span>
+        <span class="chip warn">Pre-fill must stay clearly editable</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Returning user · luteal</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="smart-banner">
+                  <div class="tag">Luteal · day 24</div>
+                  <div class="txt">Your last 3 migraines here were <b>right-sided, throbbing, ~3/5</b> — often after poor sleep.</div>
+                  <div class="suggest-row">
+                    <div class="suggest-btn primary">Log like last time</div>
+                    <div class="suggest-btn">Start blank</div>
+                  </div>
+                </div>
+                <div class="mini-summary">Pre-filled: Right · Throbbing · 3/5 · Poor sleep — tap any row to change</div>
+                <div class="set-group">
+                  <div class="set-row"><span class="lbl">Headache</span><span class="val">Yes <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Severity</span><span class="val">3 / 5 <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Location</span><span class="val">Right side <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Triggers</span><span class="val">Poor sleep <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Cycle</span><span class="val empty">Not set <span class="chev">›</span></span></div>
+                </div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save<div class="k">4 fields pre-filled · review &amp; save</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- M · SETTINGS ROWS -->
+  <section class="option" id="settings">
+    <div class="opt-head">
+      <div class="opt-tag">M · Settings-style rows</div>
+      <h2 class="opt-title">Zero pills on the main screen — drill in</h2>
+      <p class="opt-sub">iOS Settings pattern: each field is a row showing current value (or “Not set”). Tap row → push or sheet with that field’s control. Main screen is ~10 rows, very scannable.</p>
+      <div class="pros-cons">
+        <span class="chip good">Very familiar on iOS</span>
+        <span class="chip good">Shows what’s filled at a glance</span>
+        <span class="chip warn">Extra navigation per field</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Main · all rows</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="talk-card"><div class="mic">🎙</div><div><div class="t">Talk</div><div class="s">Say how you feel</div></div></div>
+                <div class="set-group">
+                  <div class="grp-label">Headache</div>
+                  <div class="set-row"><span class="lbl">Migraine / headache</span><span class="val">Yes <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Severity</span><span class="val">3 / 5 <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Location</span><span class="val">Right side <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Pain quality</span><span class="val">Throbbing <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Aura</span><span class="val empty">Not set <span class="chev">›</span></span></div>
+                </div>
+                <div class="set-group">
+                  <div class="grp-label">Cycle</div>
+                  <div class="set-row"><span class="lbl">Bleeding</span><span class="val lav empty">Not set <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Cramps</span><span class="val lav empty">Not set <span class="chev">›</span></span></div>
+                </div>
+                <div class="set-group">
+                  <div class="grp-label">Context</div>
+                  <div class="set-row"><span class="lbl">Triggers</span><span class="val">Poor sleep <span class="chev">›</span></span></div>
+                  <div class="set-row"><span class="lbl">Relief taken</span><span class="val empty">Not set <span class="chev">›</span></span></div>
+                </div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-wrap">
+        <div class="state-label">Drill-in · Location</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">‹ Log</span><span class="title">Location</span><span class="save">Done</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="hint">Select all that apply.</div>
+                <div class="set-group">
+                  <div class="set-row"><span class="lbl">Right side</span><span class="val" style="color:var(--coral)">✓</span></div>
+                  <div class="set-row"><span class="lbl">Left side</span><span class="val"></span></div>
+                  <div class="set-row"><span class="lbl">Both sides</span><span class="val"></span></div>
+                  <div class="set-row"><span class="lbl">Behind the eye</span><span class="val"></span></div>
+                  <div class="set-row"><span class="lbl">Temple</span><span class="val"></span></div>
+                  <div class="set-row"><span class="lbl">Forehead</span><span class="val"></span></div>
+                  <div class="set-row"><span class="lbl">Jaw / teeth</span><span class="val"></span></div>
+                  <div class="set-row"><span class="lbl">Neck</span><span class="val"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- N · CHIP BUILDER -->
+  <section class="option" id="chips">
+    <div class="opt-head">
+      <div class="opt-tag">N · Build from empty</div>
+      <h2 class="opt-title">Start blank — add only what matters</h2>
+      <p class="opt-sub">Inverse of the current form: screen starts empty. Tap “+ Headache”, “+ Period”, “+ Triggers” to add categories. Each becomes an editable chip; tap chip to open its fields. Nothing you don’t ask for.</p>
+      <div class="pros-cons">
+        <span class="chip good">Zero noise for minimal logs</span>
+        <span class="chip good">Grows with user intent</span>
+        <span class="chip warn">Discoverability of “+ Period” etc.</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Empty start</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="talk-card"><div class="mic">🎙</div><div><div class="t">Talk</div><div class="s">Fastest way in</div></div></div>
+                <div class="empty-state"><div class="em">○</div>Nothing added yet.<br>Add what’s happening right now.</div>
+                <div class="chip-bar">
+                  <div class="add-chip"><span class="plus">+</span> Headache</div>
+                  <div class="add-chip"><span class="plus">+</span> Period</div>
+                  <div class="add-chip"><span class="plus">+</span> Triggers</div>
+                  <div class="add-chip"><span class="plus">+</span> Relief</div>
+                  <div class="add-chip"><span class="plus">+</span> Other symptoms</div>
+                </div>
+              </div>
+              <div class="save-bar"><div class="save-btn" style="opacity:.45;">Save<div class="k">add something first</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-wrap">
+        <div class="state-label">Two categories added</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll">
+                <div class="chip-bar" style="margin-bottom:16px;">
+                  <div class="logged-chip">🤕 Right · 3/5 <span class="x">✕</span></div>
+                  <div class="logged-chip lav">🩸 Medium flow <span class="x">✕</span></div>
+                  <div class="add-chip"><span class="plus">+</span> Add</div>
+                </div>
+                <div class="field"><div class="fl">Edit headache</div>
+                  <div class="pills"><span class="pill on">Right side</span><span class="pill on">Throbbing</span><span class="pill">Sharp</span></div>
+                  <div class="sev-meter" style="margin-top:8px;"><div class="s">1</div><div class="s">2</div><div class="s cur">3</div><div class="s">4</div><div class="s">5</div></div>
+                </div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save<div class="k">Headache + Period</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- O · SEVERITY HERO -->
+  <section class="option" id="hero">
+    <div class="opt-head">
+      <div class="opt-tag rec">O · Severity-first hero</div>
+      <h2 class="opt-title">Big number, one slider — details tucked away</h2>
+      <p class="opt-sub">For the common case (“I have a headache, it’s a 3”): giant severity readout, Yes/No toggle, Talk card. Everything else behind “Add details” at the bottom. Optimized for the 80% path.</p>
+      <div class="pros-cons">
+        <span class="chip good">3 controls cover most logs</span>
+        <span class="chip good">Strong visual hierarchy</span>
+        <span class="chip warn">Cycle/triggers not visible by default</span>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="frame-wrap">
+        <div class="state-label">Default · migraine yes</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="statusbar"><span>21:18</span><span>􀙇</span></div>
+          <div class="screen">
+            <div class="nav-bar"><span class="cancel">Close</span><span class="title">Log symptoms</span><span class="save">Save</span></div>
+            <div class="scr-body">
+              <div class="scr-scroll" style="display:flex;flex-direction:column;min-height:100%;">
+                <div class="hero-toggle"><span class="tg on">Headache</span><span class="tg">No headache</span></div>
+                <div class="hero-sev">
+                  <div class="hero-num">3</div>
+                  <div class="hero-label">out of 5</div>
+                  <div class="hero-caption">moderate</div>
+                </div>
+                <div class="hero-slider slider-wrap">
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div></div>
+                  <div class="slider-labels"><span>barely there</span><span>disabling</span></div>
+                </div>
+                <div class="talk-card" style="margin-top:8px;"><div class="mic">🎙</div><div><div class="t">Or say it</div><div class="s">Talk fills the details</div></div></div>
+                <div class="details-fab">＋ Add location, cycle, triggers, relief…</div>
+              </div>
+              <div class="save-bar"><div class="save-btn">Save<div class="k">Headache · 3/5</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span class="fm">EBB · log symptoms UI · part 2</span>
+    <span>H–O · same schema · <a href="symptom-tracker-log-symptoms-options.html" style="color:var(--coral)">part 1</a></span>
+  </footer>
+
+</body>
+</html>
