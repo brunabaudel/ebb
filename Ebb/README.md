@@ -19,7 +19,7 @@ Ebb/
   DesignSystem/   Theme tokens, FieldControl, phase ring, entry card
   Features/       Today, Calendar, Patterns, Settings, Log, Debug
 EbbTests/         Swift Testing unit tests
-ci/               Fastlane helper scripts
+ci/               CI helper scripts
 fastlane/         Codemagic CI lanes
 ```
 
@@ -39,10 +39,10 @@ xcodebuild test \
   -destination "$DEST"
 ```
 
-## Deploy to your iPhone (TestFlight)
+## Install on your iPhone (Codemagic Ad Hoc)
 
-1. Complete one-time setup in [CODEMAGIC_SETUP.md](CODEMAGIC_SETUP.md)
-2. Push to branch **`main`** (or start **Ebb — TestFlight** manually in Codemagic)
-3. Install **Ebbie** from the TestFlight app on your iPhone
+An unsigned build cannot be installed on a physical iPhone. Use Codemagic to produce a signed Ad Hoc IPA:
 
-For a direct device install without TestFlight, run **Ebb — Ad Hoc (install on device)** in Codemagic and sideload the `.ipa` artifact.
+1. Complete one-time setup in [CODEMAGIC_SETUP.md](CODEMAGIC_SETUP.md) — upload an Apple Distribution certificate and an Ad Hoc provisioning profile (with your iPhone UDID) in Codemagic **Code signing identities**.
+2. Start **Ebb — Ad Hoc (install on device)** manually in Codemagic.
+3. Download the `.ipa` from build artifacts and install via **Finder** or **Apple Configurator**.
