@@ -1,0 +1,101 @@
+# Codemagic CI for the Ebb iOS app (branch main).
+# One-time dashboard setup: Ebb/CODEMAGIC_SETUP.md
+#
+# Signing and TestFlight uploads run through Fastlane (Ebb/fastlane/Fastfile).
+# The only credential you add in Codemagic is the App Store Connect API key
+# named "ebb" under Team integrations → Developer Portal.
+
+workflows:
+  ebb-unit-tests:
+    name: Ebb — Unit tests
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    working_directory: Ebb
+    environment:
+      xcode: latest
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+      cancel_previous_builds: true
+    when:
+      changeset:
+        includes:
+          - Ebb/**
+          - codemagic.yaml
+    scripts:
+      - name: Install dependencies
+        script: |
+          set -euo pipefail
+          gem install bundler --no-document
+          bundle install --jobs 4 --retry 3
+      - name: Run unit tests
+        script: bundle exec fastlane test
+
+  ebb-testflight:
+    name: Ebb — TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    working_directory: Ebb
+    integrations:
+      # Injects APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID,
+      # and APP_STORE_CONNECT_PRIVATE_KEY for Fastlane.
+      app_store_connect: ebb
+    environment:
+      xcode: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+      cancel_previous_builds: true
+    when:
+      changeset:
+        includes:
+          - Ebb/**
+          - codemagic.yaml
+    scripts:
+      - name: Install dependencies
+        script: |
+          set -euo pipefail
+          gem install bundler --no-document
+          bundle install --jobs 4 --retry 3
+      - name: Build and upload to TestFlight
+        script: bundle exec fastlane beta
+    artifacts:
+      - fastlane/output/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+  ebb-adhoc-device:
+    name: Ebb — Ad Hoc (install on device)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    working_directory: Ebb
+    integrations:
+      app_store_connect: ebb
+    environment:
+      xcode: latest
+    # Manual start only — download the IPA from build artifacts and install via Finder or Apple Configurator.
+    scripts:
+      - name: Install dependencies
+        script: |
+          set -euo pipefail
+          gem install bundler --no-document
+          bundle install --jobs 4 --retry 3
+      - name: Build Ad Hoc IPA
+        script: bundle exec fastlane adhoc
+    artifacts:
+      - fastlane/output/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - brubaudel@gmail.com
+        notify:
+          success: true
+          failure: true
