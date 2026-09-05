@@ -1,16 +1,18 @@
 # Codemagic CI for the Ebb iOS app (branch main).
 # One-time dashboard setup: Ebb/CODEMAGIC_SETUP.md
+#
+# Signing and TestFlight uploads run through Fastlane (Ebb/fastlane/Fastfile).
+# The only credential you add in Codemagic is the App Store Connect API key
+# named "ebb" under Team integrations → Developer Portal.
 
 workflows:
   ebb-unit-tests:
     name: Ebb — Unit tests
     max_build_duration: 30
     instance_type: mac_mini_m2
+    working_directory: Ebb
     environment:
       xcode: latest
-      vars:
-        XCODE_PROJECT: Ebb/Ebb.xcodeproj
-        XCODE_SCHEME: Ebb
     triggering:
       events:
         - push
@@ -26,36 +28,24 @@ workflows:
           - Ebb/**
           - codemagic.yaml
     scripts:
-      - name: Run unit tests on iOS Simulator
+      - name: Install dependencies
         script: |
           set -euo pipefail
-          DESTINATION="$(bash Ebb/ci/resolve_simulator_destination.sh)"
-          xcodebuild test \
-            -project "$XCODE_PROJECT" \
-            -scheme "$XCODE_SCHEME" \
-            -configuration Debug \
-            -destination "$DESTINATION" \
-            -derivedDataPath /tmp/DerivedData \
-            CODE_SIGNING_ALLOWED=NO
+          gem install bundler --no-document
+          bundle install --jobs 4 --retry 3
+      - name: Run unit tests
+        script: bundle exec fastlane test
 
   ebb-testflight:
     name: Ebb — TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m2
+    working_directory: Ebb
     integrations:
-      # Must match the API key name in Codemagic → Team integrations → Developer Portal.
+      # Injects APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID,
+      # and APP_STORE_CONNECT_PRIVATE_KEY for Fastlane.
       app_store_connect: ebb
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.bcbs.ebb
-      groups:
-        - ebb_apple_credentials
-      vars:
-        XCODE_PROJECT: Ebb/Ebb.xcodeproj
-        XCODE_SCHEME: Ebb
-        BUNDLE_ID: com.bcbs.ebb
-        DEVELOPMENT_TEAM: "3F274MB2RL"
       xcode: latest
     triggering:
       events:
@@ -70,75 +60,37 @@ workflows:
           - Ebb/**
           - codemagic.yaml
     scripts:
-      - name: Configure App Store Connect API key for Ruby scripts
-        script: bash Ebb/ci/write_app_store_connect_api_key.sh
-      - name: Set build number
+      - name: Install dependencies
         script: |
           set -euo pipefail
-          cd Ebb
-          agvtool new-version -all "$BUILD_NUMBER"
-      - name: Register bundle ID and verify App Store Connect app
-        script: |
-          set -euo pipefail
-          gem install fastlane --no-document
-          ruby Ebb/ci/register_bundle_id.rb
-          ruby Ebb/ci/verify_app_store_connect_app.rb
-      - name: Ensure App Store provisioning profile
-        script: |
-          set -euo pipefail
-          gem install fastlane --no-document
-          ruby Ebb/ci/ensure_app_store_profile.rb
-      - name: Create TestFlight internal group
-        script: ruby Ebb/ci/create_beta_group.rb
-      - name: Set up code signing on Xcode project
-        script: xcode-project use-profiles
-      - name: Build IPA
-        script: |
-          set -euo pipefail
-          xcode-project build-ipa \
-            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+          gem install bundler --no-document
+          bundle install --jobs 4 --retry 3
+      - name: Build and upload to TestFlight
+        script: bundle exec fastlane beta
     artifacts:
-      - build/ios/ipa/*.ipa
+      - fastlane/output/*.ipa
       - /tmp/xcodebuild_logs/*.log
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        beta_groups:
-          - Ebb Internal
 
   ebb-adhoc-device:
     name: Ebb — Ad Hoc (install on device)
     max_build_duration: 60
     instance_type: mac_mini_m2
+    working_directory: Ebb
     integrations:
       app_store_connect: ebb
     environment:
-      ios_signing:
-        distribution_type: ad_hoc
-        bundle_identifier: com.bcbs.ebb
-      vars:
-        XCODE_PROJECT: Ebb/Ebb.xcodeproj
-        XCODE_SCHEME: Ebb
       xcode: latest
     # Manual start only — download the IPA from build artifacts and install via Finder or Apple Configurator.
     scripts:
-      - name: Set build number
+      - name: Install dependencies
         script: |
           set -euo pipefail
-          cd Ebb
-          agvtool new-version -all "$BUILD_NUMBER"
-      - name: Set up code signing on Xcode project
-        script: xcode-project use-profiles
-      - name: Build signed IPA
-        script: |
-          set -euo pipefail
-          xcode-project build-ipa \
-            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+          gem install bundler --no-document
+          bundle install --jobs 4 --retry 3
+      - name: Build Ad Hoc IPA
+        script: bundle exec fastlane adhoc
     artifacts:
-      - build/ios/ipa/*.ipa
+      - fastlane/output/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
       email:

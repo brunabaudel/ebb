@@ -1,14 +1,14 @@
 # Codemagic setup
 
-Codemagic mirrors the GitHub Actions TestFlight pipeline on branch **`main`**. Three workflows in [`codemagic.yaml`](../codemagic.yaml) at the repo root:
+Codemagic builds the Ebb iOS app on branch **`main`** using **Fastlane** and a single App Store Connect API key. Three workflows in [`codemagic.yaml`](../codemagic.yaml) at the repo root:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
-| **Ebb — Unit tests** | Push or PR to `main` (when `Ebb/**` changes) | Simulator unit tests, no signing |
-| **Ebb — TestFlight** | Push to `main` (when `Ebb/**` changes) | Archive, upload to TestFlight, distribute to **Ebb Internal** |
-| **Ebb — Ad Hoc (install on device)** | Manual start in Codemagic UI | Signed `.ipa` for direct install on registered devices (no TestFlight) |
+| **Ebb — Unit tests** | Push or PR to `main` (when `Ebb/**` changes) | `fastlane test` on iOS Simulator, no signing |
+| **Ebb — TestFlight** | Push to `main` (when `Ebb/**` changes) | `fastlane beta` — cert/sigh via API, archive, upload to TestFlight, distribute to **Ebb Internal** |
+| **Ebb — Ad Hoc (install on device)** | Manual start in Codemagic UI | `fastlane adhoc` — signed `.ipa` for direct install on registered devices |
 
-PRs run unit tests only. Pushes run unit tests and TestFlight in parallel (same as GitHub Actions). Start the ad hoc workflow when you want a build to sideload onto a registered iPhone.
+PRs run unit tests only. Pushes run unit tests and TestFlight in parallel. Start the ad hoc workflow when you want a build to sideload onto a registered iPhone.
 
 ## 1. Add the app in Codemagic
 
@@ -17,85 +17,91 @@ PRs run unit tests only. Pushes run unit tests and TestFlight in parallel (same 
 3. When asked for configuration, choose **codemagic.yaml** (not the Workflow Editor).
 4. Select branch **`main`** and click **Check for configuration file** — Codemagic should detect `codemagic.yaml`.
 
-## 2. App Store Connect API key (Team integration)
+## 2. App Store Connect API key (the only credential)
 
-Reuse the same Admin API key as GitHub Actions (see [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md)):
+Add **one** Admin or App Manager API key under Codemagic Team settings. Fastlane uses it to create/fetch distribution certificates and provisioning profiles — you do **not** need to upload a `.p12`, set `BUILD_CERTIFICATE_BASE64`, `P12_PASSWORD`, or `KEYCHAIN_PASSWORD`, and you do **not** need a separate environment-variable group for the API key.
 
 | Field | Value |
 |-------|-------|
 | Key name in Codemagic | **`ebb`** (must match `integrations.app_store_connect` in `codemagic.yaml`) |
-| Issuer ID | Same as `APPSTORE_ISSUER_ID` in GitHub (see [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md)) |
-| Key ID | Same as `APPSTORE_API_KEY_ID` in GitHub (see [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md)) |
-| `.p8` file | Same key as `APPSTORE_API_PRIVATE_KEY` in GitHub |
+| Issuer ID | From App Store Connect → Users and Access → Integrations → App Store Connect API |
+| Key ID | From the same page |
+| `.p8` file | Download when creating the key (only available once) |
 
 Steps: **Team settings → Team integrations → Developer Portal → Manage keys → Add key**.
 
-## 3. Code signing identities
+Codemagic injects three environment variables into workflows that declare `integrations.app_store_connect: ebb`:
 
-Upload the **same** Apple Distribution certificate used for GitHub Actions (see [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md) — export `Ebb-Distribution.p12` once from Keychain Access).
+- `APP_STORE_CONNECT_KEY_IDENTIFIER`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_PRIVATE_KEY`
 
-1. **Team settings → codemagic.yaml settings → Code signing identities → iOS certificates**
-2. Upload the `.p12`, enter its password, reference name e.g. **`ebb-distribution`**
-3. **iOS provisioning profiles → Fetch profiles** (uses the API key above)
-4. Select the **App Store** profile for **`com.bcbs.ebb`**, reference name e.g. **`ebb-app-store`**
-5. **Fetch profiles** again and select an **Ad Hoc** profile for **`com.bcbs.ebb`** that includes your iPhone UDID(s), reference name e.g. **`ebb-ad-hoc`**
+Fastlane reads these directly (`app_store_connect_api_key`, `cert`, `sigh`, `upload_to_testflight`). No GitHub secrets transfer is required for Codemagic.
 
-Codemagic matches certificates and profiles by bundle ID via `ios_signing.distribution_type` in `codemagic.yaml`. The TestFlight workflow also runs `ci/ensure_app_store_profile.rb` to regenerate the App Store profile when HealthKit or iCloud entitlements change.
+> **Add this key before your first signed build.** Until the integration exists, TestFlight and Ad Hoc workflows will fail with a missing-credentials error.
 
-> Do **not** let Codemagic generate a new distribution certificate if you already have one — Apple allows only three per account. Upload the existing `.p12`.
+## 3. How signing works
 
-## 4. Environment variable group
+Fastlane lanes in [`fastlane/Fastfile`](fastlane/Fastfile):
 
-Create a group named **`ebb_apple_credentials`** (Application or Team settings → Environment variables). Mark secrets as **Secret**.
+1. **`setup_ci`** — temporary keychain on the build machine
+2. **`cert`** — create or reuse an Apple Distribution certificate via the API
+3. **`sigh`** — create or refresh the provisioning profile (App Store or Ad Hoc)
+4. **`build_app`** — archive and export a signed IPA
+5. **`upload_to_testflight`** (TestFlight lane only)
 
-| Variable | Value | Secret? |
-|----------|-------|---------|
-| `APP_STORE_CONNECT_PRIVATE_KEY` | Full `.p8` contents (include `BEGIN`/`END` lines) | Yes |
-| `APP_STORE_CONNECT_KEY_IDENTIFIER` | Same as `APPSTORE_API_KEY_ID` in GitHub | No |
-| `APP_STORE_CONNECT_ISSUER_ID` | Same as `APPSTORE_ISSUER_ID` in GitHub | No |
+Existing Ruby scripts under `ci/` still run for bundle-ID registration, beta-group setup, and entitlement verification — they share the same API key file that Fastlane writes at build time.
 
-These feed the existing Ruby scripts (`register_bundle_id.rb`, `ensure_app_store_profile.rb`, `create_beta_group.rb`) via `ci/write_app_store_connect_api_key.sh`.
+### Certificate limit
 
-## 5. Webhook (if builds do not start automatically)
+Apple allows at most **three** Apple Distribution certificates per account. If Fastlane reports that the limit is reached, revoke an unused distribution certificate in [Apple Developer → Certificates](https://developer.apple.com/account/resources/certificates/list) and re-run the build. The GitHub Actions pipeline may still use its own uploaded `.p12`; Codemagic/Fastlane manages signing independently.
+
+### Optional future work: fastlane match
+
+For teams that want one shared certificate store across GitHub Actions and Codemagic, [fastlane match](https://docs.fastlane.tools/actions/match/) can sync certs/profiles through an encrypted git repo. That is **not** required for Codemagic — document and adopt only if you create a dedicated match repository.
+
+## 4. Webhook (if builds do not start automatically)
 
 For GitHub repos connected over HTTPS, Codemagic usually installs the webhook automatically. If pushes to `main` do not trigger builds:
 
 1. Open the app in Codemagic → **Webhooks**
 2. Click **Update webhook** (team admin who added the repo)
 
-## 6. First build
+## 5. First build
 
 **TestFlight**
 
-1. Push a commit touching `Ebb/**` on branch **`main`**, or start **Ebb — TestFlight** manually from the Codemagic UI.
-2. Wait ~10–15 minutes after upload, then open **TestFlight** on your iPhone and install **Ebbie**.
+1. Complete step 2 (API key integration).
+2. Push a commit touching `Ebb/**` on branch **`main`**, or start **Ebb — TestFlight** manually from the Codemagic UI.
+3. Wait ~10–15 minutes after upload, then open **TestFlight** on your iPhone and install **Ebbie**.
 
 **Ad hoc (direct install)**
 
-1. Register your iPhone UDID in the Apple Developer portal (if not already).
-2. Refresh the **Ad Hoc** profile in Codemagic code signing identities (step 3 above).
-3. Start **Ebb — Ad Hoc (install on device)** manually in Codemagic.
-4. Download the `.ipa` from build artifacts (or the email link) and install via Finder or Apple Configurator.
+1. Register your iPhone UDID in the Apple Developer portal.
+2. Start **Ebb — Ad Hoc (install on device)** manually in Codemagic. Fastlane creates/refreshes an Ad Hoc profile that includes registered devices.
+3. Download the `.ipa` from build artifacts (or the email link) and install via Finder or Apple Configurator.
 
 Build numbers use Codemagic's `BUILD_NUMBER` (same idea as GitHub's `run_number`).
 
 ## GitHub Actions vs Codemagic
 
-Both pipelines share the same Ruby scripts and signing material. You can run either or both:
+Both can deploy the same app:
 
-- **GitHub Actions** — `.github/workflows/testflight.yml`, secrets in GitHub
-- **Codemagic** — `codemagic.yaml`, credentials in Codemagic UI
+- **GitHub Actions** — `.github/workflows/testflight.yml`, secrets in GitHub (unchanged)
+- **Codemagic** — `codemagic.yaml` + Fastlane, **one** API key in Codemagic Team integrations
+
+You can run either or both. Codemagic does not require copying GitHub signing secrets.
 
 ## Troubleshooting
 
 | Error | Fix |
 |-------|-----|
 | `No workflows configured` on PR | Ensure `codemagic.yaml` exists on the **PR source branch** |
-| `Missing App Store Connect API credentials` | Add the `ebb_apple_credentials` variable group |
+| Missing App Store Connect API credentials | Add the **`ebb`** Team integration (step 2) |
 | Integration name mismatch | Rename the Codemagic API key to **`ebb`** or update `integrations.app_store_connect` in `codemagic.yaml` |
-| No matching certificate for bundle ID | Upload the `.p12` under Code signing identities; confirm bundle ID is `com.bcbs.ebb` |
-| `No valid IOS_DISTRIBUTION certificate` | Re-upload the same `.p12` used in GitHub (`BUILD_CERTIFICATE_BASE64`) |
-| iCloud / HealthKit profile errors | Same fixes as [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md) — then re-run TestFlight |
-| `No App Store Connect app found` | App record **Ebbie** must exist (one-time step, already done) |
+| Distribution certificate limit reached | Revoke an unused IOS_DISTRIBUTION cert in Apple Developer portal |
+| iCloud / HealthKit profile errors | Same fixes as [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md) — Fastlane `sigh` regenerates the profile on the next run |
+| `No App Store Connect app found` | App record **Ebbie** must exist (one-time browser step, already done) |
+| Ad Hoc install fails on device | Ensure the device UDID is registered; re-run the ad hoc workflow so `sigh` refreshes the profile |
 
 See also [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md) for Apple Developer portal steps and beta group details.
