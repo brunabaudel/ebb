@@ -67,7 +67,7 @@ Ebb is a privacy-first, on-device symptom tracker. Read `docs/ebb-build-plan.md`
 
 - Swift Testing (`@Test`, `#expect`) for new tests. Unit-test the pure layers hard: `StatsEngine`, schema loading/validation, cycle-phase derivation, classifier output validation.
 - UI flows tested with mock services injected; no test may hit HealthKit, the network, or real inference.
-- Keep the GitHub Actions TestFlight workflow (`.github/workflows/testflight.yml`) green; the project must always build with `xcodebuild` from a clean checkout.
+- Keep the Codemagic CI workflows in `codemagic.yaml` green; the project must always build with `xcodebuild` (or `fastlane test`) from a clean checkout.
 - When adding files to the Xcode project, edit `project.pbxproj` carefully or use a folder-reference structure; verify the target builds afterwards.
 
 ## Code style

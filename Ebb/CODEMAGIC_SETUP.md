@@ -19,7 +19,7 @@ PRs run unit tests only. Pushes run unit tests and TestFlight in parallel. Start
 
 ## 2. App Store Connect API key (the only credential)
 
-Add **one** Admin or App Manager API key under Codemagic Team settings. Fastlane uses it to create/fetch distribution certificates and provisioning profiles — you do **not** need to upload a `.p12`, set `BUILD_CERTIFICATE_BASE64`, `P12_PASSWORD`, or `KEYCHAIN_PASSWORD`, and you do **not** need a separate environment-variable group for the API key.
+Add **one** Admin or App Manager API key under Codemagic Team settings. Fastlane uses it to create/fetch distribution certificates and provisioning profiles — you do **not** need to upload a `.p12` or maintain separate signing secrets in GitHub.
 
 | Field | Value |
 |-------|-------|
@@ -36,7 +36,7 @@ Codemagic injects three environment variables into workflows that declare `integ
 - `APP_STORE_CONNECT_ISSUER_ID`
 - `APP_STORE_CONNECT_PRIVATE_KEY`
 
-Fastlane reads these directly (`app_store_connect_api_key`, `cert`, `sigh`, `upload_to_testflight`). No GitHub secrets transfer is required for Codemagic.
+Fastlane reads these directly (`app_store_connect_api_key`, `cert`, `sigh`, `upload_to_testflight`).
 
 > **Add this key before your first signed build.** Until the integration exists, TestFlight and Ad Hoc workflows will fail with a missing-credentials error.
 
@@ -50,24 +50,59 @@ Fastlane lanes in [`fastlane/Fastfile`](fastlane/Fastfile):
 4. **`build_app`** — archive and export a signed IPA
 5. **`upload_to_testflight`** (TestFlight lane only)
 
-Existing Ruby scripts under `ci/` still run for bundle-ID registration, beta-group setup, and entitlement verification — they share the same API key file that Fastlane writes at build time.
+Ruby scripts under `ci/` still run for bundle-ID registration, beta-group setup, and entitlement verification — they share the same API key file that Fastlane writes at build time.
 
 ### Certificate limit
 
-Apple allows at most **three** Apple Distribution certificates per account. If Fastlane reports that the limit is reached, revoke an unused distribution certificate in [Apple Developer → Certificates](https://developer.apple.com/account/resources/certificates/list) and re-run the build. The GitHub Actions pipeline may still use its own uploaded `.p12`; Codemagic/Fastlane manages signing independently.
+Apple allows at most **three** Apple Distribution certificates per account. If Fastlane reports that the limit is reached, revoke an unused distribution certificate in [Apple Developer → Certificates](https://developer.apple.com/account/resources/certificates/list) and re-run the build.
 
-### Optional future work: fastlane match
+## 4. One-time: iCloud container for CloudKit sync
 
-For teams that want one shared certificate store across GitHub Actions and Codemagic, [fastlane match](https://docs.fastlane.tools/actions/match/) can sync certs/profiles through an encrypted git repo. That is **not** required for Codemagic — document and adopt only if you create a dedicated match repository.
+Phase 8 adds CloudKit backup. The App Store profile must include container `iCloud.com.bcbs.ebb` (matching `Ebb/Ebb.entitlements` and `Ebb/EbbRelease.entitlements`).
 
-## 4. Webhook (if builds do not start automatically)
+1. Open [Apple Developer → Identifiers](https://developer.apple.com/account/resources/identifiers/list)
+2. If missing, click **+** → **iCloud Containers** → create identifier **`iCloud.com.bcbs.ebb`**
+3. Open App ID **`com.bcbs.ebb`** → enable **iCloud** → choose **Include CloudKit support**
+4. Click **Configure** (or **Edit**) next to iCloud → check **`iCloud.com.bcbs.ebb`** → **Save**
+5. On the same App ID, enable **Push Notifications** (required for CloudKit sync uploads)
+6. Push to **`main`** or re-run **Ebb — TestFlight** in Codemagic. Fastlane `sigh` regenerates the App Store profile automatically.
+
+CI enables the iCloud capability via API, but Apple still requires the container to be selected on the App ID in the developer portal (cannot be done via API key alone).
+
+Push Notifications only needs the **capability enabled** on the App ID. You do **not** need to create an APNs SSL certificate or Auth Key — CloudKit sends silent pushes through Apple's servers.
+
+## 5. One-time: deploy CloudKit schema to Production
+
+TestFlight and App Store builds use the **Production** CloudKit environment. Production does **not** inherit your Development schema automatically — you must deploy it once (and again after model changes).
+
+Debug builds (`Ebb.entitlements`) use **Development**; Release/TestFlight builds (`EbbRelease.entitlements`) use **Production** with `aps-environment=production`.
+
+1. Connect an iPhone and run Ebb from **Xcode** (Debug — not TestFlight, not Simulator).
+2. Sign in to iCloud on the device, open Ebb, and **save one symptom log**.
+3. Open [CloudKit Console](https://icloud.developer.apple.com/) → container **`iCloud.com.bcbs.ebb`** → **Development** → **Schema**.
+4. Confirm record types such as **`CD_SymptomEntry`** appear (not just `Users`).
+5. In the left sidebar, click **Deploy Schema Changes…** → deploy to **Production**.
+6. Verify **Production → Schema** shows the same record types.
+7. Install the latest **TestFlight** build, add a log on Wi‑Fi, and confirm **Production → Data** shows records in zone `com.apple.coredata.cloudkit.zone`.
+
+After app updates that change the SwiftData model, run Ebb once from **Xcode on a device** (Debug), save a log, then **Deploy Schema Changes…** to Production again so fields such as `CD_iCloudExportToken` exist server-side.
+
+Every TestFlight build runs `ci/verify_release_entitlements.rb` to ensure `aps-environment` is `production` and the CloudKit container environment is `Production`.
+
+## 6. One-time: App Store Connect app record (done)
+
+The app record exists as **Ebbie** (the name "Ebb" was already taken on the App Store). The App Store Connect name is independent of the bundle ID and the on-device display name — CI matches builds by bundle ID only (`com.bcbs.ebb`).
+
+App records cannot be created via the API, even with an Admin key — creating the app (name, SKU, bundle ID) is a one-time browser step.
+
+## 7. Webhook (if builds do not start automatically)
 
 For GitHub repos connected over HTTPS, Codemagic usually installs the webhook automatically. If pushes to `main` do not trigger builds:
 
 1. Open the app in Codemagic → **Webhooks**
 2. Click **Update webhook** (team admin who added the repo)
 
-## 5. First build
+## 8. First build
 
 **TestFlight**
 
@@ -81,16 +116,18 @@ For GitHub repos connected over HTTPS, Codemagic usually installs the webhook au
 2. Start **Ebb — Ad Hoc (install on device)** manually in Codemagic. Fastlane creates/refreshes an Ad Hoc profile that includes registered devices.
 3. Download the `.ipa` from build artifacts (or the email link) and install via Finder or Apple Configurator.
 
-Build numbers use Codemagic's `BUILD_NUMBER` (same idea as GitHub's `run_number`).
+Build numbers use Codemagic's `BUILD_NUMBER`.
 
-## GitHub Actions vs Codemagic
+## Beta group
 
-Both can deploy the same app:
+CI manages an **internal** TestFlight group named **Ebb Internal** — no App Store Connect access needed. `ci/create_beta_group.rb` (idempotent, runs on every `fastlane beta` deploy):
 
-- **GitHub Actions** — `.github/workflows/testflight.yml`, secrets in GitHub (unchanged)
-- **Codemagic** — `codemagic.yaml` + Fastlane, **one** API key in Codemagic Team integrations
+- creates the group with **access to all builds**, so every uploaded build is distributed to the group automatically once Apple finishes processing it — no Beta App Review, no per-build assignment
+- adds `brubaudel@gmail.com` (the account owner) as a tester
 
-You can run either or both. Codemagic does not require copying GitHub signing secrets.
+The tester receives a TestFlight email invite on first run; after accepting it once, new builds just appear in the TestFlight app.
+
+Internal groups only accept App Store Connect **team members**. To add more testers, add their email to the `TESTERS` list in `ci/create_beta_group.rb` — but they must first be invited to the ASC team (Users and Access), which requires the browser. For testers outside the team, an external group with a public link would be needed instead (first build then requires Beta App Review).
 
 ## Troubleshooting
 
@@ -100,8 +137,7 @@ You can run either or both. Codemagic does not require copying GitHub signing se
 | Missing App Store Connect API credentials | Add the **`ebb`** Team integration (step 2) |
 | Integration name mismatch | Rename the Codemagic API key to **`ebb`** or update `integrations.app_store_connect` in `codemagic.yaml` |
 | Distribution certificate limit reached | Revoke an unused IOS_DISTRIBUTION cert in Apple Developer portal |
-| iCloud / HealthKit profile errors | Same fixes as [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md) — Fastlane `sigh` regenerates the profile on the next run |
+| iCloud / HealthKit profile errors | Complete the iCloud container steps above; re-run **Ebb — TestFlight** so `sigh` regenerates the profile |
+| `doesn't match the entitlements file's value for the com.apple.developer.icloud-container-identifiers entitlement` | Associate container `iCloud.com.bcbs.ebb` with App ID `com.bcbs.ebb` in Apple Developer |
 | `No App Store Connect app found` | App record **Ebbie** must exist (one-time browser step, already done) |
 | Ad Hoc install fails on device | Ensure the device UDID is registered; re-run the ad hoc workflow so `sigh` refreshes the profile |
-
-See also [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md) for Apple Developer portal steps and beta group details.

@@ -19,6 +19,8 @@ Ebb/
   DesignSystem/   Theme tokens, FieldControl, phase ring, entry card
   Features/       Today, Calendar, Patterns, Settings, Log, Debug
 EbbTests/         Swift Testing unit tests
+ci/               Fastlane helper scripts
+fastlane/         Codemagic CI lanes
 ```
 
 ## Run locally
@@ -38,14 +40,6 @@ xcodebuild test \
 ```
 
 ## Deploy to your iPhone (TestFlight)
-
-**GitHub Actions**
-
-1. Add GitHub secrets/variables (see [TESTFLIGHT_SETUP.md](TESTFLIGHT_SETUP.md))
-2. Go to **Actions → TestFlight → Run workflow**
-3. Install **Ebb** from the TestFlight app on your iPhone
-
-**Codemagic**
 
 1. Complete one-time setup in [CODEMAGIC_SETUP.md](CODEMAGIC_SETUP.md)
 2. Push to branch **`main`** (or start **Ebb — TestFlight** manually in Codemagic)

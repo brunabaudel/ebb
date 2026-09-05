@@ -53,7 +53,7 @@ Everything else hangs off these. No visible UI yet beyond a debug screen.
 1. **Schema config as a bundled resource.** Convert Part 1 of the classification spec into `symptom-schema.json` shipped in the app bundle, with a Swift loader (`SchemaConfig`, `Field`, `FieldValue` types, `schemaVersion`). This single file must drive *both* the UI controls and (later) the model vocabulary — never duplicate the enums in Swift.
 2. **Data model.** SwiftData `SymptomEntry`: timestamp, `schemaVersion`, a dictionary of field-key → value(s) validated against the schema, the verbatim transcript (`note`), and derived `cyclePhase`. Design it CloudKit-compatible from day one (optional fields, no unique constraints CloudKit can't handle).
 3. **Theme-tokens layer.** One `Theme` type with the 11 role tokens found in the palettes file (`base, surface, line, text, muted, pain, paindim, onpain, cycle, cycdim, ok`), six theme instances with the exact hexes from `symptom-tracker-palettes.html`, injected via SwiftUI `Environment`. No screen ever hardcodes a color.
-4. **Project housekeeping.** Raise the deployment target as needed (Foundation Models requires a recent iOS), organize target folders (`Models`, `Theme`, `Screens`, `Components`, `Services`), keep the TestFlight workflow green.
+4. **Project housekeeping.** Raise the deployment target as needed (Foundation Models requires a recent iOS), organize target folders (`Models`, `Theme`, `Screens`, `Components`, `Services`), keep the Codemagic TestFlight workflow green.
 
 **Done when:** a debug screen renders every schema field as text and swatches for every theme, and a `SymptomEntry` round-trips through SwiftData.
 
