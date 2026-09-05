@@ -1,4 +1,4 @@
-# App Store Connect / Developer Portal identifiers for Fastlane.
+# Developer Portal identifiers for Fastlane.
 # Team ID is public metadata (also in Ebb.xcodeproj); not a secret.
 
 app_identifier("com.bcbs.ebb")

@@ -10,7 +10,7 @@ This repo (`brunabaudel/ebb`) is the **dedicated Ebb iOS app repository**.
 ## `main` — Ebb iOS app
 
 - Contains the full app: `Ebb/`, `docs/`, `.github/workflows/`, CI, and Cursor skills.
-- TestFlight deploys run from pushes to `main` (when `Ebb/**` changes).
+- Codemagic unit tests run on pushes and PRs to `main` (when `Ebb/**` changes).
 
 ## Feature branches
 
