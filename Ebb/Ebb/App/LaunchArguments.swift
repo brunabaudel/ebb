@@ -1,6 +1,6 @@
 import Foundation
 
-/// Launch arguments read by views during CI screenshot capture (`ci/capture_screenshots.sh`).
+/// Launch arguments read by views during simulator runs and UI previews.
 enum LaunchArguments {
     static let autoTapLog = "-AutoTapLog"
     static let autoTalkLog = "-AutoTalkLog"

@@ -1,57 +1,51 @@
 ---
 name: testflight-ios-deploy
-description: Deploy an iOS app to TestFlight and manage beta groups/testers entirely through CI and the App Store Connect API, without opening App Store Connect in a browser. Use when setting up or debugging TestFlight uploads, beta groups, tester invites, code signing in GitHub Actions, or Spaceship/fastlane API scripts for this repo.
+description: Deploy an iOS app to TestFlight and manage beta groups/testers through Codemagic, Fastlane, and the App Store Connect API. Use when setting up or debugging TestFlight uploads, beta groups, tester invites, code signing in Codemagic, or Spaceship/fastlane scripts for this repo.
 ---
 
 # TestFlight deploy and beta group management via API
 
-This repo ships the `Ebb` iOS app to TestFlight from GitHub Actions with zero
-manual App Store Connect (ASC) steps after a one-time app-record creation.
-Everything is driven by an ASC API key and small Ruby scripts using Spaceship
-(the API client library inside the `fastlane` gem — fastlane lanes/Fastfile
-are NOT used).
+This repo ships the `Ebb` iOS app to TestFlight from **Codemagic** using **Fastlane**
+and small Ruby scripts using Spaceship (the API client inside the `fastlane` gem).
 
 ## Working configuration
 
 | Piece | Location |
 |-------|----------|
-| Workflow | `.github/workflows/testflight.yml` |
+| CI config | `codemagic.yaml` (workflows `ebb-unit-tests`, `ebb-testflight`, `ebb-adhoc-device`) |
+| Fastlane lanes | `Ebb/fastlane/Fastfile` (`test`, `beta`, `adhoc`) |
+| Setup guide | `Ebb/CODEMAGIC_SETUP.md` |
 | Bundle ID registration | `Ebb/ci/register_bundle_id.rb` |
 | App record existence check | `Ebb/ci/verify_app_store_connect_app.rb` |
 | Beta group + testers | `Ebb/ci/create_beta_group.rb` |
-| Export options | `Ebb/ExportOptions.plist` (`app-store-connect`, manual signing) |
-| Certificate cleanup | `Ebb/ci/prune_ephemeral_certificates.rb` |
-| Keychain/cert matching | `Ebb/ci/apple_signing_helpers.rb` |
-| Provisioning profile | `Ebb/ci/ensure_app_store_profile.rb` |
-| Signing import | `.github/actions/setup-apple-signing` |
+| Entitlement verification | `Ebb/ci/verify_release_entitlements.rb` |
+| Simulator destination | `Ebb/ci/resolve_simulator_destination.sh` |
+| Capabilities helper | `Ebb/ci/bundle_capabilities.rb` |
 
-GitHub **secrets**: `DEVELOPMENT_TEAM` (Apple team ID), `APPSTORE_API_PRIVATE_KEY`
-(full `.p8` contents including BEGIN/END lines), `BUILD_CERTIFICATE_BASE64` (one
-Apple Distribution `.p12`), `P12_PASSWORD`, `KEYCHAIN_PASSWORD`.
-GitHub **variables**: `APPSTORE_ISSUER_ID`, `APPSTORE_API_KEY_ID`.
-The API key has the **Admin** role.
+Codemagic **Team integration** named **`ebb`** injects:
 
-Pipeline order (job `deploy-testflight`, `macos-26` runner):
+- `APP_STORE_CONNECT_KEY_IDENTIFIER`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_PRIVATE_KEY`
 
-1. Write the `.p8` key to `~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8`
-   (Spaceship and xcodebuild both read it from there) and validate it contains
-   `BEGIN PRIVATE KEY`.
-2. `agvtool new-version -all $GITHUB_RUN_NUMBER` — monotonically increasing
-   build numbers with no state in the repo.
-3. Register bundle ID (idempotent), verify the ASC app record exists.
-4. Import the single Apple Distribution `.p12` from `BUILD_CERTIFICATE_BASE64`
-   into a temporary keychain.
-5. **Prune ephemeral certificates** — revoke API-created development certs,
-   verify the imported `.p12` matches a valid IOS_DISTRIBUTION certificate, and
-   warn about other distribution certs (never revoked).
-6. Create the internal beta group and add testers (idempotent).
-7. Ensure/download the App Store provisioning profile for `com.bcbs.ebb` using
-   the same distribution certificate as the keychain.
-8. `xcodebuild archive` + `-exportArchive` with `CODE_SIGN_STYLE=Manual` and
-   **no** `-allowProvisioningUpdates` — reuses the stored cert every run.
-9. Upload with `apple-actions/upload-testflight-build@v3`.
+Fastlane reads these for `cert`, `sigh`, and `upload_to_testflight`. Ruby scripts
+expect `APPSTORE_*` env vars and a `.p8` file — Fastlane's `write_api_key_for_ruby_scripts`
+helper bridges the two naming conventions at build time.
 
-Auth boilerplate shared by all scripts:
+## `fastlane beta` pipeline order
+
+1. Validate App Store Connect API credentials from Codemagic integration.
+2. Write `.p8` key to `~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8` for Ruby scripts.
+3. Register bundle ID (idempotent), verify ASC app record exists, create beta group.
+4. `setup_ci` — temporary keychain on the build machine.
+5. `cert` — create or reuse Apple Distribution certificate via API.
+6. `sigh` — create/refresh App Store provisioning profile (`Ebb App Store CI`).
+7. `increment_build_number` from Codemagic `BUILD_NUMBER`.
+8. `build_app` — archive and export signed IPA.
+9. `verify_release_entitlements.rb` — CloudKit production entitlements check.
+10. `upload_to_testflight` — distribute to **Ebb Internal** group.
+
+Auth boilerplate shared by Ruby scripts:
 
 ```ruby
 require "spaceship"
@@ -108,14 +102,12 @@ Spaceship::ConnectAPI.post_beta_tester_assignment(
    is set in `project.pbxproj`, so builds never get stuck on
    "Missing Compliance".
 
-6. **App Store uploads require the current iOS SDK** — hence the `macos-26`
-   runner (Xcode 26). Older runner images get rejected by Apple.
+6. **App Store uploads require the current iOS SDK** — Codemagic uses `xcode: latest`
+   on `mac_mini_m2` instances. Older Xcode versions get rejected by Apple.
 
-7. **Do not use automatic signing in CI.** `-allowProvisioningUpdates` on
-   ephemeral GitHub runners creates a new IOS_DEVELOPMENT certificate every run,
-   hits Apple's certificate limit, and archives fail with "Choose a certificate
-   to revoke." Use one Apple Distribution `.p12` in `BUILD_CERTIFICATE_BASE64`
-   and manual signing instead.
+7. **Fastlane `cert`/`sigh` manage signing via API** — no manual `.p12` upload
+   in Codemagic. Apple allows at most three IOS_DISTRIBUTION certificates per
+   account; revoke unused certs if `cert` reports the limit is reached.
 
 8. Idempotency pattern used everywhere: find first, create only if missing,
    exit 0 either way — every deploy re-runs all setup steps safely.
@@ -125,16 +117,13 @@ Spaceship::ConnectAPI.post_beta_tester_assignment(
 - Testers get one TestFlight email invite; after accepting, new builds appear
   automatically (internal group). Add testers by appending to the `TESTERS`
   array in `Ebb/ci/create_beta_group.rb`.
-- The workflow triggers on push to `main` touching `Ebb/**` or the
-  workflow file, plus `workflow_dispatch`. Pushes run **Capture screenshots**
-  and **Deploy to TestFlight** in parallel. Manual runs expose two booleans:
-  `capture_screenshots` and `deploy_testflight` (screenshots-only ~5 min,
-  TestFlight-only ~3 min, both ~8 min). PRs run simulator tests + screenshots only.
+- **Ebb — TestFlight** triggers on push to `main` when `Ebb/**` or
+  `codemagic.yaml` changes. **Ebb — Unit tests** also runs on PRs.
   Apple's post-upload processing adds 10–30 minutes before the build is
   installable.
-- Debug failures with `gh run list --workflow=testflight.yml` and
-  `gh run view <id> --log-failed`. Spaceship errors surface Apple's exact
-  message (e.g. attribute rejections) in the step log.
+- Debug failures in the Codemagic build log for the **Build and upload to
+  TestFlight** step. Spaceship errors surface Apple's exact message (e.g.
+  attribute rejections) in the log.
 - To test Spaceship calls without credentials, generate a throwaway key:
   `OpenSSL::PKey::EC.generate("prime256v1").to_pem` and pass it as `key:` to
   `Token.create` — client wiring can be exercised locally; only the HTTP call
