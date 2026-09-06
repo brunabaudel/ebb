@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Calendar screen mocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0E0B12;--ink:#1A1620;--surface:#241E2C;--raised:#2C2533;--line:#3A3242;
+    --text:#EDE6F0;--muted:#A99FB0;--faint:#776E80;
+    --coral:#E89B8B;--coral-dim:#7d4f48;--coral-bg:#2e2229;
+    --lav:#9D8FC7;--lav-dim:#4c4466;--lav-bg:#241f33;--sage:#8FB1A0;
+    --period:#d98a9e;--period-bg:#2c2030;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--page);color:var(--text);font-family:"Figtree",system-ui,sans-serif;line-height:1.45;padding:54px 26px 90px;}
+
+  .head{max-width:1180px;margin:0 auto 44px;}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--lav);margin-bottom:16px;}
+  .head h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(30px,5vw,48px);line-height:1.06;letter-spacing:-.01em;}
+  .head h1 em{font-style:italic;color:var(--coral);}
+  .head p{color:var(--muted);max-width:68ch;margin-top:18px;font-size:16px;}
+
+  .brief{max-width:1180px;margin:0 auto 48px;padding:20px 24px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#221b2e,#1A1620);font-size:14px;color:var(--muted);line-height:1.6;}
+  .brief h2{font-family:"Fraunces",serif;font-size:20px;color:var(--text);font-weight:500;margin-bottom:10px;}
+  .brief b{color:var(--text);font-weight:600;}
+  .brief em{color:var(--lav);font-style:normal;font-weight:600;}
+
+  .legend{max-width:1180px;margin:0 auto 48px;padding:22px 26px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--ink),transparent);display:flex;flex-wrap:wrap;gap:24px 40px;}
+  .legend h4{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;}
+  .legend ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);}
+  .legend li::before{content:"·";color:var(--lav);margin-right:8px;font-weight:700;}
+  .sw{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);}
+  .sw i{width:16px;height:16px;border-radius:5px;display:inline-block;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,330px));gap:46px 38px;justify-content:center;max-width:1180px;margin:0 auto;}
+  .section-h{max-width:1180px;margin:56px auto 28px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);}
+  .frame-wrap{display:flex;flex-direction:column;gap:14px;}
+  .scr-name{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--lav);padding-left:4px;}
+  .scr-name.base{color:var(--coral);}
+  .annot{font-size:13px;color:var(--faint);padding-left:4px;max-width:330px;}
+  .annot b{color:var(--muted);font-weight:600;}
+
+  .phone{width:330px;height:715px;border-radius:46px;background:var(--ink);border:1px solid #312938;box-shadow:0 0 0 9px #16121b,0 30px 70px -30px #000;position:relative;overflow:hidden;}
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:18px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;color:var(--text);z-index:30;}
+  .statusbar .dots{opacity:.8;font-size:11px;}
+  .screen{position:absolute;inset:0;padding:58px 22px 22px;display:flex;flex-direction:column;overflow:hidden;}
+  .screen.has-tabbar{padding-bottom:88px;}
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:78px;background:#16121bcc;border-top:1px solid var(--line);backdrop-filter:blur(12px);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 8px 0;z-index:30;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--faint);min-width:64px;}
+  .tab.on{color:var(--coral);}
+  .tab .ic{font-size:20px;line-height:1;}
+  .nav-back{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--coral);font-weight:600;margin:-4px 0 10px;}
+  .nav-back .arr{font-size:22px;line-height:1;font-weight:400;}
+
+  /* shared calendar bits */
+  .cal-top{display:flex;justify-content:space-between;align-items:center;}
+  .cal-top .m{font-family:"Fraunces",serif;font-size:22px;font-weight:500;}
+  .cal-top .m span{color:var(--faint);font-weight:400;font-size:15px;}
+  .cal-nav{display:flex;gap:16px;color:var(--muted);font-size:16px;}
+  .cal-ov{display:flex;gap:8px;margin-top:15px;}
+  .ov-chip{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:11px 6px;text-align:center;}
+  .ov-chip .n{font-family:"Fraunces",serif;font-size:21px;line-height:1;}
+  .ov-chip .l{font-size:10px;color:var(--faint);margin-top:6px;}
+  .ov-chip.mig .n{color:var(--coral);}
+  .ov-chip.cyc .n{color:var(--lav);}
+  .cal-toggle{display:flex;background:#201a28;border:1px solid var(--line);border-radius:12px;padding:3px;margin-top:14px;}
+  .cal-toggle .tg{flex:1;text-align:center;padding:8px 0;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);}
+  .cal-toggle .tg.on{background:var(--coral);color:#2a1714;}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);margin-top:18px;margin-bottom:7px;}
+  .dow span{text-align:center;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cell{aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text);position:relative;border:1px solid transparent;}
+  .cell.out{color:var(--faint);opacity:.35;}
+  .cell.lut{background:var(--lav-bg);}
+  .cell.period{background:var(--period-bg);border-color:#6e5763;}
+  .cell.pred{border:1px dashed #6e5763;color:#d9a9b3;}
+  .cell.today{box-shadow:0 0 0 2px var(--coral);font-weight:700;}
+  .cell .mig{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--coral);box-shadow:0 0 6px var(--coral);}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:9px 15px;margin-top:14px;font-size:10.5px;color:var(--muted);}
+  .cal-legend span{display:flex;align-items:center;gap:6px;}
+  .cal-legend i{width:11px;height:11px;border-radius:4px;display:inline-block;}
+  .cal-legend i.mig{border-radius:50%;width:7px;height:7px;background:var(--coral);}
+  .cal-legend i.lut{background:var(--lav-bg);border:1px solid var(--lav-dim);}
+  .cal-legend i.pred{border:1px dashed #6e5763;background:transparent;}
+  .cal-legend i.tod{border:2px solid var(--coral);background:transparent;width:9px;height:9px;}
+  .day-detail{margin-top:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 15px;}
+  .day-detail .dd-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px;}
+  .day-detail .dd-h .d{font-family:"Fraunces",serif;font-size:16px;}
+  .day-detail .dd-h .ph{font-size:11px;color:var(--lav);font-weight:600;}
+  .dd-entry{display:flex;align-items:center;gap:10px;}
+  .dd-entry+.dd-entry{margin-top:10px;}
+  .dd-entry .em{width:26px;height:26px;border-radius:8px;background:#2e2735;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto;}
+  .dd-entry .t{font-size:13px;font-weight:500;}
+  .dd-entry .s{font-size:11px;color:var(--faint);}
+  .dd-entry .sev{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--coral);background:var(--coral-bg);border:1px solid var(--coral-dim);padding:3px 7px;border-radius:7px;}
+
+  .wk-cap{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:13px;}
+  .wk-cap b{color:var(--lav);font-weight:600;}
+  .wk-strip{display:flex;gap:6px;margin-top:16px;}
+  .wk-day{flex:1;border-radius:14px;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);}
+  .wk-day .wd{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);}
+  .wk-day .dn{font-size:15px;line-height:1;}
+  .wk-day.lut{background:var(--lav-bg);}
+  .wk-day.period{background:var(--period-bg);border-color:#6e5763;}
+  .wk-day.sel{background:var(--coral);border-color:var(--coral);}
+  .wk-day.sel .wd{color:#5c322b;}
+  .wk-day.sel .dn{color:#2a1714;font-weight:700;}
+  .wk-marks{display:flex;gap:3px;height:7px;align-items:center;}
+  .wk-marks .mg{width:6px;height:6px;border-radius:50%;background:var(--coral);}
+  .wk-day.sel .wk-marks .mg{background:#2a1714;}
+  .wk-marks .pd{width:14px;height:4px;border-radius:2px;background:var(--period);}
+  .wk-phase{display:flex;align-items:center;gap:9px;margin-top:18px;font-size:11px;color:var(--muted);}
+  .wk-phase .seg{flex:1;height:6px;border-radius:3px;overflow:hidden;display:flex;}
+  .wk-phase .seg .l{height:100%;background:var(--lav-dim);}
+  .wk-phase .seg .m{height:100%;background:var(--period);}
+  .wk-phase .k{font-family:"JetBrains Mono",monospace;font-size:9px;}
+  .wk-phase .k.lv{color:var(--lav);}
+  .wk-phase .k.rs{color:var(--period);}
+
+  .tl{position:relative;height:82px;}
+  .tl .axis{position:absolute;left:0;right:0;top:54px;height:2px;background:var(--line);}
+  .tl .luteal{position:absolute;top:48px;height:14px;border-radius:7px;background:var(--lav-dim);opacity:.55;}
+  .tl .mk{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--coral);top:48px;border:2px solid var(--ink);box-shadow:0 0 8px var(--coral);}
+  .tl .ph{position:absolute;top:72px;font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);transform:translateX(-50%);}
+  .tl .day0{position:absolute;top:0;font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);}
+
+  .footer{max-width:1180px;margin:64px auto 0;padding-top:28px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer .fm{font-family:"JetBrains Mono",monospace;}
+
+  /* variant-specific */
+  .cal-phase-rail{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:10.5px;color:var(--muted);}
+  .cal-phase-rail .rail{flex:1;height:5px;border-radius:999px;overflow:hidden;display:flex;}
+  .cal-phase-rail .rail .fol{background:#2a2431;}
+  .cal-phase-rail .rail .lut{background:var(--lav-dim);}
+  .cal-phase-rail .rail .men{background:#6e5763;}
+  .cal-phase-rail .tag{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--lav);}
+  .cell.heat-0{background:transparent;}
+  .cell.heat-1{background:#2a2431;}
+  .cell.heat-2{background:#3d3040;}
+  .cell.heat-3{background:#523848;}
+  .cell.heat-4{background:#6a3f4a;font-weight:600;}
+  .cell.sel-h{box-shadow:0 0 0 2px var(--lav);}
+
+  .cal-mini .cell{font-size:12px;border-radius:9px;aspect-ratio:1;}
+  .cal-mini .cell .mig{bottom:4px;width:4px;height:4px;}
+  .cal-split-hint{font-size:11px;color:var(--faint);text-align:center;margin-top:10px;}
+  .screen.has-sheet .cal-sheet{position:absolute;left:0;right:0;bottom:78px;background:var(--surface);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:10px 16px 16px;box-shadow:0 -16px 40px -8px #000000aa;z-index:20;}
+  .cal-sheet .handle{width:36px;height:4px;border-radius:999px;background:var(--line);margin:0 auto 12px;}
+  .cal-sheet .sheet-cap{font-size:11px;color:var(--faint);text-align:center;margin-bottom:10px;}
+
+  .agenda-h{font-family:"Fraunces",serif;font-size:22px;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+  .agenda-h .pick{font-size:13px;color:var(--lav);font-weight:600;font-family:"Figtree",sans-serif;}
+  .agenda-list{margin-top:14px;display:flex;flex-direction:column;gap:14px;flex:1;overflow:hidden;}
+  .agenda-sec-h{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--lav);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .agenda-sec-h::after{content:"";flex:1;height:1px;background:var(--line);}
+  .agenda-row{display:flex;gap:12px;}
+  .agenda-row .dt{width:42px;text-align:center;flex:0 0 auto;}
+  .agenda-row .dt .d{font-family:"Fraunces",serif;font-size:20px;line-height:1;}
+  .agenda-row .dt .wd{font-size:9px;color:var(--faint);font-family:"JetBrains Mono",monospace;}
+  .agenda-row .body{flex:1;}
+  .agenda-row .body .ph{font-size:10px;color:var(--lav);font-weight:600;margin-bottom:6px;}
+  .agenda-entry{display:flex;align-items:center;gap:9px;background:#2a2431;border:1px solid var(--line);border-radius:12px;padding:9px 10px;margin-bottom:6px;}
+  .agenda-entry .em{width:24px;height:24px;border-radius:7px;background:#2e2735;display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .agenda-entry .t{font-size:12.5px;font-weight:500;}
+  .agenda-entry .s{font-size:10.5px;color:var(--faint);}
+  .agenda-entry .sev{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--coral);background:var(--coral-bg);border:1px solid var(--coral-dim);padding:2px 6px;border-radius:6px;}
+
+  .vscroll{flex:1;margin-top:10px;display:flex;flex-direction:column;gap:16px;overflow:hidden;}
+  .vscroll-mo{font-family:"Fraunces",serif;font-size:17px;font-weight:500;margin-bottom:8px;}
+  .vscroll-mo .yr{font-size:12px;color:var(--faint);font-weight:400;}
+  .vscroll-mo.cur{color:var(--coral);}
+  .vscroll .cal{gap:4px;}
+  .vscroll .cell{font-size:11.5px;border-radius:8px;}
+  .vscroll-fade{position:absolute;left:0;right:0;bottom:88px;height:48px;background:linear-gradient(180deg,transparent,var(--ink));pointer-events:none;z-index:10;}
+
+  .cal-expand{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;padding:10px;border:1px dashed var(--line);border-radius:12px;font-size:12.5px;color:var(--muted);font-weight:600;}
+  .cal-collapsed{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 8px;}
+  .cal-collapsed .dow{margin-top:0;margin-bottom:5px;}
+  .cal-collapsed .cell{font-size:10px;border-radius:7px;aspect-ratio:auto;height:26px;}
+  .cal-collapsed .cell .mig{display:none;}
+
+  .ring-cal{display:flex;flex-direction:column;align-items:center;margin-top:8px;}
+  .ring-cal svg{margin-top:6px;}
+  .ring-cal .sel-day{margin-top:14px;text-align:center;}
+  .ring-cal .sel-day .big{font-family:"Fraunces",serif;font-size:28px;line-height:1;}
+  .ring-cal .sel-day .sub{font-size:12px;color:var(--lav);font-weight:600;margin-top:4px;}
+
+  .dual-track{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+  .dual-lane{display:flex;align-items:center;gap:6px;}
+  .dual-lane .lbl{font-family:"JetBrains Mono",monospace;font-size:8px;width:28px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;}
+  .dual-lane .lane{flex:1;display:flex;gap:4px;}
+  .dual-lane .tick{flex:1;height:28px;border-radius:8px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;position:relative;}
+  .dual-lane .tick.on-mig{background:var(--coral-bg);border-color:var(--coral-dim);}
+  .dual-lane .tick.on-mig::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--coral);position:absolute;bottom:4px;}
+  .dual-lane .tick.on-lut{background:var(--lav-bg);}
+  .dual-lane .tick.on-period{background:var(--period-bg);border-color:#6e5763;}
+  .dual-lane .tick.sel{box-shadow:0 0 0 2px var(--coral);}
+
+  .contrib{margin-top:14px;}
+  .contrib .yr{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);margin-bottom:8px;}
+  .contrib-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:3px;}
+  .contrib-grid .dot{width:100%;aspect-ratio:1;border-radius:3px;background:#2a2431;}
+  .contrib-grid .dot.m1{background:#3d3040;}
+  .contrib-grid .dot.m2{background:#523848;}
+  .contrib-grid .dot.m3{background:var(--coral);box-shadow:0 0 6px var(--coral);}
+  .contrib-grid .dot.lut{outline:1px solid var(--lav-dim);}
+
+  .phase-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;flex:1;}
+  .phase-col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;gap:5px;min-height:0;}
+  .phase-col .ph-n{font-family:"JetBrains Mono",monospace;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);text-align:center;margin-bottom:4px;}
+  .phase-col.lut{border-color:var(--lav-dim);background:var(--lav-bg);}
+  .phase-col .day-chip{font-size:11px;text-align:center;padding:6px 0;border-radius:8px;background:#2a2431;}
+  .phase-col .day-chip.mig{color:var(--coral);font-weight:600;box-shadow:inset 0 0 0 1px var(--coral-dim);}
+  .phase-col .day-chip.today{box-shadow:0 0 0 2px var(--coral);}
+
+  .week-card{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;}
+  .week-card+.week-card{margin-top:10px;}
+  .week-card .wc-h{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;}
+  .week-card .wc-h b{color:var(--lav);}
+
+  .compare-cycles{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;}
+  .compare-cycles .row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--muted);}
+  .compare-cycles .row:last-child{margin-bottom:0;}
+  .compare-cycles .lbl{width:52px;font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);}
+  .compare-cycles .bar-wrap{flex:1;height:8px;background:#2a2431;border-radius:999px;position:relative;}
+  .compare-cycles .bar-wrap .fill{position:absolute;top:0;bottom:0;border-radius:999px;background:var(--lav-dim);}
+  .compare-cycles .bar-wrap .dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--coral);}
+
+  .split-fixed{display:flex;flex-direction:column;height:100%;margin-top:4px;}
+  .split-fixed .top-half{flex:0 0 48%;display:flex;flex-direction:column;overflow:hidden;}
+  .split-fixed .divider{height:1px;background:var(--line);margin:8px 0;}
+  .split-fixed .bot-half{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+  .pill-scrub{display:flex;gap:6px;margin-top:14px;overflow:hidden;padding-bottom:4px;}
+  .pill-scrub .pill-day{flex:0 0 auto;width:44px;padding:8px 0;border-radius:12px;background:var(--surface);border:1px solid var(--line);text-align:center;}
+  .pill-scrub .pill-day .wd{font-family:"JetBrains Mono",monospace;font-size:8px;color:var(--faint);}
+  .pill-scrub .pill-day .dn{font-size:14px;margin-top:3px;}
+  .pill-scrub .pill-day.lut{background:var(--lav-bg);}
+  .pill-scrub .pill-day.sel{background:var(--coral);border-color:var(--coral);}
+  .pill-scrub .pill-day.sel .wd,.pill-scrub .pill-day.sel .dn{color:#2a1714;}
+
+  .typo-cal{margin-top:16px;flex:1;}
+  .typo-day{padding:14px 0;border-bottom:1px solid var(--line);}
+  .typo-day.sel .typo-date{color:var(--coral);}
+  .typo-day .typo-date{font-family:"Fraunces",serif;font-size:22px;line-height:1.1;}
+  .typo-day .typo-meta{font-size:11px;color:var(--lav);font-weight:600;margin-top:4px;}
+  .typo-day .typo-entry{font-size:12.5px;color:var(--muted);margin-top:8px;}
+
+  .spine{flex:1;margin-top:14px;position:relative;padding-left:20px;overflow:hidden;}
+  .spine::before{content:"";position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--line);}
+  .spine-item{position:relative;margin-bottom:16px;padding-left:16px;}
+  .spine-item::before{content:"";position:absolute;left:-17px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--coral);border:2px solid var(--ink);box-shadow:0 0 8px var(--coral);}
+  .spine-item .dt{font-family:"Fraunces",serif;font-size:16px;}
+  .spine-item .meta{font-size:10px;color:var(--lav);font-weight:600;margin-top:2px;}
+  .spine-item .txt{font-size:12px;color:var(--muted);margin-top:4px;}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="kicker">Ebb · Calendar · Design exploration</div>
+  <h1>Eighteen ways to browse <em>history</em></h1>
+  <p>Standalone mock board — every option keeps the <b>Month</b> and <b>Week</b> toggle. Companion: <a href="symptom-tracker-calendar-mocks.html">18 broader calendar directions</a> · <a href="symptom-tracker-calendar-month-week-mocks.html">month &amp; week design pairs</a>.</p>
+</header>
+
+<section class="brief">
+  <h2>What every option must do</h2>
+  <p>Show <b>cycle context</b> (phase, cycle day, days to period), mark <b>migraines</b> and <b>period</b> (logged + predicted), let the user <b>pick a day</b> and read its entries, and respect <b>history limits</b> on the free tier. Navigation: ‹ Today back button; tab bar stays on Today underneath.</p>
+</section>
+
+<section class="legend">
+  <div>
+    <h4>Palette</h4>
+    <div class="sw"><i style="background:#E89B8B"></i> Coral — migraine / pain</div>
+    <div class="sw"><i style="background:#9D8FC7"></i> Lavender — cycle / hormone</div>
+    <div class="sw"><i style="background:#241f33;border:1px solid #4c4466"></i> Luteal tint</div>
+  </div>
+  <div>
+    <h4>Groups</h4>
+    <ul>
+      <li><b style="color:var(--text)">A · Baseline</b> — current shipped direction</li>
+      <li><b style="color:var(--text)">B · Spatial</b> — grids &amp; rings</li>
+      <li><b style="color:var(--text)">C · Temporal</b> — time-first layouts</li>
+      <li><b style="color:var(--text)">D · Density</b> — compact &amp; scannable</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Type</h4>
+    <ul>
+      <li>Fraunces — dates &amp; headings</li>
+      <li>Figtree — UI chrome</li>
+      <li>JetBrains Mono — weekdays, labels</li>
+    </ul>
+  </div>
+</section>
+
+<p class="section-h">A · Baseline (current direction)</p>
+<div class="grid">
+
+  <!-- 01 MONTH -->
+  <div class="frame-wrap">
+    <div class="scr-name base">01 · Month grid · baseline</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:21</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-ov">
+          <div class="ov-chip mig"><div class="n">3</div><div class="l">migraines</div></div>
+          <div class="ov-chip cyc"><div class="n">24</div><div class="l">cycle day</div></div>
+          <div class="ov-chip"><div class="n">6</div><div class="l">days to period</div></div>
+        </div>
+        <div class="cal-toggle"><span class="tg">Week</span><span class="tg on">Month</span></div>
+        <div class="dow"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+        <div class="cal">
+          <div class="cell">1</div><div class="cell">2</div><div class="cell">3</div><div class="cell">4</div><div class="cell">5</div><div class="cell lut">6</div><div class="cell lut">7</div>
+          <div class="cell lut">8<span class="mig"></span></div><div class="cell lut">9</div><div class="cell lut">10</div><div class="cell lut">11<span class="mig"></span></div><div class="cell lut">12</div><div class="cell lut">13</div><div class="cell lut today">14<span class="mig"></span></div>
+          <div class="cell lut">15</div><div class="cell lut">16</div><div class="cell lut">17</div><div class="cell lut">18</div><div class="cell lut">19</div><div class="cell pred">20</div><div class="cell pred">21</div>
+          <div class="cell pred">22</div><div class="cell pred">23</div><div class="cell pred">24</div><div class="cell">25</div><div class="cell">26</div><div class="cell">27</div><div class="cell">28</div>
+          <div class="cell">29</div><div class="cell">30</div><div class="cell out">1</div><div class="cell out">2</div><div class="cell out">3</div><div class="cell out">4</div><div class="cell out">5</div>
+        </div>
+        <div class="cal-legend">
+          <span><i class="mig"></i>Migraine</span><span><i class="lut"></i>Luteal</span><span><i class="pred"></i>Predicted</span><span><i class="tod"></i>Today</span>
+        </div>
+        <div class="day-detail">
+          <div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div>
+          <div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Reference implementation.</b> Familiar month grid, overview chips, week/month toggle, inline day detail. Most encoding lives in the cells.</div>
+  </div>
+
+  <!-- 02 WEEK -->
+  <div class="frame-wrap">
+    <div class="scr-name base">02 · Week strip · baseline</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:22</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">8–14 <span>June</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-ov">
+          <div class="ov-chip mig"><div class="n">3</div><div class="l">migraines</div></div>
+          <div class="ov-chip cyc"><div class="n">24</div><div class="l">cycle day</div></div>
+          <div class="ov-chip"><div class="n">6</div><div class="l">days to period</div></div>
+        </div>
+        <div class="cal-toggle"><span class="tg on">Week</span><span class="tg">Month</span></div>
+        <div class="wk-cap">Migraines often <b>cluster in the luteal window</b>.</div>
+        <div class="wk-strip">
+          <div class="wk-day lut"><span class="wd">MO</span><span class="dn">8</span><span class="wk-marks"><span class="mg"></span></span></div>
+          <div class="wk-day lut"><span class="wd">TU</span><span class="dn">9</span><span class="wk-marks"></span></div>
+          <div class="wk-day lut"><span class="wd">WE</span><span class="dn">10</span><span class="wk-marks"></span></div>
+          <div class="wk-day lut"><span class="wd">TH</span><span class="dn">11</span><span class="wk-marks"><span class="mg"></span></span></div>
+          <div class="wk-day lut"><span class="wd">FR</span><span class="dn">12</span><span class="wk-marks"></span></div>
+          <div class="wk-day lut"><span class="wd">SA</span><span class="dn">13</span><span class="wk-marks"></span></div>
+          <div class="wk-day sel lut"><span class="wd">SU</span><span class="dn">14</span><span class="wk-marks"><span class="mg"></span></span></div>
+        </div>
+        <div class="wk-phase"><span class="k lv">luteal</span><span class="seg"><span class="l" style="flex:0 0 57%"></span><span class="m" style="flex:1"></span></span><span class="k rs">menstrual</span></div>
+        <div class="day-detail" style="margin-top:14px;">
+          <div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div>
+          <div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Same screen, week toggle.</b> Phase bar under the strip tells the cycle story better than tinting every cell.</div>
+  </div>
+
+</div>
+
+<p class="section-h">B · Spatial — grids, rings &amp; lanes</p>
+<div class="grid">
+
+  <!-- 03 HEATMAP -->
+  <div class="frame-wrap">
+    <div class="scr-name">03 · Heatmap month</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:23</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-phase-rail"><span class="tag">luteal · day 24</span><div class="rail"><span class="fol" style="flex:0 0 38%"></span><span class="lut" style="flex:0 0 45%"></span><span class="men" style="flex:1"></span></div></div>
+        <div class="cal-ov" style="margin-top:12px;">
+          <div class="ov-chip mig"><div class="n">3</div><div class="l">migraines</div></div>
+          <div class="ov-chip"><div class="n">4.1</div><div class="l">avg severity</div></div>
+          <div class="ov-chip cyc"><div class="n">92%</div><div class="l">in luteal</div></div>
+        </div>
+        <div class="dow"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+        <div class="cal">
+          <div class="cell heat-0">1</div><div class="cell heat-0">2</div><div class="cell heat-1">3</div><div class="cell heat-0">4</div><div class="cell heat-0">5</div><div class="cell heat-1">6</div><div class="cell heat-1">7</div>
+          <div class="cell heat-2">8<span class="mig"></span></div><div class="cell heat-1">9</div><div class="cell heat-1">10</div><div class="cell heat-3">11<span class="mig"></span></div><div class="cell heat-1">12</div><div class="cell heat-1">13</div><div class="cell heat-4 today sel-h">14<span class="mig"></span></div>
+          <div class="cell heat-1">15</div><div class="cell heat-0">16</div><div class="cell heat-0">17</div><div class="cell heat-0">18</div><div class="cell heat-0">19</div><div class="cell pred heat-0">20</div><div class="cell pred heat-0">21</div>
+          <div class="cell pred heat-0">22</div><div class="cell heat-0">23</div><div class="cell heat-0">24</div><div class="cell heat-0">25</div><div class="cell heat-0">26</div><div class="cell heat-0">27</div><div class="cell heat-0">28</div>
+        </div>
+        <div class="cal-legend"><span><i class="mig"></i>Migraine</span><span><i style="background:#523848"></i>Heavier day</span><span><i class="pred"></i>Predicted</span></div>
+        <div class="day-detail"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Symptom load, not phase tint.</b> Darker cells = worse days. Phase moves to the rail + chips — answers “how bad was this month?”</div>
+  </div>
+
+  <!-- 04 RING -->
+  <div class="frame-wrap">
+    <div class="scr-name">04 · Ring calendar</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:23</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="ring-cal">
+          <svg width="220" height="220" viewBox="0 0 220 220">
+            <circle cx="110" cy="110" r="88" fill="none" stroke="#332b3d" stroke-width="14"/>
+            <circle cx="110" cy="110" r="88" fill="none" stroke="#4c4466" stroke-width="14" stroke-dasharray="553" stroke-dashoffset="180" stroke-linecap="round" transform="rotate(-90 110 110)"/>
+            <circle cx="110" cy="22" r="5" fill="#EDE6F0" opacity=".4"/>
+            <circle cx="110" cy="22" r="5" fill="#EDE6F0"/><text x="110" y="26" text-anchor="middle" fill="#776E80" font-size="8" font-family="JetBrains Mono">1</text>
+            <circle cx="198" cy="110" r="5" fill="#E89B8B"/><text x="198" y="114" text-anchor="middle" fill="#E89B8B" font-size="8" font-family="JetBrains Mono">14</text>
+            <circle cx="110" cy="198" r="5" fill="#E89B8B" opacity=".7"/>
+            <circle cx="22" cy="110" r="5" fill="#E89B8B" opacity=".7"/>
+          </svg>
+          <div class="sel-day"><div class="big">14</div><div class="sub">luteal · day 24 · Sunday</div></div>
+        </div>
+        <div class="cal-legend" style="justify-content:center;margin-top:8px;"><span><i class="mig"></i>Migraine day</span><span><i class="lut"></i>Luteal arc</span></div>
+        <div class="day-detail"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Extends Today’s cycle ring.</b> Month as a circular track — luteal arc, coral migraine days. Distinctive but harder to scan at a glance.</div>
+  </div>
+
+  <!-- 05 DUAL TRACK -->
+  <div class="frame-wrap">
+    <div class="scr-name">05 · Dual track lanes</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:24</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">8–14 <span>June</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-ov">
+          <div class="ov-chip mig"><div class="n">3</div><div class="l">migraines</div></div>
+          <div class="ov-chip cyc"><div class="n">24</div><div class="l">cycle day</div></div>
+          <div class="ov-chip"><div class="n">6</div><div class="l">days to period</div></div>
+        </div>
+        <div class="dual-track">
+          <div class="dual-lane"><span class="lbl">Pain</span><div class="lane">
+            <div class="tick on-mig">8</div><div class="tick">9</div><div class="tick">10</div><div class="tick on-mig">11</div><div class="tick">12</div><div class="tick">13</div><div class="tick on-mig sel">14</div>
+          </div></div>
+          <div class="dual-lane"><span class="lbl">Cycle</span><div class="lane">
+            <div class="tick on-lut">8</div><div class="tick on-lut">9</div><div class="tick on-lut">10</div><div class="tick on-lut">11</div><div class="tick on-lut">12</div><div class="tick on-lut">13</div><div class="tick on-lut sel">14</div>
+          </div></div>
+        </div>
+        <div class="wk-phase"><span class="k lv">luteal</span><span class="seg"><span class="l" style="flex:0 0 57%"></span><span class="m" style="flex:1"></span></span><span class="k rs">menstrual</span></div>
+        <div class="day-detail" style="margin-top:14px;"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Two parallel stories.</b> Migraine lane stacked above cycle lane — overlap jumps out without mixing encodings in one cell.</div>
+  </div>
+
+  <!-- 06 PHASE COLUMNS -->
+  <div class="frame-wrap">
+    <div class="scr-name">06 · Phase columns</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:24</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">Cycle 4 <span>· day 24</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="wk-cap" style="margin-top:8px;">Days grouped by <b>phase</b>, not calendar week.</div>
+        <div class="phase-cols">
+          <div class="phase-col"><div class="ph-n">Menstrual</div><div class="day-chip">1</div><div class="day-chip">2</div><div class="day-chip">3</div><div class="day-chip">4</div><div class="day-chip">5</div></div>
+          <div class="phase-col"><div class="ph-n">Follicular</div><div class="day-chip">6</div><div class="day-chip">7</div><div class="day-chip">…</div><div class="day-chip">16</div></div>
+          <div class="phase-col lut"><div class="ph-n" style="color:var(--lav)">Luteal</div><div class="day-chip mig">17</div><div class="day-chip mig">20</div><div class="day-chip mig today">24</div><div class="day-chip">25</div></div>
+          <div class="phase-col"><div class="ph-n">Next</div><div class="day-chip" style="opacity:.5">1</div><div class="day-chip" style="opacity:.5">2</div></div>
+        </div>
+        <div class="day-detail"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Phase-first kanban.</b> Migraines stack in the luteal column — makes clustering obvious, loses calendar-week context.</div>
+  </div>
+
+  <!-- 07 CONTRIBUTION -->
+  <div class="frame-wrap">
+    <div class="scr-name">07 · Contribution grid</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:25</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">2026 <span>· migraines</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-ov">
+          <div class="ov-chip mig"><div class="n">11</div><div class="l">this year</div></div>
+          <div class="ov-chip cyc"><div class="n">4</div><div class="l">cycles</div></div>
+          <div class="ov-chip"><div class="n">2.8</div><div class="l">avg / cycle</div></div>
+        </div>
+        <div class="contrib">
+          <div class="yr">Jan – Jun · lavender outline = luteal days</div>
+          <div class="contrib-grid">
+            <div class="dot"></div><div class="dot"></div><div class="dot m1 lut"></div><div class="dot m2 lut"></div><div class="dot"></div><div class="dot m3 lut"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot m1"></div><div class="dot m2 lut"></div><div class="dot m3 lut"></div><div class="dot m1"></div><div class="dot m2 lut"></div><div class="dot m3 lut"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot m1 lut"></div><div class="dot m2 lut"></div><div class="dot m3 lut"></div><div class="dot"></div><div class="dot m1 lut"></div>
+            <div class="dot m2 lut"></div><div class="dot m3 lut"></div><div class="dot"></div><div class="dot m1"></div><div class="dot m2 lut"></div><div class="dot m3 lut"></div><div class="dot m1 lut"></div>
+            <div class="dot m2 lut"></div><div class="dot m3 lut"></div><div class="dot"></div><div class="dot"></div><div class="dot m1 lut"></div><div class="dot m2 lut"></div><div class="dot m3 lut"></div>
+            <div class="dot"></div><div class="dot m1"></div><div class="dot m2"></div><div class="dot m3 lut"></div><div class="dot m1 lut"></div><div class="dot m2 lut"></div><div class="dot m3 lut"></div>
+          </div>
+        </div>
+        <div class="cal-legend"><span><i class="mig"></i>Migraine day</span><span><i class="lut"></i>Luteal outline</span><span><i style="background:#2a2431"></i>Quiet</span></div>
+        <div class="day-detail"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Year-at-a-glance density.</b> GitHub-style dots — great for spotting seasonal clusters; day detail still needed for specifics.</div>
+  </div>
+
+</div>
+
+<p class="section-h">C · Temporal — time &amp; cycle first</p>
+<div class="grid">
+
+  <!-- 08 CYCLE TIMELINE -->
+  <div class="frame-wrap">
+    <div class="scr-name">08 · Cycle timeline</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:25</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">Cycle 4 <span>May 18 – Jun 14</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-toggle"><span class="tg on">Cycle</span><span class="tg">Week</span><span class="tg">Month</span></div>
+        <div style="margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 14px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.45;">Migraines <b style="color:var(--lav)">cluster in the luteal window</b> — same axis as Patterns.</div>
+          <div class="tl">
+            <span class="day0">day 1</span><div class="axis"></div>
+            <div class="luteal" style="left:52%;right:0;"></div>
+            <div class="mk" style="left:58%"></div><div class="mk" style="left:72%"></div><div class="mk" style="left:86%;outline:2px solid var(--lav);outline-offset:1px;"></div>
+            <div class="ph" style="left:12%">menstrual</div><div class="ph" style="left:38%">follicular</div><div class="ph" style="left:76%;color:var(--lav)">luteal</div>
+          </div>
+        </div>
+        <div class="cal-ov" style="margin-top:14px;">
+          <div class="ov-chip mig"><div class="n">3</div><div class="l">migraines</div></div>
+          <div class="ov-chip cyc"><div class="n">24</div><div class="l">cycle day</div></div>
+          <div class="ov-chip"><div class="n">6</div><div class="l">days to period</div></div>
+        </div>
+        <div class="day-detail"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Cycle page, not month page.</b> Swipe between cycles; tap markers for day detail. Best when the user thinks in cycle days, not calendar dates.</div>
+  </div>
+
+  <!-- 09 AGENDA -->
+  <div class="frame-wrap">
+    <div class="scr-name">09 · Agenda list</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:26</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="agenda-h"><span>June 2026</span><span class="pick">Month ▾</span></div>
+        <div class="agenda-list">
+          <div><div class="agenda-sec-h">Luteal · this week</div>
+            <div class="agenda-row"><div class="dt"><div class="d" style="color:var(--coral)">14</div><div class="wd">SUN</div></div><div class="body"><div class="ph">luteal · day 24</div><div class="agenda-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div></div>
+            <div class="agenda-row" style="margin-top:10px;"><div class="dt"><div class="d">11</div><div class="wd">WED</div></div><div class="body"><div class="ph">luteal · day 21</div><div class="agenda-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">07:15 · dull</div></div><span class="sev">3/5</span></div></div></div>
+          </div>
+          <div><div class="agenda-sec-h">Earlier in June</div>
+            <div class="agenda-row"><div class="dt"><div class="d">8</div><div class="wd">MON</div></div><div class="body"><div class="ph">luteal · day 18</div><div class="agenda-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">22:10 · throbbing</div></div><span class="sev">4/5</span></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Log archive.</b> Only days with entries; phase section headers. Ideal for doctor prep and “what did I log?”</div>
+  </div>
+
+  <!-- 10 VERTICAL SCROLL -->
+  <div class="frame-wrap">
+    <div class="scr-name">10 · Vertical scroll history</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:26</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar" style="position:relative;">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">History</div><div class="cal-nav" style="font-size:12px;"><span style="color:var(--lav)">Jump to today</span></div></div>
+        <div class="vscroll">
+          <div><div class="vscroll-mo cur">June <span class="yr">2026</span></div>
+            <div class="dow" style="margin-top:0;margin-bottom:5px;"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+            <div class="cal"><div class="cell">1</div><div class="cell lut">6</div><div class="cell lut">8<span class="mig"></span></div><div class="cell lut">11<span class="mig"></span></div><div class="cell lut today">14<span class="mig"></span></div><div class="cell pred">20</div><div class="cell pred">21</div></div>
+          </div>
+          <div><div class="vscroll-mo">May <span class="yr">2026</span></div>
+            <div class="dow" style="margin-top:0;margin-bottom:5px;"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+            <div class="cal"><div class="cell lut">18</div><div class="cell lut">21</div><div class="cell period">22<span class="mig"></span></div><div class="cell period">23<span class="mig"></span></div><div class="cell period">24</div></div>
+          </div>
+          <div style="opacity:.5;"><div class="vscroll-mo">April <span class="yr">2026</span></div><div class="cal"><div class="cell">1</div><div class="cell">2</div><div class="cell">3</div></div></div>
+        </div>
+        <div class="vscroll-fade"></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Continuous journal.</b> Stacked months, scroll back through history — natural for Ebb+ gating. Tap a day for detail.</div>
+  </div>
+
+  <!-- 11 SPINE -->
+  <div class="frame-wrap">
+    <div class="scr-name">11 · Timeline spine</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:27</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">Recent <span>· June</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="spine">
+          <div class="spine-item"><div class="dt">Sun 14 June</div><div class="meta">luteal · day 24</div><div class="txt">🤕 Migraine · right · 4/5 · 20:40</div></div>
+          <div class="spine-item"><div class="dt">Wed 11 June</div><div class="meta">luteal · day 21</div><div class="txt">🤕 Migraine · right · 3/5 · 07:15</div></div>
+          <div class="spine-item"><div class="dt">Mon 8 June</div><div class="meta">luteal · day 18</div><div class="txt">🤕 Migraine · right · 4/5 · 22:10</div></div>
+          <div class="spine-item" style="opacity:.55;"><div class="dt">Fri 22 May</div><div class="meta" style="color:var(--period)">menstrual · day 1</div><div class="txt">🩸 Period · heavy · 🤕 Migraine · 11:30</div></div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Vertical event stream.</b> No grid — a spine with branching entries. Reads like a medical diary; less spatial calendar feel.</div>
+  </div>
+
+  <!-- 12 COMPARE -->
+  <div class="frame-wrap">
+    <div class="scr-name">12 · Compare cycles</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:27</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">Cycles <span>· compare</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="compare-cycles">
+          <div class="row"><span class="lbl">Cycle 4</span><div class="bar-wrap"><div class="fill" style="left:52%;width:48%"></div><div class="dot" style="left:58%"></div><div class="dot" style="left:72%"></div><div class="dot" style="left:86%"></div></div><span>3 mig</span></div>
+          <div class="row"><span class="lbl">Cycle 3</span><div class="bar-wrap"><div class="fill" style="left:50%;width:50%"></div><div class="dot" style="left:55%"></div><div class="dot" style="left:68%"></div><div class="dot" style="left:78%"></div><div class="dot" style="left:90%"></div></div><span>4 mig</span></div>
+          <div class="row"><span class="lbl">Cycle 2</span><div class="bar-wrap"><div class="fill" style="left:54%;width:46%"></div><div class="dot" style="left:60%"></div><div class="dot" style="left:75%"></div></div><span>2 mig</span></div>
+        </div>
+        <div class="wk-cap" style="margin-top:14px;">This cycle vs last — migraines still <b>landing in luteal</b>, slightly fewer than cycle 3.</div>
+        <div class="day-detail"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24 · cycle 4</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Pattern confirmation mode.</b> Overlay last 2–3 cycles — “is it getting better?” Bridges Calendar and Patterns.</div>
+  </div>
+
+</div>
+
+<p class="section-h">D · Density — compact &amp; drill-in</p>
+<div class="grid">
+
+  <!-- 13 SPLIT SHEET -->
+  <div class="frame-wrap">
+    <div class="scr-name">13 · Split + bottom sheet</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:28</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar has-sheet">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-phase-rail"><span class="tag">luteal · day 24</span><div class="rail"><span class="fol" style="flex:0 0 38%"></span><span class="lut" style="flex:1"></span></div><span style="font-size:9px;color:var(--faint)">6d</span></div>
+        <div class="dow" style="margin-top:12px;margin-bottom:5px;"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+        <div class="cal cal-mini">
+          <div class="cell out">26</div><div class="cell out">30</div><div class="cell">1</div><div class="cell lut">6</div><div class="cell lut">8<span class="mig"></span></div><div class="cell lut">11<span class="mig"></span></div><div class="cell lut today">14<span class="mig"></span></div>
+          <div class="cell lut">15</div><div class="cell lut">16</div><div class="cell lut">17</div><div class="cell lut">18</div><div class="cell lut">19</div><div class="cell pred">20</div><div class="cell pred">21</div>
+        </div>
+        <div class="cal-split-hint">2-week strip · tap a day</div>
+        <div class="cal-sheet"><div class="handle"></div><div class="sheet-cap">Sun 14 June · luteal · day 24</div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Mini grid + sheet.</b> Overview chips removed; detail slides up. Grid stays visible while reading entries — less scroll than baseline.</div>
+  </div>
+
+  <!-- 14 WEEK FIRST -->
+  <div class="frame-wrap">
+    <div class="scr-name">14 · Week-first · expandable month</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:28</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">8–14 <span>June</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-ov">
+          <div class="ov-chip mig"><div class="n">3</div><div class="l">migraines</div></div>
+          <div class="ov-chip cyc"><div class="n">24</div><div class="l">cycle day</div></div>
+          <div class="ov-chip"><div class="n">6</div><div class="l">days to period</div></div>
+        </div>
+        <div class="wk-strip" style="margin-top:12px;">
+          <div class="wk-day lut"><span class="wd">MO</span><span class="dn">8</span><span class="wk-marks"><span class="mg"></span></span></div>
+          <div class="wk-day lut"><span class="wd">TU</span><span class="dn">9</span><span class="wk-marks"></span></div>
+          <div class="wk-day lut"><span class="wd">WE</span><span class="dn">10</span><span class="wk-marks"></span></div>
+          <div class="wk-day lut"><span class="wd">TH</span><span class="dn">11</span><span class="wk-marks"><span class="mg"></span></span></div>
+          <div class="wk-day lut"><span class="wd">FR</span><span class="dn">12</span><span class="wk-marks"></span></div>
+          <div class="wk-day lut"><span class="wd">SA</span><span class="dn">13</span><span class="wk-marks"></span></div>
+          <div class="wk-day sel lut"><span class="wd">SU</span><span class="dn">14</span><span class="wk-marks"><span class="mg"></span></span></div>
+        </div>
+        <div class="wk-phase"><span class="k lv">luteal</span><span class="seg"><span class="l" style="flex:0 0 57%"></span><span class="m" style="flex:1"></span></span><span class="k rs">menstrual</span></div>
+        <div class="cal-expand"><span style="color:var(--lav);font-size:10px;">▾</span> Show full month</div>
+        <div class="cal-collapsed"><div class="dow"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+          <div class="cal"><div class="cell">1</div><div class="cell lut">6</div><div class="cell lut">8</div><div class="cell lut">11</div><div class="cell lut today">14</div></div>
+        </div>
+        <div class="day-detail" style="margin-top:10px;"><div class="dd-h"><span class="d">Sun 14 June</span><span class="ph">luteal · day 24</span></div><div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing</div></div><span class="sev">4/5</span></div></div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Week is home.</b> No mode toggle for most sessions — month expands on demand. Strongest near-term cycle story.</div>
+  </div>
+
+  <!-- 15 FIXED SPLIT -->
+  <div class="frame-wrap">
+    <div class="scr-name">15 · Fixed 50 / 50 split</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:29</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="split-fixed">
+          <div class="top-half">
+            <div class="cal-top"><div class="m" style="font-size:18px;">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+            <div class="dow" style="margin-top:10px;margin-bottom:5px;"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+            <div class="cal">
+              <div class="cell">1</div><div class="cell lut">6</div><div class="cell lut">8<span class="mig"></span></div><div class="cell lut">11<span class="mig"></span></div><div class="cell lut today">14<span class="mig"></span></div><div class="cell pred">20</div><div class="cell pred">21</div>
+              <div class="cell pred">22</div><div class="cell">25</div><div class="cell">26</div><div class="cell">27</div><div class="cell">28</div><div class="cell">29</div><div class="cell">30</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="bot-half">
+            <div class="dd-h" style="margin-bottom:10px;"><span class="d" style="font-family:Fraunces,serif;font-size:16px;">Sun 14 June</span><span class="ph" style="font-size:11px;color:var(--lav);font-weight:600;">luteal · day 24</span></div>
+            <div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing · worse with movement</div></div><span class="sev">4/5</span></div>
+            <div style="margin-top:12px;font-size:12px;color:var(--faint);">Tap an entry to edit · + log for this day</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>No scrolling.</b> Grid pinned top, detail pinned bottom — always see both. Works on larger phones; tight on SE.</div>
+  </div>
+
+  <!-- 16 PILL SCRUBBER -->
+  <div class="frame-wrap">
+    <div class="scr-name">16 · Day pill scrubber</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:29</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="cal-phase-rail"><span class="tag">luteal · day 24</span><div class="rail"><span class="fol" style="flex:0 0 38%"></span><span class="lut" style="flex:1"></span></div></div>
+        <div class="pill-scrub">
+          <div class="pill-day lut"><div class="wd">WE</div><div class="dn">11</div></div>
+          <div class="pill-day lut"><div class="wd">TH</div><div class="dn">12</div></div>
+          <div class="pill-day lut"><div class="wd">FR</div><div class="dn">13</div></div>
+          <div class="pill-day sel"><div class="wd">SU</div><div class="dn">14</div></div>
+          <div class="pill-day lut"><div class="wd">MO</div><div class="dn">15</div></div>
+          <div class="pill-day lut"><div class="wd">TU</div><div class="dn">16</div></div>
+          <div class="pill-day"><div class="wd">WE</div><div class="dn">17</div></div>
+        </div>
+        <div style="margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;flex:1;">
+          <div style="font-family:JetBrains Mono,monospace;font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;">Sun 14 · 1 entry</div>
+          <div class="dd-entry"><span class="em">🤕</span><div><div class="t">Migraine · right side</div><div class="s">20:40 · throbbing · 4/5</div></div></div>
+        </div>
+        <div class="cal-expand" style="margin-top:12px;border-style:solid;background:var(--surface);">▦ Open full month</div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Horizontal day scrubber.</b> Swipe pills to move through the month; full grid is secondary. Fast thumb navigation mid-flare.</div>
+  </div>
+
+  <!-- 17 TYPOGRAPHIC -->
+  <div class="frame-wrap">
+    <div class="scr-name">17 · Typographic diary</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:30</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="agenda-h"><span>June</span><span class="pick">2026 ▾</span></div>
+        <div class="typo-cal">
+          <div class="typo-day sel"><div class="typo-date">14 · Sunday</div><div class="typo-meta">luteal · day 24</div><div class="typo-entry">🤕 Migraine · right · throbbing · 4/5 · 20:40</div></div>
+          <div class="typo-day"><div class="typo-date">11 · Wednesday</div><div class="typo-meta">luteal · day 21</div><div class="typo-entry">🤕 Migraine · right · dull · 3/5 · 07:15</div></div>
+          <div class="typo-day"><div class="typo-date">8 · Monday</div><div class="typo-meta">luteal · day 18</div><div class="typo-entry">🤕 Migraine · right · throbbing · 4/5 · 22:10</div></div>
+          <div class="typo-day" style="opacity:.45;"><div class="typo-date">2 · Tuesday</div><div class="typo-meta">follicular · day 12</div><div class="typo-entry">Nothing logged</div></div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>No grid at all.</b> Large Fraunces dates, plain entry lines — calm and readable. Loses month-at-a-glance entirely.</div>
+  </div>
+
+  <!-- 18 WEEK CARDS -->
+  <div class="frame-wrap">
+    <div class="scr-name">18 · Week cards</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:30</span><span class="dots">􀙇 􀛨 􀋨</span></div>
+      <div class="screen has-tabbar">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="cal-top"><div class="m">June <span>2026</span></div><div class="cal-nav"><span>‹</span><span>›</span></div></div>
+        <div class="week-card" style="border-color:var(--coral-dim);">
+          <div class="wc-h"><b>This week</b> · 8–14 Jun · luteal</div>
+          <div class="dd-entry"><span class="em">🤕</span><div><div class="t">Sun 14 · Migraine · 4/5</div><div class="s">20:40 · right · throbbing</div></div></div>
+          <div class="dd-entry" style="margin-top:8px;"><span class="em">🤕</span><div><div class="t">Wed 11 · Migraine · 3/5</div><div class="s">07:15 · right · dull</div></div></div>
+        </div>
+        <div class="week-card">
+          <div class="wc-h">1–7 Jun · luteal → follicular</div>
+          <div class="dd-entry"><span class="em">🤕</span><div><div class="t">Mon 8 · Migraine · 4/5</div><div class="s">22:10 · right · throbbing</div></div></div>
+        </div>
+        <div class="week-card" style="opacity:.6;">
+          <div class="wc-h">25–31 May · previous cycle</div>
+          <div style="font-size:12px;color:var(--faint);">2 migraines · period started Fri 22</div>
+        </div>
+      </div>
+      <div class="tabbar"><div class="tab on"><span class="ic">☀</span>Today</div><div class="tab"><span class="ic">◠</span>Patterns</div><div class="tab"><span class="ic">⚙</span>Settings</div></div>
+    </div>
+    <div class="annot"><b>Entries grouped by week.</b> Each card is a bounded chunk of history — scannable like a inbox, less precise than a grid.</div>
+  </div>
+
+</div>
+
+<section class="brief" style="margin-top:56px;">
+  <h2>Mixing directions</h2>
+  <p>Strongest combos from this board: <em>14 week-first</em> + <em>13 bottom sheet</em> for drill-in; <em>08 cycle timeline</em> as a third toggle beside week/month; <em>12 compare cycles</em> as a filter on any grid view. Baseline <b>01–02</b> remain the safest default for new users.</p>
+</section>
+
+<footer class="footer">
+  <span class="fm">EBB · calendar mocks · v1</span>
+  <span>18 options · open in browser · docs/symptom-tracker-calendar-mocks.html</span>
+</footer>
+
+</body>
+</html>

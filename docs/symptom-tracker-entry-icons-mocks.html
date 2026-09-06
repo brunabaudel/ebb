@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Entry icon explorations (SF Symbols)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0E0B12;--ink:#1A1620;--surface:#241E2C;--line:#3A3242;
+    --text:#EDE6F0;--muted:#A99FB0;--faint:#776E80;
+    --coral:#E89B8B;--coral-dim:#7d4f48;--coral-bg:#2e2229;
+    --lav:#9D8FC7;--lav-dim:#4c4466;--lav-bg:#241f33;
+    --period:#d98a9e;--period-bg:#2c2030;
+    --sage:#8FB1A0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--page);color:var(--text);font-family:"Figtree",system-ui,sans-serif;line-height:1.45;padding:48px 24px 80px;-webkit-font-smoothing:antialiased}
+
+  .head{max-width:1100px;margin:0 auto 36px;}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--lav);margin-bottom:14px;}
+  .head h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(28px,4.5vw,42px);line-height:1.06;}
+  .head h1 em{font-style:italic;color:var(--coral);}
+  .head p{color:var(--muted);max-width:65ch;margin-top:14px;font-size:15px;}
+  .head a{color:var(--lav)}
+
+  .brief{max-width:1100px;margin:0 auto 40px;padding:18px 22px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(135deg,#221b2e,#1A1620);font-size:14px;color:var(--muted);line-height:1.6;}
+  .brief b{color:var(--text)}
+
+  .section{max-width:1100px;margin:0 auto 48px;}
+  .sec-h{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+  .sec-title{font-family:"Fraunces",serif;font-size:22px;font-weight:500;margin-bottom:6px;}
+  .sec-desc{font-size:13px;color:var(--faint);margin-bottom:22px;max-width:60ch;line-height:1.55;}
+
+  .icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;}
+  .icon-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 14px 14px;text-align:center;}
+  .icon-card.rec{border-color:var(--coral-dim);box-shadow:0 0 0 1px rgba(232,155,139,.12);}
+  .icon-card .sw{display:flex;align-items:center;justify-content:center;height:52px;margin-bottom:12px;}
+  .icon-card .name{font-size:13px;font-weight:600;margin-bottom:4px;}
+  .icon-card .note{font-size:11px;color:var(--faint);line-height:1.35;}
+  .icon-card .tag{display:inline-block;margin-top:8px;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;border-radius:6px;}
+  .icon-card .tag.rec{color:var(--coral);background:var(--coral-bg);border:1px solid var(--coral-dim);}
+  .icon-card .mono{display:block;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);word-break:break-all;line-height:1.35;margin-top:5px;text-decoration:none;}
+  .icon-card a.mono{color:var(--lav);}
+  .icon-card a.mono:hover{text-decoration:underline;}
+
+  .icon-card .sw .sf{width:28px;height:28px;object-fit:contain;display:block;}
+  .sf.t-coral{filter:brightness(0) saturate(100%) invert(76%) sepia(19%) saturate(749%) hue-rotate(314deg) brightness(101%) contrast(89%);}
+  .sf.t-lav{filter:brightness(0) saturate(100%) invert(68%) sepia(12%) saturate(847%) hue-rotate(219deg) brightness(92%) contrast(89%);}
+  .sf.t-period{filter:brightness(0) saturate(100%) invert(72%) sepia(18%) saturate(687%) hue-rotate(303deg) brightness(95%) contrast(88%);}
+  .sf.t-sage{filter:brightness(0) saturate(100%) invert(73%) sepia(11%) saturate(589%) hue-rotate(108deg) brightness(93%) contrast(88%);}
+  .sf.t-neutral{filter:brightness(0) invert(1);opacity:.55;}
+
+  .demo-block{max-width:1100px;margin:0 auto 56px;}
+  .demo-row{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;}
+  .phone-demo{width:300px;background:var(--ink);border:1px solid var(--line);border-radius:24px;padding:18px 16px;}
+  .phone-demo .lbl{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px;}
+  .log-row{display:flex;gap:12px;padding:10px 0;align-items:flex-start;}
+  .log-row+.log-row{border-top:1px solid var(--line);}
+  .log-ico{flex:0 0 22px;height:22px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .log-ico .sf{width:20px;height:20px;object-fit:contain;display:block;}
+  .log-body{flex:1;min-width:0;}
+  .log-head{display:flex;justify-content:space-between;gap:8px;}
+  .log-title{font-size:13px;font-weight:600;}
+  .log-time{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);}
+  .log-desc{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  .cal-row{display:flex;gap:6px;margin-top:10px;}
+  .cal-cell{width:34px;height:30px;border-radius:8px;background:var(--lav-bg);display:flex;align-items:center;justify-content:center;font-size:11px;position:relative;}
+  .cal-cell .mini{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);}
+  .cal-cell .sf-mini{width:12px;height:12px;object-fit:contain;display:block;}
+
+  .pick{max-width:1100px;margin:0 auto;padding:20px 22px;border:1px solid var(--coral-dim);border-radius:16px;background:#2a2228;font-size:14px;color:var(--muted);line-height:1.6;}
+  .pick h2{font-family:"Fraunces",serif;font-size:18px;color:var(--text);font-weight:500;margin-bottom:8px;}
+  .pick em{color:var(--coral);font-style:normal;font-weight:600;}
+  .pick code{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--text);}
+
+  .footer{max-width:1100px;margin:48px auto 0;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);font-family:"JetBrains Mono",monospace;}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="kicker">Ebb · Entry icons · SF Symbols</div>
+  <h1>Three log types, <em>system marks</em></h1>
+  <p>Apple SF Symbols for migraine, menstrual, and non-migraine entries. Browse the full library at <a href="https://sf-symbols.vercel.app/" target="_blank" rel="noopener">sf-symbols.vercel.app</a>. Companion: <a href="symptom-tracker-calendar-month-week-mocks.html">calendar mocks</a>.</p>
+</header>
+
+<section class="brief">
+  <b>Design rules:</b> No emoji. No brains or crosses. Migraine = rings/pulse · Menstrual = drop/dash · Non-migraine = <b>square or line</b> (never rings). SwiftUI: <code style="font-family:JetBrains Mono,monospace;font-size:12px;color:var(--text)">Image(systemName: "…")</code> · tint with theme colours · iOS 17+.
+</section>
+
+<!-- MIGRAINE -->
+<section class="section">
+  <div class="sec-h">Pain axis · coral · Image(systemName:)</div>
+  <div class="sec-title">Migraine icons</div>
+  <div class="sec-desc">Throbbing or focal pain — rings and waves, not literal heads.</div>
+  <div class="icon-grid">
+
+    <div class="icon-card rec">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/smallcircle.fill.circle.png" alt="" width="28" height="28"></div>
+      <div class="name">Pulse ring</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=smallcircle.fill.circle" target="_blank" rel="noopener">smallcircle.fill.circle</a>
+      <div class="note">Top pick — dot inside ring</div>
+      <span class="tag rec">pick</span>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/waveform.path.ecg.png" alt="" width="28" height="28"></div>
+      <div class="name">Throb wave</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=waveform.path.ecg" target="_blank" rel="noopener">waveform.path.ecg</a>
+      <div class="note">ECG spike — intensity</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/waveform.circle.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Wave pulse</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=waveform.circle.fill" target="_blank" rel="noopener">waveform.circle.fill</a>
+      <div class="note">Smooth pulsing rhythm</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/bolt.circle.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Bolt circle</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=bolt.circle.fill" target="_blank" rel="noopener">bolt.circle.fill</a>
+      <div class="note">Sudden sharp onset</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/burst.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Star burst</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=burst.fill" target="_blank" rel="noopener">burst.fill</a>
+      <div class="note">Sharp pain — use sparingly</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/dot.radiowaves.right.png" alt="" width="28" height="28"></div>
+      <div class="name">Radiate</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=dot.radiowaves.right" target="_blank" rel="noopener">dot.radiowaves.right</a>
+      <div class="note">Pain spreading from a point</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/bandage.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Bandage</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=bandage.fill" target="_blank" rel="noopener">bandage.fill</a>
+      <div class="note">Tension / pressure type</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/largecircle.fill.circle.png" alt="" width="28" height="28"></div>
+      <div class="name">Target rings</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=largecircle.fill.circle" target="_blank" rel="noopener">largecircle.fill.circle</a>
+      <div class="note">Aura / focal rings</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MENSTRUAL -->
+<section class="section">
+  <div class="sec-h">Cycle axis · lavender / period</div>
+  <div class="sec-title">Menstrual icons</div>
+  <div class="sec-desc">Drop in list rows · horizontal bar in calendar cells.</div>
+  <div class="icon-grid">
+
+    <div class="icon-card rec">
+      <div class="sw"><img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/drop.triangle.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Drop</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=drop.fill" target="_blank" rel="noopener">drop.fill</a>
+      <div class="note">List rows — use drop.fill in app</div>
+      <span class="tag rec">pick · list</span>
+    </div>
+
+    <div class="icon-card rec">
+      <div class="sw"><img class="sf t-period" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/minus.rectangle.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Period dash</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=circle.and.line.horizontal.fill" target="_blank" rel="noopener">circle.and.line.horizontal.fill</a>
+      <div class="note">Calendar cell marker</div>
+      <span class="tag rec">pick · cal</span>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/moon.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Moon</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=moon.fill" target="_blank" rel="noopener">moon.fill</a>
+      <div class="note">Cycle phase context</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/moon.circle.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Moon circle</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=moon.circle.fill" target="_blank" rel="noopener">moon.circle.fill</a>
+      <div class="note">Enclosed — reads small</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/circle.lefthalf.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Half moon</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=circle.lefthalf.fill" target="_blank" rel="noopener">circle.lefthalf.fill</a>
+      <div class="note">Phase indicator</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/drop.triangle.png" alt="" width="28" height="28"></div>
+      <div class="name">Drop outline</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=drop.triangle" target="_blank" rel="noopener">drop.triangle</a>
+      <div class="note">Lighter list variant</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-period" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/line.horizontal.3.png" alt="" width="28" height="28"></div>
+      <div class="name">Triple dash</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=line.horizontal.3" target="_blank" rel="noopener">line.horizontal.3</a>
+      <div class="note">Minimal calendar marker</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/circle.righthalf.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Waning phase</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=circle.righthalf.fill" target="_blank" rel="noopener">circle.righthalf.fill</a>
+      <div class="note">Alternative phase mark</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- NON-MIGRAINE -->
+<section class="section">
+  <div class="sec-h">Neutral axis · sage / muted</div>
+  <div class="sec-title">Non-migraine icons</div>
+  <div class="sec-desc">Angular or linear shapes — <b>not rings</b> (too close to migraine pulse).</div>
+  <div class="icon-grid">
+
+    <div class="icon-card rec">
+      <div class="sw"><img class="sf t-sage" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/checkmark.square.png" alt="" width="28" height="28"></div>
+      <div class="name">Check square</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=checkmark.square" target="_blank" rel="noopener">checkmark.square</a>
+      <div class="note">“No migraine” — square, not ring</div>
+      <span class="tag rec">pick</span>
+    </div>
+
+    <div class="icon-card rec">
+      <div class="sw"><img class="sf t-neutral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/square.png" alt="" width="28" height="28"></div>
+      <div class="name">Square outline</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=square" target="_blank" rel="noopener">square</a>
+      <div class="note">Generic / quiet log</div>
+      <span class="tag rec">pick</span>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-sage" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/checkmark.square.fill.png" alt="" width="28" height="28"></div>
+      <div class="name">Check square fill</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=checkmark.square.fill" target="_blank" rel="noopener">checkmark.square.fill</a>
+      <div class="note">Stronger positive signal</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-neutral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/minus.png" alt="" width="28" height="28"></div>
+      <div class="name">Em dash</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=minus" target="_blank" rel="noopener">minus</a>
+      <div class="note">Minimal — nothing notable</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-neutral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/line.horizontal.3.png" alt="" width="28" height="28"></div>
+      <div class="name">Triple line</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=line.horizontal.3" target="_blank" rel="noopener">line.horizontal.3</a>
+      <div class="note">Notes / multi-detail log</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-neutral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/zzz.png" alt="" width="28" height="28"></div>
+      <div class="name">Sleep</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=zzz" target="_blank" rel="noopener">zzz</a>
+      <div class="note">Rest / recovery log</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-sage" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/checkmark.png" alt="" width="28" height="28"></div>
+      <div class="name">Plain check</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=checkmark" target="_blank" rel="noopener">checkmark</a>
+      <div class="note">No enclosing shape</div>
+    </div>
+
+    <div class="icon-card">
+      <div class="sw"><img class="sf t-neutral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/rectangle.png" alt="" width="28" height="28"></div>
+      <div class="name">Rectangle</div>
+      <a class="mono" href="https://sf-symbols.vercel.app/?q=rectangle" target="_blank" rel="noopener">rectangle</a>
+      <div class="note">Structured log — meds, food</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- IN CONTEXT -->
+<section class="demo-block">
+  <div class="sec-h">In context</div>
+  <div class="sec-title">Recommended set</div>
+  <div class="sec-desc" style="margin-bottom:20px">Migraine = pulse ring · Menstrual = drop + dash · Non-migraine = check square.</div>
+  <div class="demo-row">
+
+    <div class="phone-demo">
+      <div class="lbl">Today-style rows</div>
+      <div class="log-row">
+        <div class="log-ico">
+          <img class="sf t-coral" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/smallcircle.fill.circle.png" alt="" width="20" height="20">
+        </div>
+        <div class="log-body">
+          <div class="log-head"><span class="log-title">Migraine — right · throbbing</span><span class="log-time">20:40</span></div>
+          <div class="log-desc">Worse with movement · nausea</div>
+        </div>
+      </div>
+      <div class="log-row">
+        <div class="log-ico">
+          <img class="sf t-lav" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/drop.triangle.fill.png" alt="" width="20" height="20">
+        </div>
+        <div class="log-body">
+          <div class="log-head"><span class="log-title">Spotting</span><span class="log-time">09:12</span></div>
+          <div class="log-desc">Mild cramps · luteal</div>
+        </div>
+      </div>
+      <div class="log-row">
+        <div class="log-ico">
+          <img class="sf t-sage" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/checkmark.square.png" alt="" width="20" height="20">
+        </div>
+        <div class="log-body">
+          <div class="log-head"><span class="log-title">No migraine</span><span class="log-time">21:00</span></div>
+          <div class="log-desc">Evening check-in</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-demo">
+      <div class="lbl">Calendar cell markers</div>
+      <div class="cal-row">
+        <div class="cal-cell" style="background:var(--lav-bg)">8
+          <span class="mini"><img class="sf t-period sf-mini" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/minus.rectangle.fill.png" alt=""></span>
+        </div>
+        <div class="cal-cell" style="background:var(--lav-bg)">11
+          <span class="mini"><img class="sf t-coral sf-mini" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/smallcircle.fill.circle.png" alt=""></span>
+        </div>
+        <div class="cal-cell" style="background:var(--coral);color:#2a1714;font-weight:700">14
+          <span class="mini"><img class="sf sf-mini" style="filter:brightness(0) invert(1) opacity:.85" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/smallcircle.fill.circle.png" alt=""></span>
+        </div>
+        <div class="cal-cell" style="background:var(--period-bg)">22
+          <span class="mini"><img class="sf t-period sf-mini" src="https://raw.githubusercontent.com/andrewtavis/sf-symbols-online/master/glyphs/minus.rectangle.fill.png" alt=""></span>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--faint);margin-top:12px;line-height:1.45;">Migraine: pulse ring · Period: dash under date · Selected day inverts marker colour.</p>
+    </div>
+
+  </div>
+</section>
+
+<section class="pick">
+  <h2>Suggested combination</h2>
+  <p><em>Migraine</em> → <code>smallcircle.fill.circle</code> &nbsp;·&nbsp; <em>Menstrual</em> → <code>drop.fill</code> in lists, <code>circle.and.line.horizontal.fill</code> in calendar &nbsp;·&nbsp; <em>Non-migraine</em> → <code>checkmark.square</code> for “no migraine”, <code>square</code> for other logs. All three distinct by <b>shape</b>.</p>
+</section>
+
+<p class="footer">EBB · entry icon mocks · docs/symptom-tracker-entry-icons-mocks.html · previews via <a href="https://github.com/andrewtavis/sf-symbols-online" style="color:var(--lav)">sf-symbols-online</a></p>
+
+</body>
+</html>
