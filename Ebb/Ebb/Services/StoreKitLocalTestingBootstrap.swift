@@ -6,6 +6,9 @@ import StoreKitTest
 
 /// Loads the bundled StoreKit configuration on the simulator when Xcode's scheme
 /// reference does not resolve (the usual cause of empty `Product.products`).
+///
+/// `SKTestSession` requires the XCTest dylib; calling it from a normal app process
+/// (simctl, xcodebuild install+launch) aborts instead of throwing.
 enum StoreKitLocalTestingBootstrap {
     #if DEBUG
     nonisolated(unsafe) private static var session: SKTestSession?
@@ -23,6 +26,12 @@ enum StoreKitLocalTestingBootstrap {
     #if DEBUG
     private static func activateBundledConfigurationIfNeeded() {
         guard session == nil else { return }
+        guard AppRuntime.isXCTestRuntimeLoaded else {
+            NSLog(
+                "Ebb StoreKit: skipping bundled configuration (XCTest runtime not loaded; use the EbbPlus StoreKit scheme or run under test)"
+            )
+            return
+        }
         guard let url = Bundle.main.url(forResource: "EbbPlus", withExtension: "storekit") else {
             NSLog("Ebb StoreKit: bundled EbbPlus.storekit not found in app bundle")
             return
