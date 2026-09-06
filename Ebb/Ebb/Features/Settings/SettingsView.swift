@@ -39,7 +39,7 @@ struct SettingsView: View {
 
                 #if DEBUG
                 Section {
-                    Button("Phase 0 debug screen") {
+                    Button("Debug screen") {
                         showDebug = true
                     }
                 } header: {

@@ -31,10 +31,6 @@ extension ProcessInfo {
             || arguments.contains(LaunchArguments.openTabCalendar)
     }
 
-    var hasLaunchArgumentOpenTabCalendar: Bool {
-        hasLaunchArgumentOpenCalendar
-    }
-
     var hasLaunchArgumentSkipOnboarding: Bool {
         arguments.contains(LaunchArguments.skipOnboarding)
     }

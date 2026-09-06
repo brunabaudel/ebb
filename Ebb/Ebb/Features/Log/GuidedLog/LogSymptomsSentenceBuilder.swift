@@ -124,17 +124,6 @@ enum LogSymptomsSentenceBuilder {
         return result
     }
 
-    static func reviewSentence(
-        values: [String: FieldValue],
-        schema: SchemaConfig
-    ) -> String {
-        segments(values: values, schema: schema)
-            .map(\.text)
-            .joined()
-            .replacingOccurrences(of: "  ", with: " ")
-            .trimmingCharacters(in: .whitespaces)
-    }
-
     static func unsetFieldLabels(
         values: [String: FieldValue],
         schema: SchemaConfig

@@ -1,9 +1,8 @@
 import Foundation
 import SwiftData
 
-/// Phase 0 acceptance check: a `SymptomEntry` written through SwiftData comes
-/// back intact. Lives outside the view so the debug screen stays dumb and the
-/// same check runs in unit tests.
+/// SwiftData round-trip check: a `SymptomEntry` written through SwiftData comes
+/// back intact. Shared by the debug screen and unit tests.
 enum StorageRoundTripCheck {
     enum Outcome: Equatable {
         case passed

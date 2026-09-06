@@ -12,11 +12,6 @@ enum AppRuntime {
             || env["XCTestSessionIdentifier"] != nil
     }
 
-    /// StoreKitTest's `SKTestSession` aborts when the XCTest dylib is not loaded (e.g. simctl launch).
-    static var isXCTestRuntimeLoaded: Bool {
-        NSClassFromString("XCTestCase") != nil
-    }
-
     /// CloudKit entitlements are not applied in unsigned simulator CI builds
     /// (`CODE_SIGNING_ALLOWED=NO`). Sync stays enabled on signed device builds.
     static var shouldUseCloudKitSync: Bool {
