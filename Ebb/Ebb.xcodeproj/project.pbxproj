@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A100000F0000000000000001 /* EbbPlus.storekit in Resources */ = {isa = PBXBuildFile; fileRef = A100000E0000000000000001 /* EbbPlus.storekit */; };
+		A10000100000000000000001 /* StoreKitTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000100000000000000002 /* StoreKitTest.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		A100000C0000000000000001 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -15,11 +20,6 @@
 			remoteInfo = Ebb;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXBuildFile section */
-		A100000F0000000000000001 /* EbbPlus.storekit in Resources */ = {isa = PBXBuildFile; fileRef = A100000E0000000000000001 /* EbbPlus.storekit */; };
-		A10000100000000000000001 /* StoreKitTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000100000000000000002 /* StoreKitTest.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A10000020000000000000004 /* Ebb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ebb.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -60,6 +60,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4C55B22E3020B7400025AAD8 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				A10000100000000000000002 /* StoreKitTest.framework */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		A10000040000000000000001 = {
 			isa = PBXGroup;
 			children = (
@@ -67,6 +75,7 @@
 				A100000B0000000000000002 /* EbbTests */,
 				A100000E0000000000000001 /* EbbPlus.storekit */,
 				A10000040000000000000003 /* Products */,
+				4C55B22E3020B7400025AAD8 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -344,7 +353,7 @@
 				DEVELOPMENT_TEAM = 3F274MB2RL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Ebb-Info.plist;
+				INFOPLIST_FILE = "Ebb-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Ebb;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Ebb uses Face ID to lock your symptom log so only you can open it.";
@@ -383,7 +392,7 @@
 				DEVELOPMENT_TEAM = 3F274MB2RL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Ebb-Info.plist;
+				INFOPLIST_FILE = "Ebb-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Ebb;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Ebb uses Face ID to lock your symptom log so only you can open it.";

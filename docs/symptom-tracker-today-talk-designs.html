@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Today · Talk button placements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0E0B12;--ink:#1A1620;--surface:#241E2C;--raised:#2C2533;--line:#3A3242;
+    --text:#EDE6F0;--muted:#A99FB0;--faint:#776E80;
+    --coral:#E89B8B;--coral-dim:#2E2229;--coral-glow:#7d4f48;
+    --lav:#9D8FC7;--lav-dim:#241F33;--lav-glow:#4c4466;
+    --sage:#8FB1A0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--page);color:var(--text);font-family:"Figtree",system-ui,sans-serif;line-height:1.45;padding:54px 26px 90px;}
+
+  .head{max-width:1180px;margin:0 auto 44px;}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--lav);margin-bottom:16px;}
+  .head h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(30px,5vw,48px);line-height:1.06;letter-spacing:-.01em;}
+  .head h1 em{font-style:italic;color:var(--coral);}
+  .head p{color:var(--muted);max-width:68ch;margin-top:18px;font-size:16px;}
+  .head p b{color:var(--text);font-weight:500;}
+
+  .legend{max-width:1180px;margin:0 auto 48px;padding:22px 26px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--ink),transparent);display:flex;flex-wrap:wrap;gap:24px 40px;}
+  .legend h4{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;}
+  .legend ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);}
+  .legend li::before{content:"·";color:var(--lav);margin-right:8px;font-weight:700;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,330px));gap:46px 38px;justify-content:center;max-width:1180px;margin:0 auto;}
+  .frame-wrap{display:flex;flex-direction:column;gap:14px;}
+  .scr-name{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--lav);padding-left:4px;}
+  .scr-name.hot{color:var(--coral);}
+  .annot{font-size:13px;color:var(--faint);padding-left:4px;max-width:330px;line-height:1.5;}
+  .annot b{color:var(--muted);font-weight:600;}
+
+  .phone{width:330px;border-radius:46px;background:var(--ink);border:1px solid #312938;box-shadow:0 0 0 9px #16121b,0 30px 70px -30px #000;position:relative;overflow:hidden;height:780px;}
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:18px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;color:var(--text);z-index:30;}
+  .statusbar .dots{opacity:.8;font-size:11px;}
+  .screen{position:absolute;inset:0;padding:58px 0 0;display:flex;flex-direction:column;}
+  .screen-scroll{flex:1;overflow:hidden;padding:0 20px 8px;}
+
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:78px;background:#16121bcc;border-top:1px solid var(--line);backdrop-filter:blur(12px);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 8px 0;z-index:30;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--faint);min-width:64px;}
+  .tab.on{color:var(--coral);}
+  .tab .ic{font-size:20px;line-height:1;}
+
+  /* Today chrome */
+  .today-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .today-h{font-family:"Fraunces",serif;font-size:26px;font-weight:500;padding-top:6px;}
+  .today-date{font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px;}
+  .today-date .chev{color:var(--lav);font-size:10px;}
+  .hdr-actions{display:flex;gap:8px;margin-top:6px;flex-shrink:0;}
+  .hdr-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text);line-height:1;}
+  .hdr-btn.cal{color:var(--lav);border-color:var(--lav-glow);}
+  .hdr-btn.plus{font-size:22px;font-weight:300;}
+  .hdr-btn.mic{color:var(--coral);border-color:var(--coral-glow);background:var(--coral-dim);}
+
+  .ring-card{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center;}
+  .ring{position:relative;width:72px;height:72px;flex-shrink:0;}
+  .ring .lab{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring .lab .d{font-family:"Fraunces",serif;font-size:20px;font-weight:500;line-height:1;}
+  .ring .lab .t{font-size:9px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;}
+  .ring-txt h3{font-size:14px;font-weight:600;margin-bottom:4px;}
+  .ring-txt p{font-size:11px;color:var(--muted);line-height:1.4;}
+  .ring-txt .accent{color:var(--coral);}
+
+  .day-strip{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px;}
+  .day-strip .label{font-size:12px;color:var(--muted);margin-bottom:10px;}
+  .heat-row{display:flex;gap:4px;align-items:flex-end;height:36px;}
+  .heat-block{flex:1;border-radius:6px;background:#2a2431;min-height:8px;}
+  .heat-block.pain{background:var(--coral);opacity:.35;}
+  .heat-block.pain.h3{opacity:.75;height:26px;}
+  .heat-block.pain.h4{opacity:.9;height:32px;box-shadow:0 0 10px -2px var(--coral);}
+  .heat-block.cycle{background:var(--lav);opacity:.5;height:14px;}
+  .heat-block.on{outline:1.5px solid var(--text);outline-offset:1px;}
+  .heat-labels{display:flex;justify-content:space-between;margin-top:6px;font-family:"JetBrains Mono",monospace;font-size:8px;color:var(--faint);}
+
+  .slot-h{display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:8px;}
+  .slot-h .range{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:600;}
+  .slot-h .all{font-size:11px;font-weight:600;color:var(--muted);}
+
+  .heat-entry{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .heat-entry:last-child{border-bottom:none;}
+  .heat-entry .when{width:42px;flex-shrink:0;}
+  .heat-entry .when .time{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);}
+  .heat-entry .content{flex:1;min-width:0;}
+  .heat-entry .content .t{font-size:13px;font-weight:600;}
+  .heat-entry .content .d{font-size:11px;color:var(--muted);margin-top:2px;}
+  .heat-entry .badge{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+  .heat-entry .badge.pain{background:var(--coral);box-shadow:0 0 6px var(--coral);}
+  .heat-entry .badge.cycle{background:var(--lav);box-shadow:0 0 6px var(--lav);}
+
+  .empty{margin-top:14px;font-size:13px;color:var(--muted);line-height:1.45;}
+
+  /* ── A: Floating mic FAB ── */
+  .fab-talk{
+    position:absolute;left:50%;bottom:92px;transform:translateX(-50%);
+    width:58px;height:58px;border-radius:50%;
+    background:var(--coral);color:#2a1714;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    box-shadow:0 6px 24px -6px var(--coral),0 0 0 1px rgba(42,23,20,.4);
+    z-index:35;
+  }
+  .fab-talk .wave{position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgba(232,155,139,.35);animation:pulse 2.4s ease-out infinite;}
+  @keyframes pulse{0%{transform:scale(.92);opacity:.8}70%{transform:scale(1.12);opacity:0}100%{opacity:0}}
+
+  /* ── B: Dual CTA row ── */
+  .cta-row{display:flex;gap:10px;margin-top:14px;}
+  .cta{flex:1;border-radius:16px;padding:14px 12px;text-align:center;font-weight:600;font-size:14px;border:1px solid transparent;}
+  .cta.talk{background:var(--coral);color:#2a1714;}
+  .cta.tap{background:transparent;border-color:var(--line);color:var(--text);}
+  .cta .ml{display:flex;align-items:center;justify-content:center;gap:7px;}
+  .cta .hint{font-weight:400;font-size:11px;margin-top:3px;opacity:.7;}
+  .cta.talk .hint{color:#3a201b;}
+  .cta.tap .hint{color:var(--faint);}
+
+  /* ── C: Talk card ── */
+  .talk-card{
+    margin-top:14px;display:flex;align-items:center;gap:14px;
+    padding:14px 16px;border-radius:18px;
+    background:linear-gradient(135deg,var(--coral-dim),var(--surface));
+    border:1px solid var(--coral-glow);
+  }
+  .talk-card .mic{
+    width:44px;height:44px;border-radius:50%;flex-shrink:0;
+    background:var(--coral);color:#2a1714;
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+    box-shadow:0 4px 14px -4px var(--coral);
+  }
+  .talk-card .t{font-size:15px;font-weight:600;}
+  .talk-card .s{font-size:12px;color:var(--muted);margin-top:2px;}
+  .talk-card .chev{margin-left:auto;color:var(--coral);font-size:18px;opacity:.7;}
+
+  /* ── D: Docked pill above tab bar ── */
+  .dock-pill{
+    position:absolute;left:20px;right:20px;bottom:92px;z-index:35;
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px 12px 12px;border-radius:999px;
+    background:var(--raised);border:1px solid var(--line);
+    box-shadow:0 10px 30px -16px #000;
+  }
+  .dock-pill .mic{
+    width:40px;height:40px;border-radius:50%;
+    background:var(--coral);color:#2a1714;
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+  }
+  .dock-pill .copy{flex:1;min-width:0;}
+  .dock-pill .t{font-size:14px;font-weight:600;}
+  .dock-pill .s{font-size:11px;color:var(--muted);margin-top:1px;}
+  .dock-pill .tap-mini{
+    width:36px;height:36px;border-radius:50%;
+    border:1px solid var(--line);background:var(--surface);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:300;color:var(--text);flex-shrink:0;
+  }
+
+  /* ── E: Header mic + plus pair ── */
+  .hdr-pair{display:flex;gap:0;margin-top:6px;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+  .hdr-pair .seg{
+    width:40px;height:34px;display:flex;align-items:center;justify-content:center;
+    background:var(--surface);font-size:15px;color:var(--text);
+  }
+  .hdr-pair .seg + .seg{border-left:1px solid var(--line);}
+  .hdr-pair .seg.talk{background:var(--coral-dim);color:var(--coral);}
+  .hdr-pair .seg.plus{font-size:20px;font-weight:300;}
+
+  /* ── F: Empty-state hero Talk ── */
+  .empty-hero{
+    margin-top:18px;padding:22px 18px;border-radius:20px;
+    background:radial-gradient(120% 140% at 10% 0%,var(--coral-dim),var(--surface) 55%);
+    border:1px solid var(--line);text-align:center;
+  }
+  .empty-hero .orb{
+    width:64px;height:64px;border-radius:50%;margin:0 auto 14px;
+    background:var(--coral);color:#2a1714;
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    box-shadow:0 0 0 8px rgba(232,155,139,.12),0 8px 24px -8px var(--coral);
+  }
+  .empty-hero h3{font-family:"Fraunces",serif;font-size:20px;font-weight:500;margin-bottom:6px;}
+  .empty-hero p{font-size:13px;color:var(--muted);max-width:28ch;margin:0 auto 16px;line-height:1.45;}
+  .empty-hero .primary{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--coral);color:#2a1714;font-weight:600;font-size:14px;
+    padding:12px 22px;border-radius:14px;
+  }
+  .empty-hero .secondary{
+    display:block;margin-top:12px;font-size:12px;color:var(--muted);font-weight:500;
+  }
+
+  /* ── G: Full-width Talk bar ── */
+  .talk-bar{
+    margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:15px;border-radius:16px;
+    background:var(--coral);color:#2a1714;font-weight:600;font-size:15px;
+    box-shadow:0 6px 20px -10px var(--coral);
+  }
+  .talk-bar .hint{font-weight:400;font-size:12px;opacity:.72;margin-left:2px;}
+
+  /* ── H: Corner FAB ── */
+  .fab-corner{
+    position:absolute;right:20px;bottom:96px;z-index:35;
+    width:54px;height:54px;border-radius:18px;
+    background:var(--coral);color:#2a1714;
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    box-shadow:0 8px 22px -8px var(--coral),0 0 0 1px rgba(42,23,20,.35);
+  }
+
+  /* ── I: Log-another list row ── */
+  .log-again{
+    margin-top:6px;display:flex;align-items:center;gap:12px;
+    padding:12px 4px;border-top:1px dashed var(--line);
+  }
+  .log-again .mic{
+    width:36px;height:36px;border-radius:12px;flex-shrink:0;
+    background:var(--coral-dim);border:1px solid var(--coral-glow);color:var(--coral);
+    display:flex;align-items:center;justify-content:center;font-size:14px;
+  }
+  .log-again .t{font-size:13px;font-weight:600;color:var(--coral);}
+  .log-again .s{font-size:11px;color:var(--faint);margin-top:1px;}
+
+  /* ── J: Soft prompt banner ── */
+  .prompt-banner{
+    margin-top:14px;display:flex;align-items:center;gap:12px;
+    padding:12px 14px;border-radius:14px;
+    background:var(--lav-dim);border:1px solid var(--lav-glow);
+  }
+  .prompt-banner .copy{flex:1;min-width:0;}
+  .prompt-banner .t{font-size:13px;font-weight:600;color:var(--text);}
+  .prompt-banner .s{font-size:11px;color:var(--muted);margin-top:2px;}
+  .prompt-banner .go{
+    flex-shrink:0;padding:8px 12px;border-radius:999px;
+    background:var(--coral);color:#2a1714;font-size:12px;font-weight:600;
+  }
+
+  /* ── K: Intensity strip “log this window” ── */
+  .strip-action{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .strip-action .ask{font-size:12px;color:var(--muted);line-height:1.35;}
+  .strip-action .ask b{color:var(--text);font-weight:600;}
+  .strip-action .btns{display:flex;gap:6px;flex-shrink:0;}
+  .strip-action .btn{
+    height:32px;padding:0 12px;border-radius:10px;font-size:12px;font-weight:600;
+    display:flex;align-items:center;gap:5px;
+  }
+  .strip-action .btn.talk{background:var(--coral);color:#2a1714;}
+  .strip-action .btn.tap{background:transparent;border:1px solid var(--line);color:var(--text);}
+
+  /* ── L: Raised center Talk in tab bar ── */
+  .tabbar.with-talk{padding-top:0;align-items:flex-start;}
+  .tabbar .talk-raise{
+    width:56px;height:56px;border-radius:50%;margin-top:-22px;
+    background:var(--coral);color:#2a1714;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:18px;line-height:1;
+    box-shadow:0 6px 20px -6px var(--coral),0 0 0 4px var(--ink);
+  }
+  .tabbar .talk-raise span{font-size:9px;font-weight:600;margin-top:3px;letter-spacing:.02em;}
+
+  /* ── M: Expandable + menu (open state) ── */
+  .plus-menu{
+    position:absolute;right:20px;top:98px;z-index:36;
+    width:168px;padding:6px;border-radius:16px;
+    background:var(--raised);border:1px solid var(--line);
+    box-shadow:0 16px 40px -20px #000;
+  }
+  .plus-menu .item{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;border-radius:12px;font-size:13px;font-weight:600;
+  }
+  .plus-menu .item.hot{background:var(--coral-dim);color:var(--coral);}
+  .plus-menu .item .ic{
+    width:28px;height:28px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;font-size:13px;
+    background:var(--surface);border:1px solid var(--line);
+  }
+  .plus-menu .item.hot .ic{background:var(--coral);color:#2a1714;border-color:transparent;}
+  .hdr-btn.plus.open{border-color:var(--coral-glow);color:var(--coral);}
+
+  /* ── N: Stacked Talk primary ── */
+  .stack-cta{margin-top:14px;display:flex;flex-direction:column;gap:10px;}
+  .stack-cta .big{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:16px;border-radius:16px;
+    background:var(--coral);color:#2a1714;font-weight:600;font-size:15px;
+  }
+  .stack-cta .link{text-align:center;font-size:13px;color:var(--muted);font-weight:500;}
+  .stack-cta .link u{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line);}
+
+  /* ── O: Breathing orb beside date ── */
+  .orb-inline{
+    display:flex;align-items:center;gap:10px;margin-top:14px;
+    padding:10px 12px;border-radius:999px;
+    background:var(--surface);border:1px solid var(--line);
+  }
+  .orb-inline .orb{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    background:radial-gradient(circle at 35% 30%,#f0b5a8,var(--coral));
+    box-shadow:0 0 0 4px rgba(232,155,139,.15);
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:#2a1714;
+  }
+  .orb-inline .t{font-size:13px;font-weight:600;}
+  .orb-inline .s{font-size:11px;color:var(--muted);}
+
+  /* ── P: Bottom sheet peek ── */
+  .sheet-peek{
+    position:absolute;left:0;right:0;bottom:78px;z-index:34;
+    background:var(--raised);border-top:1px solid var(--line);
+    border-radius:22px 22px 0 0;padding:10px 20px 18px;
+    box-shadow:0 -12px 40px -24px #000;
+  }
+  .sheet-peek .handle{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px;}
+  .sheet-peek .row{display:flex;gap:10px;}
+  .sheet-peek .cta{flex:1;border-radius:14px;padding:13px 10px;}
+
+  .section-break{max-width:1180px;margin:56px auto 28px;padding:0 4px;}
+  .section-break h2{font-family:"Fraunces",serif;font-size:22px;font-weight:500;}
+  .section-break p{color:var(--muted);font-size:14px;margin-top:8px;max-width:60ch;}
+
+  .footer{max-width:1180px;margin:64px auto 0;padding-top:28px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;}
+  .footer code{font-family:"JetBrains Mono",monospace;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="kicker">Today · Talk entry points</div>
+  <h1>Put Talk on Today — <em>sixteen ways</em>.</h1>
+  <p>Today currently opens logging via <b>+</b> only; Talk lives inside that flow. These mocks explore making Talk a first-class action on Today, still with Tap/+ available. Plum &amp; Ember tokens.</p>
+</header>
+
+<section class="legend">
+  <div>
+    <h4>Constraints</h4>
+    <ul>
+      <li>Keep calendar ▦ and + for manual log</li>
+      <li>Talk should be reachable in one tap</li>
+      <li>Migraine-friendly: large hit target, low clutter</li>
+      <li>Tab bar stays Today · Patterns · Settings</li>
+    </ul>
+  </div>
+  <div>
+    <h4>What varies</h4>
+    <ul>
+      <li>Floating vs inline vs header</li>
+      <li>Talk alone vs Talk + Tap pair</li>
+      <li>Always-visible vs empty-state only</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Sample day</h4>
+    <ul>
+      <li>Luteal · day 24</li>
+      <li>Migraine severe · 9:08p</li>
+      <li>Spotting · 2:15p</li>
+    </ul>
+  </div>
+</section>
+
+<div class="grid">
+
+  <!-- A · Floating FAB -->
+  <div class="frame-wrap">
+    <div class="scr-name hot">A · Floating mic</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block cycle"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h3"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h4 on"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+
+          <div class="slot-h"><span class="range">9p – 12a</span><span class="all">Show all</span></div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea · ibuprofen</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="fab-talk" title="Talk"><span class="wave"></span>🎙</div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Always reachable.</b> Coral orb floats above the tab bar. + stays for Tap. Risk: can cover the last log row on short phones.</div>
+    </div>
+  </div>
+
+  <!-- B · Dual CTA -->
+  <div class="frame-wrap">
+    <div class="scr-name">B · Talk + Tap row</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+            </div>
+          </div>
+
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block cycle"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h3"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+
+          <div class="cta-row">
+            <div class="cta talk"><div class="ml"><span>🎙</span>Talk</div><div class="hint">say how you feel</div></div>
+            <div class="cta tap"><div class="ml">Tap</div><div class="hint">log it yourself</div></div>
+          </div>
+
+          <div class="slot-h" style="margin-top:16px"><span class="range">Logs</span></div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">2:15p</span></div>
+            <div class="content"><div class="t">Spotting</div><div class="d">Mild cramps · luteal</div></div>
+            <div class="badge cycle"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Equal choice.</b> Talk is primary (filled), Tap secondary. Header + can drop — logging lives in the row. Matches the early UI design.</div>
+    </div>
+  </div>
+
+  <!-- C · Talk card -->
+  <div class="frame-wrap">
+    <div class="scr-name">C · Inline Talk card</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+
+          <div class="talk-card">
+            <div class="mic">🎙</div>
+            <div>
+              <div class="t">Talk</div>
+              <div class="s">Say how you feel — I'll fill the chart</div>
+            </div>
+            <div class="chev">›</div>
+          </div>
+
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block cycle"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h3"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+
+          <div class="heat-entry" style="margin-top:8px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Explains itself.</b> Label + hint teach the feature. Scrolls with content — less overlay risk than a FAB. Takes vertical space every day.</div>
+    </div>
+  </div>
+
+  <!-- D · Docked pill -->
+  <div class="frame-wrap">
+    <div class="scr-name">D · Docked Talk pill</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+            </div>
+          </div>
+
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block cycle"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h3"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+
+          <div class="heat-entry" style="margin-top:10px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea · ibuprofen</div></div>
+            <div class="badge pain"></div>
+          </div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">2:15p</span></div>
+            <div class="content"><div class="t">Spotting</div><div class="d">Mild cramps · luteal</div></div>
+            <div class="badge cycle"></div>
+          </div>
+        </div>
+        <div class="dock-pill">
+          <div class="mic">🎙</div>
+          <div class="copy">
+            <div class="t">Talk</div>
+            <div class="s">Say how you feel</div>
+          </div>
+          <div class="tap-mini" title="Tap to log">+</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>One bar, two actions.</b> Talk is the wide target; + is the quiet Tap escape hatch. Fixed above the tab bar — always in thumb reach.</div>
+    </div>
+  </div>
+
+  <!-- E · Header mic -->
+  <div class="frame-wrap">
+    <div class="scr-name">E · Header mic + plus</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-pair">
+                <div class="seg talk" title="Talk">🎙</div>
+                <div class="seg plus" title="Tap">+</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block cycle"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h3"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+
+          <div class="slot-h"><span class="range">Logs</span></div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea · ibuprofen</div></div>
+            <div class="badge pain"></div>
+          </div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">2:15p</span></div>
+            <div class="content"><div class="t">Spotting</div><div class="d">Mild cramps · luteal</div></div>
+            <div class="badge cycle"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Minimal chrome change.</b> Mic sits beside + in a segmented control. Clearest for power users; weakest teaching of “Talk” as the hero path.</div>
+    </div>
+  </div>
+
+  <!-- F · Empty-state hero -->
+  <div class="frame-wrap">
+    <div class="scr-name">F · Empty-state hero</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+              <div class="heat-block"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+
+          <div class="empty-hero">
+            <div class="orb">🎙</div>
+            <h3>How are you feeling?</h3>
+            <p>Say it out loud — Ebb fills the chart for you to confirm.</p>
+            <div class="primary">🎙  Talk</div>
+            <div class="secondary">or tap + to log yourself</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Best first impression.</b> Talk owns the empty day; once logs exist, fall back to A / D / E so the list stays clean. Pair with another option for logged days.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-break">
+  <h2>More placements</h2>
+  <p>Same Today chrome — different entry shapes. G–P push on context (selected time window), chrome (tab bar / + menu), and quieter teaching patterns.</p>
+</div>
+
+<div class="grid">
+
+  <!-- G · Full-width Talk bar -->
+  <div class="frame-wrap">
+    <div class="scr-name hot">G · Full-width Talk bar</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="talk-bar">🎙 Talk <span class="hint">— say how you feel</span></div>
+          <div class="heat-entry" style="margin-top:10px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>One hero button.</b> Simpler than dual CTAs. + remains for Tap. Strong thumb target without floating chrome.</div>
+    </div>
+  </div>
+
+  <!-- H · Corner FAB -->
+  <div class="frame-wrap">
+    <div class="scr-name">H · Corner mic</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="heat-entry" style="margin-top:10px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea · ibuprofen</div></div>
+            <div class="badge pain"></div>
+          </div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">2:15p</span></div>
+            <div class="content"><div class="t">Spotting</div><div class="d">Mild cramps · luteal</div></div>
+            <div class="badge cycle"></div>
+          </div>
+        </div>
+        <div class="fab-corner">🎙</div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Material-style FAB.</b> Squircle in the corner clears the list better than a center orb. Slightly less discoverable without a label.</div>
+    </div>
+  </div>
+
+  <!-- I · Log-another row -->
+  <div class="frame-wrap">
+    <div class="scr-name">I · After the last log</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="slot-h"><span class="range">Logs</span></div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+          <div class="heat-entry">
+            <div class="when"><span class="time">2:15p</span></div>
+            <div class="content"><div class="t">Spotting</div><div class="d">Mild cramps · luteal</div></div>
+            <div class="badge cycle"></div>
+          </div>
+          <div class="log-again">
+            <div class="mic">🎙</div>
+            <div>
+              <div class="t">Log another with Talk</div>
+              <div class="s">Or use + to tap it in</div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Contextual, quiet.</b> Talk appears where “add another” naturally sits. Weak when the list is empty — pair with F.</div>
+    </div>
+  </div>
+
+  <!-- J · Soft prompt banner -->
+  <div class="frame-wrap">
+    <div class="scr-name">J · Soft prompt</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="prompt-banner">
+            <div class="copy">
+              <div class="t">Feeling off?</div>
+              <div class="s">Say it — Ebb will draft a log</div>
+            </div>
+            <div class="go">Talk</div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="heat-entry" style="margin-top:8px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Dismissible coaching.</b> Lavender banner teaches Talk without committing permanent chrome. Could hide after first use.</div>
+    </div>
+  </div>
+
+  <!-- K · Log this window -->
+  <div class="frame-wrap">
+    <div class="scr-name">K · Log this window</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity · <b style="color:var(--text);font-weight:600;">9p–12a</b></div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4 on"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+            <div class="strip-action">
+              <div class="ask">Log something in <b>9p–12a</b>?</div>
+              <div class="btns">
+                <div class="btn talk">🎙</div>
+                <div class="btn tap">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="heat-entry" style="margin-top:8px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Tied to the strip.</b> Selecting a time block reveals Talk/+ for that window. Clever if you already filter by slot; invisible otherwise.</div>
+    </div>
+  </div>
+
+  <!-- L · Raised tab Talk -->
+  <div class="frame-wrap">
+    <div class="scr-name">L · Raised tab Talk</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="heat-entry" style="margin-top:10px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar with-talk">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="talk-raise">🎙<span>Talk</span></div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+        </div>
+      </div>
+      <div class="annot"><b>App-wide Talk.</b> Center raise makes logging global (even from Patterns). Costs a tab slot / breaks the 3-tab rhythm — Settings would need a home.</div>
+    </div>
+  </div>
+
+  <!-- M · + expands menu -->
+  <div class="frame-wrap">
+    <div class="scr-name">M · + expands menu</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus open">+</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="heat-entry" style="margin-top:10px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="plus-menu">
+          <div class="item hot"><div class="ic">🎙</div>Talk</div>
+          <div class="item"><div class="ic">+</div>Tap to log</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Keeps Today clean.</b> One header control; Talk is one tap deeper. Good if Talk shouldn't dominate every visit.</div>
+    </div>
+  </div>
+
+  <!-- N · Stacked primary -->
+  <div class="frame-wrap">
+    <div class="scr-name">N · Stacked Talk primary</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="stack-cta">
+            <div class="big">🎙  Talk · say how you feel</div>
+            <div class="link">Prefer tapping? <u>Log manually</u></div>
+          </div>
+          <div class="heat-entry" style="margin-top:12px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Talk-first hierarchy.</b> Like B, but Tap is demoted to a text link — clearer product bet that voice is the path.</div>
+    </div>
+  </div>
+
+  <!-- O · Breathing orb pill -->
+  <div class="frame-wrap">
+    <div class="scr-name">O · Breathing orb pill</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+              <div class="hdr-btn plus">+</div>
+            </div>
+          </div>
+          <div class="orb-inline">
+            <div class="orb">🎙</div>
+            <div>
+              <div class="t">Talk when you're ready</div>
+              <div class="s">Same calm orb as the Talk screen</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="heat-entry" style="margin-top:8px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Brand continuity.</b> Reuses the Talk orb so the action feels familiar, not like a second UI language. Soft, migraine-friendly.</div>
+    </div>
+  </div>
+
+  <!-- P · Bottom sheet peek -->
+  <div class="frame-wrap">
+    <div class="scr-name">P · Sheet peek</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●●</span></div>
+      <div class="screen">
+        <div class="screen-scroll">
+          <div class="today-top">
+            <div>
+              <div class="today-h">Today</div>
+              <div class="today-date">Monday, August 3 <span class="chev">›</span></div>
+            </div>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal">▦</div>
+            </div>
+          </div>
+          <div class="ring-card">
+            <div class="ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#332b3d" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#9D8FC7" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="34"/>
+              </svg>
+              <div class="lab"><span class="d">24</span><span class="t">day</span></div>
+            </div>
+            <div class="ring-txt">
+              <h3>Luteal phase</h3>
+              <p>Higher-risk window — <span class="accent">estrogen falling</span>.</p>
+            </div>
+          </div>
+          <div class="day-strip">
+            <div class="label">Today's intensity</div>
+            <div class="heat-row">
+              <div class="heat-block"></div><div class="heat-block"></div><div class="heat-block cycle"></div>
+              <div class="heat-block"></div><div class="heat-block pain h3"></div><div class="heat-block"></div>
+              <div class="heat-block"></div><div class="heat-block pain h4"></div>
+            </div>
+            <div class="heat-labels"><span>12a</span><span>6a</span><span>12p</span><span>6p</span></div>
+          </div>
+          <div class="heat-entry" style="margin-top:8px">
+            <div class="when"><span class="time">9:08p</span></div>
+            <div class="content"><div class="t">Migraine — severe</div><div class="d">Right side · nausea</div></div>
+            <div class="badge pain"></div>
+          </div>
+        </div>
+        <div class="sheet-peek">
+          <div class="handle"></div>
+          <div class="row">
+            <div class="cta talk"><div class="ml"><span>🎙</span>Talk</div><div class="hint">say how you feel</div></div>
+            <div class="cta tap"><div class="ml">Tap</div><div class="hint">log it yourself</div></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="annot"><b>Persistent sheet.</b> Dual CTAs docked as a peek above the tab bar — always visible, content scrolls behind. Heavier chrome than a FAB.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  Open in browser: <code>docs/symptom-tracker-today-talk-designs.html</code>
+  · Chosen: <b style="color:var(--muted);font-weight:500;">H · Corner mic</b> on Today · Talk removed from Log symptoms
+  · Related: <code>symptom-tracker-entries-mocks.html</code>, <code>symptom-tracker-ui-design.html</code>
+</footer>
+
+</body>
+</html>

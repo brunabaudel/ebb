@@ -7,7 +7,6 @@ struct TapLogView: View {
     var entry: SymptomEntry?
     /// Verbatim transcript from Talk (Phase 5) — shown at the top, never rewritten.
     var initialNote: String? = nil
-    var openTalkOnAppear: Bool = false
     var openConfirmOnAppear: Bool = false
     var launchTranscript: String? = nil
 
@@ -22,7 +21,6 @@ struct TapLogView: View {
     @State private var values: [String: FieldValue] = [:]
     @State private var note: String = ""
     @State private var showDeleteConfirmation = false
-    @State private var showTalkLog = false
     @State private var showConfirm = false
     @State private var confirmViewModel: ConfirmViewModel?
     @State private var didApplyLaunchPresentation = false
@@ -40,9 +38,7 @@ struct TapLogView: View {
                     GuidedLogFlowView(
                         schema: schema,
                         values: $values,
-                        entries: entries,
-                        onSave: save,
-                        onTalk: { showTalkLog = true }
+                        onSave: save
                     )
                 }
             }
@@ -67,11 +63,6 @@ struct TapLogView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This cannot be undone.")
-            }
-            .sheet(isPresented: $showTalkLog) {
-                TalkView(schema: schema) { transcript in
-                    presentConfirm(for: transcript)
-                }
             }
             .sheet(isPresented: $showConfirm, onDismiss: {
                 confirmViewModel = nil
@@ -152,8 +143,6 @@ struct TapLogView: View {
 
         if openConfirmOnAppear, let launchTranscript {
             presentConfirm(for: launchTranscript)
-        } else if openTalkOnAppear {
-            showTalkLog = true
         }
     }
 

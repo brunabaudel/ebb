@@ -146,6 +146,7 @@ struct FieldControl: View {
 /// Wraps pill controls onto multiple lines without hard-coding field widths.
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
+    var centerRows: Bool = false
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let result = arrange(proposal: proposal, subviews: subviews)
@@ -165,6 +166,8 @@ struct FlowLayout: Layout {
     private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> Arrangement {
         let maxWidth = proposal.width ?? .infinity
         var positions: [CGPoint] = []
+        var rowRanges: [Range<Int>] = []
+        var rowStart = 0
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
@@ -173,6 +176,8 @@ struct FlowLayout: Layout {
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
             if x + size.width > maxWidth, x > 0 {
+                rowRanges.append(rowStart..<positions.count)
+                rowStart = positions.count
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0
@@ -182,9 +187,26 @@ struct FlowLayout: Layout {
             x += size.width + spacing
             totalHeight = y + rowHeight
         }
+        if rowStart < positions.count {
+            rowRanges.append(rowStart..<positions.count)
+        }
+
+        if centerRows, maxWidth.isFinite {
+            for range in rowRanges {
+                var rowWidth: CGFloat = 0
+                for index in range {
+                    let size = subviews[index].sizeThatFits(.unspecified)
+                    rowWidth = max(rowWidth, positions[index].x + size.width)
+                }
+                let offset = max((maxWidth - rowWidth) / 2, 0)
+                for index in range {
+                    positions[index].x += offset
+                }
+            }
+        }
 
         return Arrangement(
-            size: CGSize(width: maxWidth, height: totalHeight),
+            size: CGSize(width: maxWidth.isFinite ? maxWidth : x, height: totalHeight),
             positions: positions
         )
     }
