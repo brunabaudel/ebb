@@ -4,27 +4,13 @@ import SwiftUI
 struct GuidedLogFlowView: View {
     let schema: SchemaConfig
     @Binding var values: [String: FieldValue]
-    let entries: [SymptomEntry]
     let onSave: () -> Void
-    let onTalk: () -> Void
 
     @Environment(\.theme) private var theme
-    @Environment(CycleService.self) private var cycleService
+    @Environment(MedicationPreferences.self) private var medicationPreferences
 
-    @State private var step: LogSymptomsFlowStep = .smartEntry
-    @State private var suggestion: LogEntrySuggestion?
-
-    private var overlay: CalendarCycleOverlay {
-        cycleService.makeOverlay(from: entries)
-    }
-
-    private var hasHeadache: Bool {
-        values["migraine_present"] == .boolean(true)
-    }
-
-    private var showsHeadacheDetailSteps: Bool {
-        hasHeadache
-    }
+    @State private var step: LogSymptomsFlowStep = .headachePresent
+    @State private var didApplyMedicationPrefill = false
 
     private var activeSteps: [LogSymptomsFlowStep] {
         switch values["migraine_present"] {
@@ -38,43 +24,54 @@ struct GuidedLogFlowView: View {
     }
 
     private var progressFraction: Double {
-        guard step != .smartEntry,
-              let index = step.index(in: activeSteps),
+        guard let index = step.index(in: activeSteps),
               activeSteps.count > 1
         else { return 0 }
         return Double(index + 1) / Double(activeSteps.count)
     }
 
     private var progressLabel: String {
-        guard step != .smartEntry,
-              let index = step.index(in: activeSteps)
-        else { return "" }
+        guard let index = step.index(in: activeSteps) else { return "" }
         return "\(index + 1) / \(activeSteps.count)"
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            if step != .smartEntry {
+            if step != .review {
                 sentenceStrip
+
+                progressHeader
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
             }
 
-            ScrollView {
-                stepContent
-                    .padding(20)
+            GeometryReader { geometry in
+                ScrollView {
+                    Group {
+                        if step == .review {
+                            reviewStep
+                        } else {
+                            questionBody
+                        }
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 24)
+                    .frame(
+                        maxWidth: .infinity,
+                        minHeight: geometry.size.height,
+                        alignment: step == .review ? .center : .top
+                    )
+                }
+                .scrollIndicators(.hidden)
             }
 
             if step == .review {
                 saveBar
+            } else {
+                stepNavigationBar
             }
         }
         .background(theme.base)
-        .onAppear {
-            suggestion = LogEntrySuggestionEngine.suggest(
-                entries: entries,
-                schema: schema,
-                overlay: overlay
-            )
-        }
     }
 
     // MARK: - Sentence strip (J)
@@ -86,29 +83,7 @@ struct GuidedLogFlowView: View {
                 .kerning(1.2)
                 .foregroundStyle(theme.muted)
 
-            FlowLayout(spacing: 0) {
-                ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
-                    if segment.isFilled || segment.step != nil {
-                        Button {
-                            if let target = segment.step {
-                                step = target
-                            }
-                        } label: {
-                            Text(segment.text)
-                                .font(.system(.subheadline, design: .serif))
-                                .fontWeight(segment.isFilled ? .semibold : .regular)
-                                .foregroundStyle(segmentColor(for: segment))
-                                .underline(segment.step != nil && segment.isFilled, pattern: .dot)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(segment.step == nil)
-                    } else {
-                        Text(segment.text)
-                            .font(.system(.subheadline, design: .serif))
-                            .foregroundStyle(theme.muted)
-                    }
-                }
-            }
+            entryPhrase(font: .system(.subheadline, design: .serif), centered: false)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -118,6 +93,33 @@ struct GuidedLogFlowView: View {
                 .fill(theme.line)
                 .frame(height: 1)
         }
+    }
+
+    private func entryPhrase(font: Font, centered: Bool) -> some View {
+        FlowLayout(spacing: 0, centerRows: centered) {
+            ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
+                if segment.isFilled || segment.step != nil {
+                    Button {
+                        if let target = segment.step {
+                            step = target
+                        }
+                    } label: {
+                        Text(segment.text)
+                            .font(font)
+                            .fontWeight(segment.isFilled ? .semibold : .regular)
+                            .foregroundStyle(segmentColor(for: segment))
+                            .underline(segment.step != nil && segment.isFilled, pattern: .dot)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(segment.step == nil)
+                } else {
+                    Text(segment.text)
+                        .font(font)
+                        .foregroundStyle(theme.muted)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
     }
 
     private func segmentColor(for segment: SentenceSegment) -> Color {
@@ -131,10 +133,8 @@ struct GuidedLogFlowView: View {
     // MARK: - Step content
 
     @ViewBuilder
-    private var stepContent: some View {
+    private var questionBody: some View {
         switch step {
-        case .smartEntry:
-            smartEntryStep
         case .headachePresent:
             headacheStep
         case .severity:
@@ -143,128 +143,13 @@ struct GuidedLogFlowView: View {
             locationStep
         case .qualityAndMovement:
             qualityStep
+        case .relief:
+            reliefStep
         case .cycleAndContext:
             cycleContextStep
         case .review:
-            reviewStep
+            EmptyView()
         }
-    }
-
-    // MARK: L · Smart entry
-
-    private var smartEntryStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if let suggestion {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
-                        Text(suggestion.phaseLabel.uppercased())
-                            .font(.caption2.weight(.semibold))
-                            .kerning(1.2)
-                            .foregroundStyle(theme.cycle)
-                        if let day = suggestion.cycleDay {
-                            Text("· DAY \(day)")
-                                .font(.caption2.weight(.semibold))
-                                .kerning(1.2)
-                                .foregroundStyle(theme.muted)
-                        }
-                    }
-
-                    Text(suggestion.bannerText)
-                        .font(.subheadline)
-                        .foregroundStyle(theme.text)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    HStack(spacing: 10) {
-                        Button {
-                            applySuggestion(suggestion)
-                        } label: {
-                            Text("Log like last time")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(theme.pain, in: RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(theme.onPain)
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            beginBlankFlow()
-                        } label: {
-                            Text("Start blank")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(theme.line, lineWidth: 1)
-                                }
-                                .foregroundStyle(theme.text)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(14)
-                .background(
-                    LinearGradient(
-                        colors: [theme.cycleDim, theme.painDim],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 16)
-                )
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(theme.cycle.opacity(0.35), lineWidth: 1)
-                }
-            } else {
-                Text("Tap through a few quick questions — or say it out loud.")
-                    .font(.footnote)
-                    .foregroundStyle(theme.muted)
-
-                Button(action: beginBlankFlow) {
-                    Text("Start logging")
-                        .font(.subheadline.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(theme.pain, in: RoundedRectangle(cornerRadius: 14))
-                        .foregroundStyle(theme.onPain)
-                }
-                .buttonStyle(.plain)
-            }
-
-            talkCard
-        }
-    }
-
-    private var talkCard: some View {
-        Button(action: onTalk) {
-            HStack(spacing: 12) {
-                Image(systemName: "mic.fill")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(theme.onPain)
-                    .frame(width: 44, height: 44)
-                    .background(theme.pain, in: Circle())
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Talk instead")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(theme.text)
-                    Text("Say how you feel")
-                        .font(.caption)
-                        .foregroundStyle(theme.muted)
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(12)
-            .background(theme.surface, in: RoundedRectangle(cornerRadius: 14))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(theme.line, lineWidth: 1)
-            }
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: I · Focus steps
@@ -272,7 +157,7 @@ struct GuidedLogFlowView: View {
     private var headacheStep: some View {
         focusShell(
             title: "Any headache right now?",
-            subtitle: "Skip if not — cycle and context come later."
+            subtitle: "Choose Yes or No to continue."
         ) {
             HStack(spacing: 11) {
                 bigChoiceButton(title: "Yes", isSelected: values["migraine_present"] == .boolean(true)) {
@@ -305,9 +190,11 @@ struct GuidedLogFlowView: View {
     private var locationStep: some View {
         focusShell(
             title: "Where does it hurt?",
-            subtitle: "Tap one or more zones."
+            subtitle: "Select all that apply."
         ) {
-            HeadLocationMapView(selectedKeys: locationBinding)
+            if let field = schema.field(forKey: "location") {
+                multiChoiceList(field: field, fieldKey: "location", accent: .pain)
+            }
         }
     }
 
@@ -316,53 +203,90 @@ struct GuidedLogFlowView: View {
             title: "What does it feel like?",
             subtitle: "Pick one or more. Skip if you're not sure."
         ) {
-            VStack(alignment: .leading, spacing: 18) {
-                if let field = schema.field(forKey: "quality") {
-                    FlowLayout(spacing: 7) {
-                        ForEach(field.values) { option in
-                            SelectablePill(
-                                label: option.label,
-                                isSelected: selectedChoices("quality").contains(option.key),
-                                accent: .pain
-                            ) {
-                                toggleChoice(option.key, fieldKey: "quality")
-                            }
+            if let field = schema.field(forKey: "quality") {
+                FlowLayout(spacing: 7) {
+                    ForEach(field.values) { option in
+                        SelectablePill(
+                            label: option.label,
+                            isSelected: selectedChoices("quality").contains(option.key),
+                            accent: .pain
+                        ) {
+                            toggleChoice(option.key, fieldKey: "quality")
                         }
                     }
                 }
+                .frame(maxWidth: .infinity)
+            }
+        } footer: {
+            VStack(alignment: .center, spacing: 8) {
+                Text("WORSE WITH MOVEMENT?")
+                    .font(.caption2.weight(.semibold))
+                    .kerning(1.2)
+                    .foregroundStyle(theme.muted)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("WORSE WITH MOVEMENT?")
-                        .font(.caption2.weight(.semibold))
-                        .kerning(1.2)
-                        .foregroundStyle(theme.muted)
-
-                    HStack(spacing: 11) {
-                        bigChoiceButton(
-                            title: "Yes",
-                            isSelected: values["worse_with_movement"] == .boolean(true)
-                        ) {
-                            values["worse_with_movement"] = .boolean(true)
-                        }
-                        bigChoiceButton(
-                            title: "No",
-                            isSelected: values["worse_with_movement"] == .boolean(false)
-                        ) {
-                            values["worse_with_movement"] = .boolean(false)
-                        }
+                HStack(spacing: 11) {
+                    bigChoiceButton(
+                        title: "Yes",
+                        isSelected: values["worse_with_movement"] == .boolean(true)
+                    ) {
+                        values["worse_with_movement"] = .boolean(true)
+                    }
+                    bigChoiceButton(
+                        title: "No",
+                        isSelected: values["worse_with_movement"] == .boolean(false)
+                    ) {
+                        values["worse_with_movement"] = .boolean(false)
                     }
                 }
             }
         }
     }
 
+    private var reliefStep: some View {
+        focusShell(
+            title: "Any medication or relief?",
+            subtitle: "Select all that apply. Skip if none."
+        ) {
+            if let field = schema.field(forKey: "relief_taken") {
+                multiChoiceList(field: field, fieldKey: "relief_taken", accent: .pain)
+            }
+        } footer: {
+            if !selectedChoices("relief_taken").isEmpty,
+               let effectField = schema.field(forKey: "relief_effect") {
+                VStack(alignment: .center, spacing: 8) {
+                    Text(effectField.label.uppercased())
+                        .font(.caption2.weight(.semibold))
+                        .kerning(1.2)
+                        .foregroundStyle(theme.muted)
+
+                    FlowLayout(spacing: 7) {
+                        ForEach(effectField.values) { option in
+                            SelectablePill(
+                                label: option.label,
+                                isSelected: values["relief_effect"] == .choice(option.key),
+                                accent: .pain
+                            ) {
+                                if values["relief_effect"] == .choice(option.key) {
+                                    values.removeValue(forKey: "relief_effect")
+                                } else {
+                                    values["relief_effect"] = .choice(option.key)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .onAppear { applyMedicationPrefillIfNeeded() }
+    }
+
     private var cycleContextStep: some View {
         focusShell(
             title: "Anything else today?",
-            subtitle: nil,
-            alignTop: true
+            subtitle: nil
         ) {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .center, spacing: 18) {
                 if let field = schema.field(forKey: "bleeding") {
                     fieldPills(field: field, accent: .cycle)
                 }
@@ -381,50 +305,51 @@ struct GuidedLogFlowView: View {
                 if let field = schema.field(forKey: "triggers") {
                     fieldPills(field: field, accent: .pain, limit: 4)
                 }
-                if let field = schema.field(forKey: "relief_taken") {
-                    fieldPills(field: field, accent: .pain, limit: 4)
-                }
             }
+            .frame(maxWidth: .infinity)
         }
     }
 
     private var reviewStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Ready to save?")
-                .font(.system(.title3, design: .serif))
-                .fontWeight(.medium)
-                .frame(maxWidth: .infinity, alignment: .center)
+        VStack(alignment: .center, spacing: 24) {
+            Spacer(minLength: 12)
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text(LogSymptomsSentenceBuilder.reviewSentence(values: values, schema: schema))
-                    .font(.system(.body, design: .serif))
-                    .foregroundStyle(theme.text)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 10) {
+                Text("TAP A WORD TO EDIT")
+                    .font(.caption2.weight(.semibold))
+                    .kerning(1.2)
+                    .foregroundStyle(theme.muted)
 
-                ForEach(LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema), id: \.label) { item in
-                    HStack {
-                        Text(item.label)
-                            .foregroundStyle(theme.muted)
-                        Spacer()
-                        Text("Not set")
-                            .foregroundStyle(theme.muted)
-                            .italic()
+                entryPhrase(font: .system(.title2, design: .serif), centered: true)
+            }
+
+            let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+            if !unset.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(unset, id: \.label) { item in
+                        HStack {
+                            Text(item.label)
+                                .foregroundStyle(theme.muted)
+                            Spacer()
+                            Text("Not set")
+                                .foregroundStyle(theme.muted)
+                                .italic()
+                        }
+                        .font(.subheadline)
                     }
-                    .font(.subheadline)
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(theme.line, lineWidth: 1)
                 }
             }
-            .padding(16)
-            .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(theme.line, lineWidth: 1)
-            }
 
-            Text("Tap the sentence strip above to change anything.")
-                .font(.caption)
-                .foregroundStyle(theme.muted)
-                .frame(maxWidth: .infinity, alignment: .center)
+            Spacer(minLength: 12)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Focus shell
@@ -432,15 +357,21 @@ struct GuidedLogFlowView: View {
     private func focusShell<Content: View>(
         title: String,
         subtitle: String?,
-        alignTop: Bool = false,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(spacing: 0) {
-            if step != .smartEntry {
-                progressHeader
-            }
+        focusShell(title: title, subtitle: subtitle, content: content) {
+            EmptyView()
+        }
+    }
 
-            VStack(spacing: 16) {
+    private func focusShell<Content: View, Footer: View>(
+        title: String,
+        subtitle: String?,
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder footer: () -> Footer
+    ) -> some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 10) {
                 Text(title)
                     .font(.system(.title2, design: .serif))
                     .fontWeight(.medium)
@@ -454,17 +385,19 @@ struct GuidedLogFlowView: View {
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
-
-                content()
-
-                if step != .review {
-                    stepNavigation(showSkip: true, nextTitle: nextButtonTitle) {
-                        advance()
-                    }
-                }
             }
-            .frame(maxWidth: .infinity, maxHeight: alignTop ? nil : .infinity, alignment: alignTop ? .top : .center)
+
+            Spacer(minLength: 36)
+
+            content()
+                .frame(maxWidth: .infinity)
+
+            Spacer(minLength: 36)
+
+            footer()
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private var progressHeader: some View {
@@ -485,39 +418,66 @@ struct GuidedLogFlowView: View {
                 .font(.caption2.monospaced())
                 .foregroundStyle(theme.muted)
         }
-        .padding(.bottom, 8)
     }
 
-    private func stepNavigation(
-        showSkip: Bool,
-        nextTitle: String,
-        onNext: @escaping () -> Void
-    ) -> some View {
-        HStack {
-            if canGoBack {
-                Button("← Back") { goBack() }
-                    .font(.subheadline)
-                    .foregroundStyle(theme.muted)
-            } else {
-                Color.clear.frame(width: 44)
+    private var stepNavigationBar: some View {
+        VStack(spacing: 0) {
+            Divider().overlay(theme.line)
+            HStack(spacing: 12) {
+                Button {
+                    goBack()
+                } label: {
+                    Text("← Back")
+                        .font(.subheadline)
+                        .foregroundStyle(theme.muted)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(!canGoBack)
+                .opacity(canGoBack ? 1 : 0)
+                .accessibilityHidden(!canGoBack)
+                .frame(maxWidth: .infinity)
+
+                if canSkipCurrentStep {
+                    Button {
+                        advance()
+                    } label: {
+                        Text("Skip")
+                            .font(.subheadline)
+                            .foregroundStyle(theme.muted)
+                            .frame(width: 64, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Color.clear
+                        .frame(width: 64, height: 44)
+                }
+
+                Button {
+                    advance()
+                } label: {
+                    Text(nextButtonTitle)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(canAdvance ? theme.onPain : theme.muted)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(canAdvance ? theme.pain : theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay {
+                            if !canAdvance {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(theme.line, lineWidth: 1)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .disabled(!canAdvance)
+                .frame(maxWidth: .infinity)
             }
-
-            Spacer()
-
-            if showSkip {
-                Button("Skip") { advance() }
-                    .font(.subheadline)
-                    .foregroundStyle(theme.muted)
-            }
-
-            Button(nextTitle, action: onNext)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(theme.onPain)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(theme.pain, in: RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
         }
-        .padding(.top, 8)
+        .background(theme.base)
     }
 
     private var saveBar: some View {
@@ -549,10 +509,21 @@ struct GuidedLogFlowView: View {
     }
 
     private var canGoBack: Bool {
-        guard step != .smartEntry,
-              let index = step.index(in: activeSteps)
-        else { return false }
+        guard let index = step.index(in: activeSteps) else { return false }
         return index > 0
+    }
+
+    private var canSkipCurrentStep: Bool {
+        step != .headachePresent
+    }
+
+    private var canAdvance: Bool {
+        switch step {
+        case .headachePresent:
+            values["migraine_present"] != nil
+        default:
+            true
+        }
     }
 
     private func bigChoiceButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
@@ -572,7 +543,7 @@ struct GuidedLogFlowView: View {
     }
 
     private func fieldPills(field: SchemaField, accent: FieldAccent, limit: Int? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .center, spacing: 8) {
             Text(field.label.uppercased())
                 .font(.caption2.weight(.semibold))
                 .kerning(1.2)
@@ -589,25 +560,55 @@ struct GuidedLogFlowView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity)
     }
 
-    private func applySuggestion(_ suggestion: LogEntrySuggestion) {
-        values.merge(suggestion.fieldValues) { _, new in new }
-        step = .headachePresent
-    }
+    private func multiChoiceList(field: SchemaField, fieldKey: String, accent: FieldAccent) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(field.values.enumerated()), id: \.element.id) { index, option in
+                let isSelected = selectedChoices(fieldKey).contains(option.key)
+                Button {
+                    toggleChoice(option.key, fieldKey: fieldKey)
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(isSelected ? accent.accentColor(in: theme) : theme.line)
 
-    private func beginBlankFlow() {
-        step = .headachePresent
+                        Text(option.label)
+                            .font(.body.weight(isSelected ? .semibold : .regular))
+                            .foregroundStyle(isSelected ? theme.text : theme.muted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityLabel(option.label)
+
+                if index < field.values.count - 1 {
+                    Divider()
+                        .overlay(theme.line)
+                        .padding(.leading, 48)
+                }
+            }
+        }
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(theme.line, lineWidth: 1)
+        }
     }
 
     private func advance() {
-        guard let index = step.index(in: activeSteps) else {
-            if step == .smartEntry {
-                step = .headachePresent
-            }
-            return
-        }
+        guard canAdvance else { return }
+        guard let index = step.index(in: activeSteps) else { return }
         let nextIndex = index + 1
         if nextIndex < activeSteps.count {
             step = activeSteps[nextIndex]
@@ -641,24 +642,6 @@ struct GuidedLogFlowView: View {
         )
     }
 
-    private var locationBinding: Binding<Set<String>> {
-        Binding(
-            get: {
-                if case .choices(let keys)? = values["location"] {
-                    return Set(keys)
-                }
-                return []
-            },
-            set: { keys in
-                if keys.isEmpty {
-                    values.removeValue(forKey: "location")
-                } else {
-                    values["location"] = .choices(Array(keys).sorted())
-                }
-            }
-        )
-    }
-
     private func selectedChoices(_ key: String) -> Set<String> {
         if case .choices(let keys)? = values[key] { return Set(keys) }
         return []
@@ -672,6 +655,27 @@ struct GuidedLogFlowView: View {
             keys.append(optionKey)
         }
         values[fieldKey] = keys.isEmpty ? nil : .choices(keys)
+        if fieldKey == "relief_taken", keys.isEmpty {
+            values.removeValue(forKey: "relief_effect")
+        }
+    }
+
+    private func applyMedicationPrefillIfNeeded() {
+        guard !didApplyMedicationPrefill else { return }
+        didApplyMedicationPrefill = true
+
+        let allowed = schema.field(forKey: "relief_taken")?.allowedValueKeys ?? []
+        let saved = medicationPreferences.savedReliefKeys.filter { allowed.contains($0) }
+        guard !saved.isEmpty else { return }
+
+        switch values["relief_taken"] {
+        case .none:
+            values["relief_taken"] = .choices(saved)
+        case .choices(let existing) where existing.isEmpty:
+            values["relief_taken"] = .choices(saved)
+        default:
+            break
+        }
     }
 
     private func isFieldSelected(field: SchemaField, key: String) -> Bool {
@@ -702,10 +706,8 @@ struct GuidedLogFlowView: View {
     GuidedLogFlowView(
         schema: try! SchemaConfig.load(),
         values: $values,
-        entries: [],
-        onSave: {},
-        onTalk: {}
+        onSave: {}
     )
     .environment(\.theme, .plumEmber)
-    .environment(CycleService(provider: MockCycleDataProvider()))
+    .environment(MedicationPreferences())
 }

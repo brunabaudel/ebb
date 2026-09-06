@@ -2,22 +2,22 @@ import Foundation
 
 /// Steps in the merged I+L+J+K guided logging flow (new entries only).
 enum LogSymptomsFlowStep: Int, CaseIterable, Identifiable, Sendable {
-    case smartEntry
     case headachePresent
     case severity
     case location
     case qualityAndMovement
+    case relief
     case cycleAndContext
     case review
 
     var id: Int { rawValue }
 
-    /// Question steps shown after smart entry — excludes smart entry itself.
+    /// Question steps for the guided flow.
     static func questionSteps(hasHeadache: Bool) -> [LogSymptomsFlowStep] {
         if hasHeadache {
-            [.headachePresent, .severity, .location, .qualityAndMovement, .cycleAndContext, .review]
+            [.headachePresent, .severity, .location, .qualityAndMovement, .relief, .cycleAndContext, .review]
         } else {
-            [.headachePresent, .cycleAndContext, .review]
+            [.headachePresent, .relief, .cycleAndContext, .review]
         }
     }
 

@@ -108,12 +108,29 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(sentence.localizedCaseInsensitiveContains("poor sleep"))
     }
 
-    func testSegmentsIncludeBleedingPlaceholder() {
+    func testSegmentsIncludeAllGuidedFields() {
         let values: [String: FieldValue] = [
             "migraine_present": .boolean(true),
             "severity": .scale(2),
+            "location": .choices(["right"]),
+            "quality": .choices(["dull"]),
+            "worse_with_movement": .boolean(true),
+            "relief_taken": .choices(["ibuprofen"]),
+            "relief_effect": .choice("partial"),
+            "bleeding": .choice("spotting"),
+            "cramps_severity": .scale(2),
+            "triggers": .choices(["stress"]),
         ]
         let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
-        XCTAssertTrue(segments.contains { $0.id == "bleeding" })
+        let ids = Set(segments.map(\.id))
+        XCTAssertTrue(ids.contains("severity"))
+        XCTAssertTrue(ids.contains("location"))
+        XCTAssertTrue(ids.contains("quality"))
+        XCTAssertTrue(ids.contains("worse_with_movement"))
+        XCTAssertTrue(ids.contains("relief_taken"))
+        XCTAssertTrue(ids.contains("relief_effect"))
+        XCTAssertTrue(ids.contains("bleeding"))
+        XCTAssertTrue(ids.contains("cramps_severity"))
+        XCTAssertTrue(ids.contains("triggers"))
     }
 }
