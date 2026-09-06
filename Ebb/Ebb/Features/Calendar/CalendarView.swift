@@ -23,7 +23,7 @@ struct CalendarView: View {
     }
 
     var body: some View {
-        ScrollView {
+        VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 backNavigation
                 header
@@ -34,11 +34,16 @@ struct CalendarView: View {
                 displayModeToggle
                 gridSection
                 legend
-                dayHistory
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            .padding(.bottom, 12)
+
+            ScrollView {
+                dayHistory
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+                    .padding(.bottom, 12)
+            }
         }
         .background(theme.base)
         .foregroundStyle(theme.text)
@@ -467,30 +472,27 @@ struct CalendarView: View {
     // MARK: - Day history (Today-style rows)
 
     private var dayHistory: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Divider().overlay(theme.line)
+        let dayEntries = overlay.entries(on: selectedDay, from: entries)
 
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
                 Text(selectedDay.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                     .font(.system(.body, design: .serif))
-                Spacer(minLength: 8)
+                Spacer()
                 if let phase = overlay.phase(for: selectedDay),
                    let cycleDay = overlay.cycleDay(for: selectedDay) {
                     Text("\(phase.displayName.lowercased()) · day \(cycleDay)")
-                        .font(.caption2.weight(.semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(theme.cycle)
-                        .lineLimit(1)
                 }
             }
-            .padding(.top, 12)
             .padding(.bottom, 10)
 
-            let dayEntries = overlay.entries(on: selectedDay, from: entries)
             if dayEntries.isEmpty {
                 Text("Nothing logged this day.")
                     .font(.subheadline)
                     .foregroundStyle(theme.muted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 4)
             } else {
                 VStack(spacing: 0) {
                     ForEach(dayEntries) { entry in
@@ -506,7 +508,12 @@ struct CalendarView: View {
                 }
             }
         }
-        .padding(.top, 10)
+        .padding(.top, 12)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(theme.line)
+                .frame(height: 1)
+        }
     }
 
     // MARK: - Styling helpers
