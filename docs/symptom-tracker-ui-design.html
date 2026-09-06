@@ -65,6 +65,22 @@
   .statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;color:var(--text);z-index:30;}
   .statusbar .dots{display:flex;gap:5px;align-items:center;opacity:.85;font-size:11px;}
   .screen{position:absolute;inset:0;padding:58px 22px 22px;display:flex;flex-direction:column;overflow:hidden;}
+  .screen.has-tabbar{padding-bottom:88px;}
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:78px;background:#16121bcc;border-top:1px solid var(--line);backdrop-filter:blur(12px);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 8px 0;z-index:30;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--faint);min-width:64px;}
+  .tab.on{color:var(--coral);}
+  .tab .ic{font-size:20px;line-height:1;}
+  .nav-back{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--coral);font-weight:600;margin:-4px 0 10px;}
+  .nav-back .arr{font-size:22px;line-height:1;font-weight:400;}
+  .hdr-actions{display:flex;gap:8px;align-items:flex-start;}
+  .hdr-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:var(--text);flex-shrink:0;}
+  .hdr-btn.cal{color:var(--lav);border-color:var(--lav-dim);box-shadow:0 0 0 1px #4c446633;}
+  .hdr-btn.cal.hot{box-shadow:0 0 0 2px var(--coral),0 0 14px -4px var(--coral);}
+  .date-link{display:inline-flex;align-items:center;gap:5px;color:var(--muted);}
+  .date-link .chev{font-size:10px;color:var(--lav);opacity:.85;}
+  .flow-note{max-width:1180px;margin:0 auto 40px;padding:18px 22px;border:1px solid var(--coral-dim);border-radius:16px;background:linear-gradient(90deg,#2e2229,#1A1620);font-size:14px;color:var(--muted);line-height:1.55;}
+  .flow-note b{color:var(--text);font-weight:600;}
+  .flow-note em{color:var(--coral);font-style:normal;font-weight:600;}
 
   .annot{font-size:13px;color:var(--faint);padding-left:4px;max-width:330px;}
   .annot b{color:var(--muted);font-weight:600;}
@@ -357,6 +373,10 @@
     <p>Working name <b style="color:var(--text)">“Ebb”</b> (placeholder — it’s the estrogen ebb that triggers the attack). Every screen is designed dim-first because the person logging is light-sensitive and low-energy. Coral carries the pain axis, lavender the cycle axis. Non-functional mockup — visual design only, no implementation.</p>
   </header>
 
+  <section class="flow-note">
+    <b>Calendar placement (not in tab bar):</b> Keep the tab bar to <em>Today · Patterns · Settings</em> — three destinations, not four. Calendar is <b>history browsing</b>; open it from Today via the <em>calendar icon</em> in the header (or tap the date). It pushes on the Today stack with a back button — same month/week views as before, tab bar stays on Today underneath.
+  </section>
+
   <section class="legend">
     <div class="grp">
       <h4>Palette</h4>
@@ -385,18 +405,22 @@
 
     <!-- 1 · TODAY -->
     <div class="frame-wrap">
-      <div class="scr-name">01 · Today</div>
+      <div class="scr-name">01 · Today · calendar entry point</div>
       <div class="phone">
         <div class="island"></div>
         <div class="statusbar"><span>21:18</span><span class="dots">􀙇 􀛨 􀋨</span></div>
-        <div class="screen">
+        <div class="screen has-tabbar">
           <div class="h-row">
             <div>
               <div class="greet">Evening, Bruna</div>
-              <div class="sub">Sunday, 14 June</div>
+              <div class="sub date-link">Sunday, 14 June <span class="chev">›</span></div>
             </div>
-            <span class="phase-pill"><span class="dot"></span>Luteal</span>
+            <div class="hdr-actions">
+              <div class="hdr-btn cal hot" title="Browse history">▦</div>
+              <div class="hdr-btn" title="Log">+</div>
+            </div>
           </div>
+          <span class="phase-pill" style="margin-top:10px;width:fit-content;"><span class="dot"></span>Luteal</span>
 
           <div class="ring-card">
             <div class="ring">
@@ -438,9 +462,14 @@
             <div class="cta tap"><div class="ml">Tap</div><div class="hint">log it yourself</div></div>
           </div>
         </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
       </div>
       <div class="scr-name" style="color:var(--faint)">&nbsp;</div>
-      <div class="annot"><b>Hero is the cycle ring</b>, not a stat card — it places every symptom against the hormonal phase, which is the entire premise. Two ways in are given equal weight: <b>Talk</b> and <b>Tap</b>.</div>
+      <div class="annot"><b>Calendar lives here, not in the tab bar.</b> The lavender <b>▦</b> button (or the tappable date) opens full history. <b>+</b> stays for logging. Hero is still the cycle ring; Talk and Tap unchanged. Tab bar = Today · Patterns · Settings only.</div>
     </div>
 
     <!-- 2 · TALK -->
@@ -596,7 +625,7 @@
       <div class="phone">
         <div class="island"></div>
         <div class="statusbar"><span>21:20</span><span class="dots">􀙇 􀛨 􀋨</span></div>
-        <div class="screen">
+        <div class="screen has-tabbar">
           <div class="pat-h">This cycle</div>
 
           <div class="timeline-card">
@@ -626,18 +655,24 @@
             <div class="q">All 3 attacks followed a <b>poor-sleep</b> night in the luteal window.</div>
           </div>
         </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">☀</span>Today</div>
+          <div class="tab on"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
       </div>
       <div class="scr-name" style="color:var(--faint)">&nbsp;</div>
-      <div class="annot"><b>The synthesis screen</b> — the lavender cycle axis carries it. Plain-language patterns first, the timeline showing migraine dots falling inside the luteal band. This is the summary call from the spec.</div>
+      <div class="annot"><b>The synthesis screen</b> — insights only, no log list. Calendar history is one tap away on Today (▦), not a peer tab here.</div>
     </div>
 
     <!-- 6 · CALENDAR -->
     <div class="frame-wrap">
-      <div class="scr-name">06 · Calendar — Month view · default</div>
+      <div class="scr-name">06 · Calendar — Month view · pushed from Today</div>
       <div class="phone">
         <div class="island"></div>
         <div class="statusbar"><span>21:21</span><span class="dots">􀙇 􀛨 􀋨</span></div>
-        <div class="screen">
+        <div class="screen has-tabbar">
+          <div class="nav-back"><span class="arr">‹</span> Today</div>
           <div class="cal-top">
             <div class="m">June <span>2026</span></div>
             <div class="cal-nav"><span>‹</span><span>›</span></div>
@@ -681,9 +716,14 @@
             </div>
           </div>
         </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
       </div>
       <div class="scr-name" style="color:var(--faint)">&nbsp;</div>
-      <div class="annot"><b>Default view — the calendar opens here.</b> Month is best for spotting clusters across weeks: every coral migraine dot sits inside the lavender luteal band. The toggle swaps only the grid — chips, day detail and data model stay put.</div>
+      <div class="annot"><b>Pushed screen, not a tab.</b> ‹ Today returns to the home stack. Month view is still the default — coral dots inside the lavender luteal band. Tab bar stays visible with Today selected (you never left the Today tab).</div>
     </div>
 
     <!-- 7 · CALENDAR — WEEK STRIP -->
@@ -692,7 +732,8 @@
       <div class="phone">
         <div class="island"></div>
         <div class="statusbar"><span>21:22</span><span class="dots">􀙇 􀛨 􀋨</span></div>
-        <div class="screen">
+        <div class="screen has-tabbar">
+          <div class="nav-back"><span class="arr">‹</span> Today</div>
           <div class="cal-top">
             <div class="m">18–24 <span>May</span></div>
             <div class="cal-nav"><span>‹</span><span>›</span></div>
@@ -744,9 +785,14 @@
             </div>
           </div>
         </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
       </div>
       <div class="scr-name" style="color:var(--faint)">&nbsp;</div>
-      <div class="annot"><b>Alternate view, one tap away.</b> Identical chips, toggle and day detail — only the grid changes. Lighter to scan, calmer mid-migraine. Shown scrolled to last period so the <b>filled rose</b> (a logged period) and the day-1 migraine cluster are visible.</div>
+      <div class="annot"><b>Same pushed stack as month view.</b> Week toggle swaps only the grid — chips, day detail and back nav stay put. Still not a tab; you arrived from Today’s ▦ button.</div>
     </div>
 
     <!-- 8 · ONBOARDING -->
@@ -778,7 +824,7 @@
       <div class="phone">
         <div class="island"></div>
         <div class="statusbar"><span>21:25</span><span class="dots">􀙇 􀛨 􀋨</span></div>
-        <div class="screen">
+        <div class="screen has-tabbar">
           <div class="set2-top"><span class="set2-title">Settings</span><span class="done">Done</span></div>
 
           <div class="set2-status">
@@ -806,9 +852,14 @@
             <div class="set2-row"><span class="lbl"><span class="ic">💊</span>My medications</span><span class="val">Ibuprofen +1 <span class="chev">›</span></span></div>
           </div>
         </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">☀</span>Today</div>
+          <div class="tab"><span class="ic">◠</span>Patterns</div>
+          <div class="tab on"><span class="ic">⚙</span>Settings</div>
+        </div>
       </div>
       <div class="scr-name" style="color:var(--faint)">&nbsp;</div>
-      <div class="annot"><b>Settings, not an identity.</b> No account anywhere — the status strip shows the only “cloud” (the user’s own iCloud) and the Face ID lock. Everything else is local preference: theme, HealthKit, reminders, cycle info, and the meds that pre-fill the relief pills.</div>
+      <div class="annot"><b>Settings, not an identity.</b> Third tab in the 3-tab bar. No calendar here — history browsing stays on Today’s stack.</div>
     </div>
 
     <!-- 10 · DOCTOR EXPORT -->
