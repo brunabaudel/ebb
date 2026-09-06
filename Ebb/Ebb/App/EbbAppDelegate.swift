@@ -6,8 +6,7 @@ final class EbbAppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        StoreKitLocalTestingBootstrap.activateIfNeeded()
-        return true
+        true
     }
 
     func application(

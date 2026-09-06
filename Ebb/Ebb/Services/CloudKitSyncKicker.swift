@@ -25,11 +25,4 @@ enum CloudKitSyncKicker {
     }
 
     static let forceUserInfoKey = "force"
-
-    #if DEBUG
-    @MainActor
-    static func resetForTesting() {
-        didRegisterForRemoteNotifications = false
-    }
-    #endif
 }

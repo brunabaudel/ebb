@@ -21,10 +21,6 @@ final class OnboardingPreferences {
         hasCompletedOnboarding = true
     }
 
-    func resetForTesting() {
-        hasCompletedOnboarding = false
-    }
-
     // MARK: - Private
 
     private enum Keys {

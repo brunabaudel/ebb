@@ -1,9 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Phase 0 verification surface: every schema field rendered as text, swatches
-/// for every theme, and a live SwiftData round-trip check. Not shipped past
-/// Phase 0 — replaced by the real tab scaffold in Phase 1.
+/// Developer verification surface: schema fields, theme swatches, and a live
+/// SwiftData round-trip check. Available from Settings → Developer (DEBUG).
 struct DebugScreen: View {
     let schemaLoadResult: Result<SchemaConfig, Error>
 

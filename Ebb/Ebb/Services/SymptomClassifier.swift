@@ -29,10 +29,6 @@ enum SymptomClassifierFactory {
         #endif
         return SynonymSymptomClassifier()
     }
-
-    static func makeForTests() -> any SymptomClassifier {
-        SynonymSymptomClassifier()
-    }
 }
 
 extension FieldValue {
