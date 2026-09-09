@@ -45,31 +45,23 @@ struct GuidedLogFlowView: View {
                     .padding(.top, 16)
             }
 
-            GeometryReader { geometry in
-                ScrollView {
-                    Group {
-                        if step == .review {
-                            reviewStep
-                        } else {
-                            questionBody
-                        }
+            ScrollView {
+                VStack(spacing: 0) {
+                    if step == .review {
+                        reviewStep
+                        inlineSaveButton
+                            .padding(.top, 32)
+                    } else {
+                        questionBody
+                        inlineStepNavigation
+                            .padding(.top, 32)
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 24)
-                    .frame(
-                        maxWidth: .infinity,
-                        minHeight: geometry.size.height,
-                        alignment: step == .review ? .center : .top
-                    )
                 }
-                .scrollIndicators(.hidden)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 24)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
-
-            if step == .review {
-                saveBar
-            } else {
-                stepNavigationBar
-            }
+            .scrollIndicators(.hidden)
         }
         .background(theme.base)
     }
@@ -253,32 +245,44 @@ struct GuidedLogFlowView: View {
         } footer: {
             if !selectedChoices("relief_taken").isEmpty,
                let effectField = schema.field(forKey: "relief_effect") {
-                VStack(alignment: .center, spacing: 8) {
-                    Text(effectField.label.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .kerning(1.2)
-                        .foregroundStyle(theme.muted)
-
-                    FlowLayout(spacing: 7) {
-                        ForEach(effectField.values) { option in
-                            SelectablePill(
-                                label: option.label,
-                                isSelected: values["relief_effect"] == .choice(option.key),
-                                accent: .pain
-                            ) {
-                                if values["relief_effect"] == .choice(option.key) {
-                                    values.removeValue(forKey: "relief_effect")
-                                } else {
-                                    values["relief_effect"] = .choice(option.key)
-                                }
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
+                reliefEffectSection(effectField)
             }
         }
         .onAppear { applyMedicationPrefillIfNeeded() }
+    }
+
+    private func reliefEffectSection(_ effectField: SchemaField) -> some View {
+        VStack(alignment: .center, spacing: 12) {
+            Divider()
+                .overlay(theme.line)
+                .padding(.vertical, 4)
+
+            Text(effectField.label.uppercased())
+                .font(.caption2.weight(.semibold))
+                .kerning(1.2)
+                .foregroundStyle(theme.muted)
+
+            FlowLayout(spacing: 7) {
+                ForEach(effectField.values) { option in
+                    SelectablePill(
+                        label: option.label,
+                        isSelected: values["relief_effect"] == .choice(option.key),
+                        accent: .pain
+                    ) {
+                        if values["relief_effect"] == .choice(option.key) {
+                            values.removeValue(forKey: "relief_effect")
+                        } else {
+                            values["relief_effect"] = .choice(option.key)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Did it help?")
     }
 
     private var cycleContextStep: some View {
@@ -312,8 +316,6 @@ struct GuidedLogFlowView: View {
 
     private var reviewStep: some View {
         VStack(alignment: .center, spacing: 24) {
-            Spacer(minLength: 12)
-
             VStack(spacing: 10) {
                 Text("TAP A WORD TO EDIT")
                     .font(.caption2.weight(.semibold))
@@ -322,6 +324,7 @@ struct GuidedLogFlowView: View {
 
                 entryPhrase(font: .system(.title2, design: .serif), centered: true)
             }
+            .padding(.top, 12)
 
             let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
             if !unset.isEmpty {
@@ -346,10 +349,8 @@ struct GuidedLogFlowView: View {
                         .strokeBorder(theme.line, lineWidth: 1)
                 }
             }
-
-            Spacer(minLength: 12)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     // MARK: - Focus shell
@@ -370,7 +371,7 @@ struct GuidedLogFlowView: View {
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
     ) -> some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 28) {
             VStack(spacing: 10) {
                 Text(title)
                     .font(.system(.title2, design: .serif))
@@ -387,17 +388,13 @@ struct GuidedLogFlowView: View {
                 }
             }
 
-            Spacer(minLength: 36)
-
             content()
                 .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 36)
 
             footer()
                 .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private var progressHeader: some View {
@@ -420,80 +417,76 @@ struct GuidedLogFlowView: View {
         }
     }
 
-    private var stepNavigationBar: some View {
-        VStack(spacing: 0) {
-            Divider().overlay(theme.line)
-            HStack(spacing: 12) {
-                Button {
-                    goBack()
-                } label: {
-                    Text("← Back")
-                        .font(.subheadline)
-                        .foregroundStyle(theme.muted)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(!canGoBack)
-                .opacity(canGoBack ? 1 : 0)
-                .accessibilityHidden(!canGoBack)
-                .frame(maxWidth: .infinity)
+    private var inlineStepNavigation: some View {
+        HStack(spacing: 12) {
+            Button {
+                goBack()
+            } label: {
+                Text("← Back")
+                    .font(.subheadline)
+                    .foregroundStyle(theme.muted)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canGoBack)
+            .opacity(canGoBack ? 1 : 0)
+            .accessibilityHidden(!canGoBack)
+            .frame(maxWidth: .infinity)
 
-                if canSkipCurrentStep {
-                    Button {
-                        advance()
-                    } label: {
-                        Text("Skip")
-                            .font(.subheadline)
-                            .foregroundStyle(theme.muted)
-                            .frame(width: 64, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Color.clear
-                        .frame(width: 64, height: 44)
-                }
-
+            if canSkipCurrentStep {
                 Button {
                     advance()
                 } label: {
-                    Text(nextButtonTitle)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(canAdvance ? theme.onPain : theme.muted)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(canAdvance ? theme.pain : theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay {
-                            if !canAdvance {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(theme.line, lineWidth: 1)
-                            }
-                        }
+                    Text("Skip")
+                        .font(.subheadline)
+                        .foregroundStyle(theme.muted)
+                        .frame(width: 64, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(!canAdvance)
-                .frame(maxWidth: .infinity)
+                .accessibilityLabel("Skip this step")
+            } else {
+                Color.clear
+                    .frame(width: 64, height: 44)
+                    .accessibilityHidden(true)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
-        }
-        .background(theme.base)
-    }
 
-    private var saveBar: some View {
-        VStack(spacing: 0) {
-            Divider().overlay(theme.line)
-            Button(action: onSave) {
-                Text("Save entry")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(theme.pain, in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(theme.onPain)
+            Button {
+                advance()
+            } label: {
+                Text(nextButtonTitle)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(canAdvance ? theme.onPain : theme.muted)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(canAdvance ? theme.pain : theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay {
+                        if !canAdvance {
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(theme.line, lineWidth: 1)
+                        }
+                    }
             }
             .buttonStyle(.plain)
-            .padding(20)
+            .disabled(!canAdvance)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel(nextButtonTitle)
         }
+        .padding(.bottom, 8)
+    }
+
+    private var inlineSaveButton: some View {
+        Button(action: onSave) {
+            Text("Save entry")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(theme.pain, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(theme.onPain)
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 8)
+        .accessibilityLabel("Save entry")
     }
 
     // MARK: - Helpers
