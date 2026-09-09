@@ -46,7 +46,7 @@ struct AppearanceSettingsView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             if let lockedThemeName {
-                Text("\(lockedThemeName) is part of Ebb+. Plum & Ember stays free forever.")
+                Text("\(lockedThemeName) is part of Ebb+. Soft paper and Plum & Ember stay free.")
             }
         }
     }

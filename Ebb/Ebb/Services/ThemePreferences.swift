@@ -10,15 +10,15 @@ final class ThemePreferences {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        selectedThemeID = defaults.string(forKey: Keys.selectedThemeID) ?? Theme.plumEmber.id
+        selectedThemeID = defaults.string(forKey: Keys.selectedThemeID) ?? Theme.defaultTheme.id
     }
 
     func effectiveTheme(isEbbPlus: Bool) -> Theme {
-        let selected = Theme.theme(for: selectedThemeID) ?? .plumEmber
+        let selected = Theme.theme(for: selectedThemeID) ?? Theme.defaultTheme
         if selected.isFreeDefault || isEbbPlus {
             return selected
         }
-        return .plumEmber
+        return Theme.defaultTheme
     }
 
     func canUse(_ theme: Theme, isEbbPlus: Bool) -> Bool {

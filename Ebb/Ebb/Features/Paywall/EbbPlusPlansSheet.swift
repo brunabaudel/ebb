@@ -50,6 +50,7 @@ struct EbbPlusPlansSheet: View {
                 VStack(alignment: .leading, spacing: 0) {
                     badge
                     title
+                    paywallIllustration
                     featureList
                     privacyLine
                     planPicker
@@ -114,12 +115,53 @@ struct EbbPlusPlansSheet: View {
         return result
     }
 
+    private var paywallIllustration: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.surface, theme.painDim.opacity(0.55)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 64, height: 64)
+
+                EbbMascot(variant: .default, size: 52)
+            }
+
+            Text("Patterns, doctor PDF, full history — still private, still on your phone.")
+                .font(.system(.subheadline, design: .serif))
+                .italic()
+                .foregroundStyle(theme.text.opacity(0.88))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [theme.surface, theme.painDim.opacity(0.35)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .strokeBorder(theme.line, lineWidth: 1)
+        }
+        .padding(.top, 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Ebb. Patterns, doctor PDF, and full history stay private on your phone.")
+    }
+
     private var featureList: some View {
         VStack(alignment: .leading, spacing: 10) {
             planFeature("Patterns & predictions", detail: "triggers, luteal-risk forecast")
             planFeature("Doctor PDF export", detail: "your full summary, on demand")
             planFeature("Full history", detail: "every cycle, not just the last three")
-            planFeature("All themes", detail: "six palettes, light & dark")
+            planFeature("All themes", detail: "seven palettes, light & dark")
         }
         .padding(.top, 16)
     }

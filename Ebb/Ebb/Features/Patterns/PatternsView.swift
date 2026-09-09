@@ -96,13 +96,7 @@ struct PatternsView: View {
 
             CycleTimelineView(timeline: report.timeline)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 20)
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: 20))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(theme.line, lineWidth: 1)
-        }
+        .themeCard(padding: 20)
     }
 
     private var triggersSection: some View {
@@ -153,13 +147,8 @@ struct PatternsView: View {
             .font(.subheadline)
             .foregroundStyle(theme.text)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(theme.line, lineWidth: 1)
-            }
+            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
     }
 
     private var reliefSection: some View {
@@ -199,12 +188,7 @@ struct PatternsView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             CycleTimelineView(timeline: report.timeline)
-                .padding(18)
-                .background(theme.surface, in: RoundedRectangle(cornerRadius: 20))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20)
-                        .strokeBorder(theme.line, lineWidth: 1)
-                }
+                .themeCard(padding: 18)
 
             Text("Patterns appear after a cycle or two of logging.")
                 .font(.footnote)
@@ -214,15 +198,28 @@ struct PatternsView: View {
     }
 
     private var emptyContent: some View {
-        ContentUnavailableView {
-            Label("Patterns", systemImage: "chart.line.uptrend.xyaxis")
-        } description: {
+        VStack(spacing: 18) {
+            EbbIllustrationWell(variant: .rest, diameter: 96, mascotSize: 72)
+
+            Text("Needs a few cycles")
+                .font(.system(.title2, design: .serif))
+
             Text(report.timelineCaption)
-        } actions: {
+                .font(.subheadline)
+                .foregroundStyle(theme.muted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+
             Text("Patterns appear after a cycle or two of logging.")
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
+                .multilineTextAlignment(.center)
         }
+        .padding(.horizontal, 20)
+        .padding(.top, 32)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Patterns need a few cycles. Ebb is resting until there is enough signal.")
     }
 
     // MARK: - Attributed text
