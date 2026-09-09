@@ -38,8 +38,6 @@ struct GuidedLogFlowView: View {
     var body: some View {
         VStack(spacing: 0) {
             if step != .review {
-                sentenceStrip
-
                 progressHeader
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -74,26 +72,7 @@ struct GuidedLogFlowView: View {
         .background(theme.base)
     }
 
-    // MARK: - Sentence strip (J)
-
-    private var sentenceStrip: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("BUILDING ENTRY · TAP A WORD TO EDIT")
-                .font(.caption2.weight(.semibold))
-                .kerning(1.2)
-                .foregroundStyle(theme.muted)
-
-            entryPhrase(font: .system(.subheadline, design: .serif), centered: false)
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(theme.surface)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(theme.line)
-                .frame(height: 1)
-        }
-    }
+    // MARK: - Entry phrase (review tap-to-edit)
 
     private func entryPhrase(font: Font, centered: Bool) -> some View {
         FlowLayout(spacing: 0, centerRows: centered) {
