@@ -1,6 +1,25 @@
 import XCTest
 @testable import Ebb
 
+final class LogSymptomsFlowStepTests: XCTestCase {
+    func testQuestionStepsWithHeadacheIncludesRelief() {
+        let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: true)
+        XCTAssertEqual(steps, [
+            .headachePresent, .severity, .location, .qualityAndMovement,
+            .relief, .cycleAndContext, .review,
+        ])
+    }
+
+    func testQuestionStepsWithoutHeadacheSkipsMigraineDetailsAndRelief() {
+        let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: false)
+        XCTAssertEqual(steps, [.headachePresent, .cycleAndContext, .review])
+        XCTAssertFalse(steps.contains(.relief))
+        XCTAssertFalse(steps.contains(.severity))
+        XCTAssertFalse(steps.contains(.location))
+        XCTAssertFalse(steps.contains(.qualityAndMovement))
+    }
+}
+
 final class LogSymptomsSentenceBuilderTests: XCTestCase {
     private let schema = try! SchemaConfig.load()
 
@@ -47,5 +66,28 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(ids.contains("bleeding"))
         XCTAssertTrue(ids.contains("cramps_severity"))
         XCTAssertTrue(ids.contains("triggers"))
+    }
+
+    func testNoHeadacheSegmentsSkipReliefPlaceholder() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+        ]
+        let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
+        let ids = Set(segments.map(\.id))
+        XCTAssertTrue(ids.contains("migraine_present"))
+        XCTAssertTrue(ids.contains("bleeding"))
+        XCTAssertFalse(ids.contains("relief_taken"))
+        XCTAssertFalse(ids.contains("relief_effect"))
+    }
+
+    func testUnsetFieldLabelsWithoutHeadacheOmitsRelief() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+        ]
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let labels = unset.map(\.label)
+        XCTAssertFalse(labels.contains("Relief taken"))
+        XCTAssertFalse(labels.contains("Did it help?"))
+        XCTAssertTrue(labels.contains("Bleeding"))
     }
 }
