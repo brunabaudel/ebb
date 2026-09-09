@@ -17,7 +17,7 @@ enum LogSymptomsFlowStep: Int, CaseIterable, Identifiable, Sendable {
         if hasHeadache {
             [.headachePresent, .severity, .location, .qualityAndMovement, .relief, .cycleAndContext, .review]
         } else {
-            [.headachePresent, .relief, .cycleAndContext, .review]
+            [.headachePresent, .cycleAndContext, .review]
         }
     }
 

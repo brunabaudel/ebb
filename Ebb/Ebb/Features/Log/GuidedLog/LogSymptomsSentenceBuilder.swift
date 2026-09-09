@@ -144,11 +144,11 @@ enum LogSymptomsSentenceBuilder {
             if values["worse_with_movement"] == nil {
                 unset.append(("Worse with movement", .qualityAndMovement))
             }
-        }
-        if values["relief_taken"] == nil {
-            unset.append(("Relief taken", .relief))
-        } else if values["relief_effect"] == nil {
-            unset.append(("Did it help?", .relief))
+            if values["relief_taken"] == nil {
+                unset.append(("Relief taken", .relief))
+            } else if values["relief_effect"] == nil {
+                unset.append(("Did it help?", .relief))
+            }
         }
         if values["bleeding"] == nil {
             unset.append(("Bleeding", .cycleAndContext))
@@ -178,20 +178,27 @@ enum LogSymptomsSentenceBuilder {
             )
         ]
         appendSeparator(&result, id: "sep_no_headache")
-        result.append(contentsOf: contextSegments(values: values, schema: schema, includePlaceholders: true))
+        result.append(contentsOf: contextSegments(
+            values: values,
+            schema: schema,
+            includePlaceholders: true,
+            includeRelief: false
+        ))
         return result
     }
 
-    /// Relief, bleeding, cramps, and triggers — shared by headache and no-headache paths.
+    /// Bleeding, cramps, and triggers — shared by headache and no-headache paths.
+    /// Relief is included only on the headache path (`includeRelief: true`).
     private static func contextSegments(
         values: [String: FieldValue],
         schema: SchemaConfig,
-        includePlaceholders: Bool
+        includePlaceholders: Bool,
+        includeRelief: Bool = true
     ) -> [SentenceSegment] {
         var result: [SentenceSegment] = []
 
-        // Relief
-        if let relief = choiceLabels(values["relief_taken"], fieldKey: "relief_taken", schema: schema) {
+        // Relief (headache path only)
+        if includeRelief, let relief = choiceLabels(values["relief_taken"], fieldKey: "relief_taken", schema: schema) {
             result.append(SentenceSegment(
                 id: "relief_taken",
                 text: "Took \(relief)",
@@ -218,7 +225,7 @@ enum LogSymptomsSentenceBuilder {
                     accent: .pain
                 ))
             }
-        } else if includePlaceholders {
+        } else if includeRelief, includePlaceholders {
             result.append(SentenceSegment(
                 id: "relief_taken",
                 text: "relief?",

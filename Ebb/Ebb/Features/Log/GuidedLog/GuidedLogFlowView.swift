@@ -621,8 +621,19 @@ struct GuidedLogFlowView: View {
     }
 
     private func clearHeadacheDetailFields() {
-        for key in ["severity", "location", "quality", "worse_with_movement", "aura"] {
+        for key in ["severity", "location", "quality", "worse_with_movement", "aura", "relief_taken", "relief_effect"] {
             values.removeValue(forKey: key)
+        }
+        realignStepIfNeeded()
+    }
+
+    /// Keeps the current step valid when the active path shrinks (e.g. migraine → No).
+    private func realignStepIfNeeded() {
+        guard step.index(in: activeSteps) == nil else { return }
+        if let headacheIndex = LogSymptomsFlowStep.headachePresent.index(in: activeSteps) {
+            step = activeSteps[headacheIndex]
+        } else {
+            step = activeSteps.first ?? .headachePresent
         }
     }
 
