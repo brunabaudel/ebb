@@ -299,7 +299,7 @@ struct GuidedLogFlowView: View {
                     .kerning(1.2)
                     .foregroundStyle(theme.muted)
 
-                entryPhrase(font: .system(.title2, design: .serif), centered: true)
+                entryPhrase(font: .system(.largeTitle, design: .serif), centered: true)
             }
 
             let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
