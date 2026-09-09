@@ -156,7 +156,7 @@ struct GuidedLogFlowView: View {
             subtitle: "1 is barely there. 5 is disabling."
         ) {
             if let field = severityField, let range = field.range {
-                SeveritySliderControl(
+                SeveritySquareControl(
                     range: range,
                     labels: field.scaleLabels,
                     selection: scaleBinding(for: "severity"),
@@ -274,7 +274,7 @@ struct GuidedLogFlowView: View {
                         .font(.caption2.weight(.semibold))
                         .kerning(1.2)
                         .foregroundStyle(theme.muted)
-                    ScaleStepper(
+                    SeveritySquareControl(
                         range: range,
                         labels: field.scaleLabels,
                         selection: scaleBinding(for: field.key),
