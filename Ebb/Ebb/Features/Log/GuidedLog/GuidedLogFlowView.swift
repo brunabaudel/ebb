@@ -38,31 +38,37 @@ struct GuidedLogFlowView: View {
     var body: some View {
         VStack(spacing: 0) {
             if step != .review {
-                sentenceStrip
-
                 progressHeader
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 24)
                     .padding(.top, 16)
+                    .padding(.bottom, 18)
             }
 
-            GeometryReader { geometry in
-                ScrollView {
-                    Group {
-                        if step == .review {
+            Group {
+                if step == .review {
+                    GeometryReader { geometry in
+                        ScrollView {
                             reviewStep(availableHeight: geometry.size.height)
-                        } else {
-                            questionBody
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 24)
+                                .frame(
+                                    maxWidth: .infinity,
+                                    minHeight: geometry.size.height,
+                                    alignment: .center
+                                )
                         }
+                        .scrollIndicators(.hidden)
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 24)
-                    .frame(
-                        maxWidth: .infinity,
-                        minHeight: geometry.size.height,
-                        alignment: step == .review ? .center : .top
-                    )
+                } else {
+                    ScrollView {
+                        questionBody
+                            .padding(.horizontal, 24)
+                            .padding(.top, 4)
+                            .padding(.bottom, 24)
+                            .frame(maxWidth: .infinity, alignment: .top)
+                    }
+                    .scrollIndicators(.hidden)
                 }
-                .scrollIndicators(.hidden)
             }
 
             if step == .review {
@@ -74,26 +80,7 @@ struct GuidedLogFlowView: View {
         .background(theme.base)
     }
 
-    // MARK: - Sentence strip (J)
-
-    private var sentenceStrip: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("BUILDING ENTRY · TAP A WORD TO EDIT")
-                .font(.caption2.weight(.semibold))
-                .kerning(1.2)
-                .foregroundStyle(theme.muted)
-
-            entryPhrase(font: .system(.subheadline, design: .serif), centered: false)
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(theme.surface)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(theme.line)
-                .frame(height: 1)
-        }
-    }
+    // MARK: - Entry phrase (review tap-to-edit)
 
     private func entryPhrase(
         font: Font,
@@ -191,7 +178,7 @@ struct GuidedLogFlowView: View {
             subtitle: "1 is barely there. 5 is disabling."
         ) {
             if let field = severityField, let range = field.range {
-                SeveritySliderControl(
+                SeveritySquareControl(
                     range: range,
                     labels: field.scaleLabels,
                     selection: scaleBinding(for: "severity"),
@@ -261,34 +248,36 @@ struct GuidedLogFlowView: View {
             title: "Any medication or relief?",
             subtitle: "Select all that apply. Skip if none."
         ) {
-            if let field = schema.field(forKey: "relief_taken") {
-                multiChoiceList(field: field, fieldKey: "relief_taken", accent: .pain)
-            }
-        } footer: {
-            if !selectedChoices("relief_taken").isEmpty,
-               let effectField = schema.field(forKey: "relief_effect") {
-                VStack(alignment: .center, spacing: 8) {
-                    Text(effectField.label.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .kerning(1.2)
-                        .foregroundStyle(theme.muted)
+            VStack(spacing: 28) {
+                if let field = schema.field(forKey: "relief_taken") {
+                    multiChoiceList(field: field, fieldKey: "relief_taken", accent: .pain)
+                }
 
-                    FlowLayout(spacing: 7) {
-                        ForEach(effectField.values) { option in
-                            SelectablePill(
-                                label: option.label,
-                                isSelected: values["relief_effect"] == .choice(option.key),
-                                accent: .pain
-                            ) {
-                                if values["relief_effect"] == .choice(option.key) {
-                                    values.removeValue(forKey: "relief_effect")
-                                } else {
-                                    values["relief_effect"] = .choice(option.key)
+                if !selectedChoices("relief_taken").isEmpty,
+                   let effectField = schema.field(forKey: "relief_effect") {
+                    VStack(alignment: .center, spacing: 8) {
+                        Text(effectField.label.uppercased())
+                            .font(.caption2.weight(.semibold))
+                            .kerning(1.2)
+                            .foregroundStyle(theme.muted)
+
+                        FlowLayout(spacing: 7) {
+                            ForEach(effectField.values) { option in
+                                SelectablePill(
+                                    label: option.label,
+                                    isSelected: values["relief_effect"] == .choice(option.key),
+                                    accent: .pain
+                                ) {
+                                    if values["relief_effect"] == .choice(option.key) {
+                                        values.removeValue(forKey: "relief_effect")
+                                    } else {
+                                        values["relief_effect"] = .choice(option.key)
+                                    }
                                 }
                             }
                         }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
                 }
             }
         }
@@ -309,7 +298,7 @@ struct GuidedLogFlowView: View {
                         .font(.caption2.weight(.semibold))
                         .kerning(1.2)
                         .foregroundStyle(theme.muted)
-                    ScaleStepper(
+                    SeveritySquareControl(
                         range: range,
                         labels: field.scaleLabels,
                         selection: scaleBinding(for: field.key),
@@ -334,8 +323,6 @@ struct GuidedLogFlowView: View {
         )
 
         return VStack(alignment: .center, spacing: 24) {
-            Spacer(minLength: 12)
-
             VStack(spacing: 10) {
                 Text("TAP A WORD TO EDIT")
                     .font(.caption2.weight(.semibold))
@@ -383,21 +370,17 @@ struct GuidedLogFlowView: View {
                         .strokeBorder(theme.line, lineWidth: 1)
                 }
             }
-
-            Spacer(minLength: 12)
         }
         .frame(maxWidth: .infinity, minHeight: availableHeight)
     }
 
     private static func reviewPhraseMaxHeight(availableHeight: CGFloat, unsetFieldCount: Int) -> CGFloat {
         let scrollPadding: CGFloat = 48
-        let spacers: CGFloat = 24
-        let labelBlock: CGFloat = 28
-        let stackSpacing: CGFloat = 24
-        var overhead = scrollPadding + spacers + labelBlock + stackSpacing
+        let labelBlock: CGFloat = 24
+        var overhead = scrollPadding + labelBlock
 
         if unsetFieldCount > 0 {
-            overhead += stackSpacing + 32 + CGFloat(unsetFieldCount) * 30
+            overhead += 24 + 32 + CGFloat(unsetFieldCount) * 30
         }
 
         return max(availableHeight - overhead, 80)
@@ -410,9 +393,14 @@ struct GuidedLogFlowView: View {
         subtitle: String?,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        focusShell(title: title, subtitle: subtitle, content: content) {
-            EmptyView()
+        VStack(alignment: .center, spacing: 0) {
+            questionTitleBlock(title: title, subtitle: subtitle)
+
+            content()
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
         }
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private func focusShell<Content: View, Footer: View>(
@@ -421,34 +409,36 @@ struct GuidedLogFlowView: View {
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
     ) -> some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 10) {
-                Text(title)
-                    .font(.system(.title2, design: .serif))
-                    .fontWeight(.medium)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(theme.muted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-            }
-
-            Spacer(minLength: 36)
+        VStack(alignment: .center, spacing: 0) {
+            questionTitleBlock(title: title, subtitle: subtitle)
 
             content()
                 .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 36)
+                .padding(.top, 40)
 
             footer()
                 .frame(maxWidth: .infinity)
+                .padding(.top, 28)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    private func questionTitleBlock(title: String, subtitle: String?) -> some View {
+        VStack(spacing: 6) {
+            Text(title)
+                .font(.system(.title2, design: .serif))
+                .fontWeight(.medium)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            if let subtitle {
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(theme.muted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
     }
 
     private var progressHeader: some View {
