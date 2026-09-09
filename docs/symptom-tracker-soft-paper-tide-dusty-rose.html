@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ebb · Soft paper · Dusty rose mascot · no S-mark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F8F3EC;
+    --paper-deep: #F0E9DF;
+    --card: #FFFCF8;
+    --line: #E6DDD2;
+    --line-strong: #D9CFC3;
+    --ink: #2A2622;
+    --ink-soft: #3D3832;
+    --muted: #7F746A;
+    --faint: #A89E93;
+    --rose: #C2607A;
+    --rose-soft: #D48A9A;
+    --rose-wash: #F5E0E6;
+    --rose-deep: #A24D64;
+    --rose-light: #E8B8C4;
+    --teal: #5B9A8F;
+    --teal-wash: #E4F0ED;
+    --oat: #E8D9C8;
+    --board: #F3EEE6;
+    --shadow-lg: rgba(60, 40, 30, 0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--board);
+    color: var(--ink);
+    font-family: "DM Sans", system-ui, sans-serif;
+    line-height: 1.45;
+    padding: 48px 28px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .board-head {
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    margin-bottom: 10px;
+  }
+  .board-head h1 {
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 500;
+    font-size: clamp(32px, 4vw, 44px);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .board-head p {
+    max-width: 68ch;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .note-chip {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    background: var(--rose-wash);
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .swatch i {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: block;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  }
+
+  .block {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 24px 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 28px -20px var(--shadow-lg);
+  }
+  .block h3 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 6px;
+  }
+  .block .blurb {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    max-width: 70ch;
+  }
+
+  /* Before / After */
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) {
+    .ba-grid { grid-template-columns: 1fr; }
+  }
+  .ba-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 18px 14px 16px;
+    text-align: center;
+  }
+  .ba-card .stage {
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 200px;
+    margin: 0 auto 12px;
+    background: var(--card);
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  .ba-card .stage svg { width: 78%; height: 78%; }
+  .ba-card .label {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .ba-card .note {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 28ch;
+    margin: 0 auto;
+  }
+  .ba-card .tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .ba-card .tag.before { color: var(--muted); background: var(--paper-deep); }
+  .ba-card .tag.after { color: var(--rose-deep); background: var(--rose-wash); }
+
+  /* Hero */
+  .hero-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 36px 20px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+  }
+  .hero-stage svg { width: min(280px, 70vw); height: auto; }
+  .hero-meta {
+    text-align: center;
+    margin-top: 12px;
+  }
+  .hero-meta .name {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 24px;
+    font-weight: 500;
+  }
+  .hero-meta .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Micro variants */
+  .micro-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 800px) {
+    .micro-grid { grid-template-columns: 1fr; }
+  }
+  .micro {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 12px 14px;
+    text-align: center;
+  }
+  .micro .stage {
+    width: 120px; height: 120px;
+    margin: 0 auto 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+  }
+  .micro .stage svg { width: 88px; height: 88px; }
+  .micro .label {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .micro .note { font-size: 11.5px; color: var(--muted); }
+
+  /* Expressions */
+  .expr-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 800px) {
+    .expr-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .expr {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 10px 12px;
+    text-align: center;
+  }
+  .expr svg { width: 72px; height: 72px; display: block; margin: 0 auto 10px; }
+  .expr span {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+  .expr small {
+    display: block;
+    font-size: 10px;
+    color: var(--faint);
+    margin-top: 2px;
+  }
+
+  /* Size strip */
+  .sizes {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .size { text-align: center; }
+  .size .bubble {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+  }
+  .size span { font-size: 11px; color: var(--faint); letter-spacing: 0.04em; }
+  .s128 .bubble { width: 148px; height: 148px; }
+  .s128 svg { width: 112px; height: 112px; }
+  .s64 .bubble { width: 88px; height: 88px; }
+  .s64 svg { width: 56px; height: 56px; }
+  .s32 .bubble { width: 52px; height: 52px; border-radius: 14px; }
+  .s32 svg { width: 28px; height: 28px; }
+
+  /* Phones */
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 980px) {
+    .phones { grid-template-columns: 1fr; justify-items: center; }
+  }
+  .phone-wrap { text-align: center; }
+  .phone-wrap .moment-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 12px;
+  }
+  .phone {
+    width: 230px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 36px;
+    padding: 10px;
+    box-shadow:
+      0 0 0 8px #EDE6DC,
+      0 18px 40px -22px var(--shadow-lg);
+    text-align: left;
+  }
+  .phone-screen {
+    background: var(--paper);
+    border-radius: 28px;
+    min-height: 400px;
+    padding: 18px 16px 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .status {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+  .status .dots { letter-spacing: 2px; color: var(--faint); }
+  .empty {
+    margin-top: 36px;
+    text-align: center;
+    padding: 26px 12px 18px;
+    background: var(--card);
+    border: 1px dashed var(--line-strong);
+    border-radius: 18px;
+  }
+  .empty .mascot-slot {
+    width: 92px; height: 92px;
+    margin: 0 auto 12px;
+    display: grid; place-items: center;
+  }
+  .empty .mascot-slot svg { width: 84px; height: 84px; }
+  .empty .title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .empty .hint {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 22ch;
+    margin: 0 auto;
+  }
+  .pill-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+    justify-content: center;
+  }
+  .pill {
+    font-size: 10px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--rose-wash);
+    color: var(--rose-deep);
+    font-weight: 500;
+  }
+  .nav-dots {
+    position: absolute;
+    bottom: 14px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 18px;
+    color: var(--faint); font-size: 10px; letter-spacing: 0.06em;
+  }
+  .talk-head { text-align: center; margin-top: 8px; }
+  .talk-head .mascot-slot {
+    width: 100px; height: 100px;
+    margin: 0 auto 10px;
+    display: grid; place-items: center;
+  }
+  .talk-head .mascot-slot svg { width: 92px; height: 92px; }
+  .talk-head .title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .talk-head .sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .bubble-chat {
+    margin-top: 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px 16px 16px 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .composer {
+    margin-top: 14px;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--faint);
+  }
+  .onboard { text-align: center; padding-top: 28px; }
+  .onboard .mascot-slot {
+    width: 120px; height: 120px;
+    margin: 0 auto 16px;
+    display: grid; place-items: center;
+  }
+  .onboard .mascot-slot svg { width: 110px; height: 110px; }
+  .onboard .welcome {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .onboard .copy {
+    font-size: 12.5px;
+    color: var(--muted);
+    max-width: 24ch;
+    margin: 0 auto 18px;
+  }
+  .cta {
+    display: inline-block;
+    background: var(--rose);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 999px;
+  }
+
+  .foot {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .foot b { color: var(--ink-soft); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="board-head">
+    <div class="eyebrow">Ebb · Soft paper 01.2 · mascot focus</div>
+    <h1>Ebb · Dusty rose · no S-mark</h1>
+    <p>Bruna feedback locked: <b>remove the mid-body wave / S stroke</b>, keep soft droplet + face + cheeks, colorway = <b>Dusty rose</b> (pain-axis). Shape = A · Simpler.</p>
+    <span class="note-chip">S-mark removed · dusty rose locked</span>
+    <div class="swatches">
+      <div class="swatch"><i style="background:#C2607A"></i>body #C2607A</div>
+      <div class="swatch"><i style="background:#E8B8C4"></i>light #E8B8C4</div>
+      <div class="swatch"><i style="background:#F5E0E6"></i>wash #F5E0E6</div>
+      <div class="swatch"><i style="background:#A24D64"></i>cheek #A24D64</div>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- BEFORE / AFTER                                               -->
+  <!-- ============================================================ -->
+  <div class="block">
+    <h3>Before · After</h3>
+    <p class="blurb">Same Dusty rose body. Left still has the mid-body S / wave stroke; right is clean — the change this board locks.</p>
+    <div class="ba-grid">
+
+      <div class="ba-card">
+        <div class="stage" aria-label="Before with S-mark">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ba-before" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#E8B8C4"/><stop offset="1" stop-color="#C2607A"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+            <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#ba-before)"/>
+            <!-- S / wave mark — BEFORE only -->
+            <path d="M44 70c5.5-6.5 11-6.5 16 0s10.5 6.5 16 0" stroke="#F5E0E6" stroke-width="3.2" stroke-linecap="round" opacity=".55"/>
+            <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+            <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+            <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+          </svg>
+        </div>
+        <div class="label">Before</div>
+        <p class="note">Mid-body wave stroke still present — the S Bruna wants gone.</p>
+        <span class="tag before">with S-mark</span>
+      </div>
+
+      <div class="ba-card">
+        <div class="stage" aria-label="After no S-mark">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ba-after" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#E8B8C4"/><stop offset="1" stop-color="#C2607A"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+            <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#ba-after)"/>
+            <!-- no S-mark -->
+            <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+            <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+            <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+          </svg>
+        </div>
+        <div class="label">After</div>
+        <p class="note">Clean droplet — face + cheeks only. Soft paper 01.2 feel.</p>
+        <span class="tag after">no S-mark</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- HERO                                                         -->
+  <!-- ============================================================ -->
+  <div class="block">
+    <h3>Hero · clean droplet</h3>
+    <p class="blurb">Primary Ebb — Dusty rose A · Simpler, S-mark removed. Soft gradient body, gentle smile, rose-deep cheeks.</p>
+    <div class="hero-stage" aria-label="Ebb dusty rose hero">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hero-body" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#E8B8C4"/>
+            <stop offset="1" stop-color="#C2607A"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+        <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#hero-body)"/>
+        <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+        <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+        <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+        <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+        <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+      </svg>
+    </div>
+    <div class="hero-meta">
+      <div class="name">Ebb · Dusty rose</div>
+      <div class="sub">A · Simpler · no mid-body wave</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MICRO VARIANTS                                               -->
+  <!-- ============================================================ -->
+  <div class="block">
+    <h3>Micro variants · still no S</h3>
+    <p class="blurb">Optional material tweaks — all Dusty rose, none restore the wave stroke.</p>
+    <div class="micro-grid">
+
+      <div class="micro">
+        <div class="stage">
+          <svg viewBox="0 0 120 120" fill="none">
+            <defs>
+              <linearGradient id="m1" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#E8B8C4"/><stop offset="1" stop-color="#C2607A"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+            <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#m1)"/>
+            <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+            <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+            <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+          </svg>
+        </div>
+        <div class="label">Clean</div>
+        <p class="note">Baseline hero — no highlight, no crest.</p>
+      </div>
+
+      <div class="micro">
+        <div class="stage">
+          <svg viewBox="0 0 120 120" fill="none">
+            <defs>
+              <linearGradient id="m2" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#E8B8C4"/><stop offset="1" stop-color="#C2607A"/>
+              </linearGradient>
+              <linearGradient id="m2h" x1="42" y1="28" x2="78" y2="72" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFFCF8" stop-opacity=".45"/><stop offset="1" stop-color="#E8B8C4" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+            <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#m2)"/>
+            <path d="M60 28c0 0-18 22-18 40 0 12 7.5 22 18 22 4.5 0 8.5-2 11.5-5.2C66 76 62 52 60 28Z" fill="url(#m2h)"/>
+            <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+            <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+            <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+            <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+          </svg>
+        </div>
+        <div class="label">Tiny highlight</div>
+        <p class="note">Soft oat sheen on the left — still no S.</p>
+      </div>
+
+      <div class="micro">
+        <div class="stage">
+          <svg viewBox="0 0 120 120" fill="none">
+            <defs>
+              <linearGradient id="m3" x1="30" y1="18" x2="90" y2="104" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#E8B8C4"/><stop offset=".55" stop-color="#C2607A"/><stop offset="1" stop-color="#A24D64"/>
+              </linearGradient>
+              <linearGradient id="m3c" x1="40" y1="26" x2="82" y2="58" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#F5E0E6"/><stop offset="1" stop-color="#E8B8C4" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="102" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+            <!-- slight crest notch at tip -->
+            <path d="M60 16c-2 8-4 12-4 12C42 42 28 54 28 72c0 18.778 14.327 34 32 34s32-15.222 32-34C92 54 78 42 64 28c0 0-2-4-4-12Z" fill="url(#m3)"/>
+            <path d="M60 28c0 0-20 24-20 40.5C40 82 48.5 94 60 94c5.5 0 10.4-2.4 14-6.4C67 78 62 58 60 28Z" fill="url(#m3c)" opacity=".55"/>
+            <circle cx="50" cy="58" r="3.1" fill="#2A2622" opacity=".52"/>
+            <circle cx="70" cy="58" r="3.1" fill="#2A2622" opacity=".52"/>
+            <path d="M54 69c3.2 3.6 8.8 3.6 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+            <ellipse cx="43" cy="65" rx="4" ry="2.4" fill="#A24D64" opacity=".28"/>
+            <ellipse cx="77" cy="65" rx="4" ry="2.4" fill="#A24D64" opacity=".28"/>
+          </svg>
+        </div>
+        <div class="label">Slight crest</div>
+        <p class="note">Soft tip notch + wash — no wave mark on the belly.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- EXPRESSION SHEET                                             -->
+  <!-- ============================================================ -->
+  <div class="block">
+    <h3>Expression sheet</h3>
+    <p class="blurb">Dusty rose · no S on any state. Idle is the default companion face.</p>
+    <div class="expr-grid">
+      <div class="expr">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#C2607A"/>
+          <circle cx="26" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+          <circle cx="38" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+          <path d="M28 41c2.4 2.4 5.6 2.4 8 0" stroke="#2A2622" stroke-width="1.8" stroke-linecap="round" opacity=".36"/>
+          <ellipse cx="22" cy="38" rx="2.6" ry="1.6" fill="#A24D64" opacity=".28"/>
+          <ellipse cx="42" cy="38" rx="2.6" ry="1.6" fill="#A24D64" opacity=".28"/>
+        </svg>
+        <span>Idle</span>
+        <small>default companion</small>
+      </div>
+      <div class="expr">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#C2607A"/>
+          <path d="M32 14c0 0-12 15-12 24.5C20 46.5 25.2 53 32 53c3.4 0 6.5-1.6 8.7-4.1C36.5 44 33.5 34 32 14Z" fill="#F5E0E6" opacity=".4"/>
+          <circle cx="26" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+          <circle cx="38" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+          <ellipse cx="32" cy="42" rx="3.4" ry="2.4" fill="#2A2622" opacity=".26"/>
+          <path d="M44 26c4-1 7 2 6 6" stroke="#E8B8C4" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+          <circle cx="50" cy="34" r="1.3" fill="#E8B8C4" opacity=".55"/>
+        </svg>
+        <span>Listening</span>
+        <small>Talk companion</small>
+      </div>
+      <div class="expr">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 10C32 10 16 28 16 39c0 9.4 7.2 17 16 17s16-7.6 16-17C48 28 32 10 32 10Z" fill="#D48A9A"/>
+          <path d="M24 33c2.4-.9 4.8-.1 5.8 2M34.2 35c1.2-2.1 3.6-2.9 5.6-1.7" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity=".42"/>
+          <path d="M28 42c2.4 1.6 5.6 1.6 8 0" stroke="#2A2622" stroke-width="1.7" stroke-linecap="round" opacity=".3"/>
+          <ellipse cx="32" cy="22" rx="8" ry="3" fill="#FFFCF8" opacity=".22"/>
+        </svg>
+        <span>Resting</span>
+        <small>empty / migraine-low</small>
+      </div>
+      <div class="expr">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 6C32 6 12 28 12 41c0 11.6 9 21 20 21s20-9.4 20-21C52 28 32 6 32 6Z" fill="#C2607A"/>
+          <circle cx="25" cy="33" r="2.5" fill="#2A2622" opacity=".52"/>
+          <circle cx="39" cy="33" r="2.5" fill="#2A2622" opacity=".52"/>
+          <path d="M26 41c3.4 4.6 8.6 4.6 12 0" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity=".4"/>
+          <circle cx="14" cy="18" r="2.1" fill="#A24D64" opacity=".55"/>
+          <circle cx="50" cy="16" r="1.7" fill="#D48A9A" opacity=".7"/>
+          <circle cx="48" cy="26" r="1.3" fill="#E8D9C8"/>
+          <ellipse cx="21" cy="38" rx="2.4" ry="1.5" fill="#A24D64" opacity=".28"/>
+          <ellipse cx="43" cy="38" rx="2.4" ry="1.5" fill="#A24D64" opacity=".28"/>
+        </svg>
+        <span>Happy / saved</span>
+        <small>log confirmed</small>
+      </div>
+      <div class="expr">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#C2607A"/>
+          <circle cx="26" cy="34" r="2.4" fill="#2A2622" opacity=".5"/>
+          <circle cx="38" cy="34" r="2.4" fill="#2A2622" opacity=".5"/>
+          <path d="M28 43c2.6-1.2 5.4-1.2 8 0" stroke="#2A2622" stroke-width="1.8" stroke-linecap="round" opacity=".34"/>
+          <path d="M24 28c1.2-1.6 3.2-1.6 4.4 0M36 28c1.2-1.6 3.2-1.6 4.4 0" stroke="#2A2622" stroke-width="1.5" stroke-linecap="round" opacity=".22"/>
+          <ellipse cx="22" cy="38" rx="2.5" ry="1.5" fill="#A24D64" opacity=".22"/>
+          <ellipse cx="42" cy="38" rx="2.5" ry="1.5" fill="#A24D64" opacity=".22"/>
+        </svg>
+        <span>Gentle concern</span>
+        <small>hard day check-in</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SIZE STRIP                                                   -->
+  <!-- ============================================================ -->
+  <div class="block">
+    <h3>Size strip</h3>
+    <p class="blurb">128 / 64 / 32 — clean droplet + face; no S at any size.</p>
+    <div class="sizes">
+      <div class="size s128">
+        <div class="bubble">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#C2607A"/>
+            <circle cx="26" cy="34" r="2.5" fill="#2A2622" opacity=".52"/>
+            <circle cx="38" cy="34" r="2.5" fill="#2A2622" opacity=".52"/>
+            <path d="M28 41c2.4 2.5 5.6 2.5 8 0" stroke="#2A2622" stroke-width="1.9" stroke-linecap="round" opacity=".36"/>
+            <ellipse cx="22" cy="38" rx="2.5" ry="1.5" fill="#A24D64" opacity=".28"/>
+            <ellipse cx="42" cy="38" rx="2.5" ry="1.5" fill="#A24D64" opacity=".28"/>
+          </svg>
+        </div>
+        <span>128</span>
+      </div>
+      <div class="size s64">
+        <div class="bubble">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#C2607A"/>
+            <circle cx="26" cy="34" r="2.6" fill="#2A2622" opacity=".52"/>
+            <circle cx="38" cy="34" r="2.6" fill="#2A2622" opacity=".52"/>
+            <path d="M28 41c2.4 2.5 5.6 2.5 8 0" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".36"/>
+          </svg>
+        </div>
+        <span>64</span>
+      </div>
+      <div class="size s32">
+        <div class="bubble">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#C2607A"/>
+            <circle cx="26" cy="35" r="3.2" fill="#2A2622" opacity=".55"/>
+            <circle cx="38" cy="35" r="3.2" fill="#2A2622" opacity=".55"/>
+          </svg>
+        </div>
+        <span>32</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- IN-APP                                                       -->
+  <!-- ============================================================ -->
+  <div class="block">
+    <h3>Soft paper in-app</h3>
+    <p class="blurb">Empty Today, Talk companion, onboarding welcome — Dusty rose Ebb, no S-mark.</p>
+    <div class="phones">
+
+      <div class="phone-wrap">
+        <div class="moment-label">Empty Today</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+            <div class="empty">
+              <div class="mascot-slot">
+                <svg viewBox="0 0 120 120" fill="none">
+                  <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="#C2607A"/>
+                  <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+                  <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+                  <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+                  <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+                  <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+                </svg>
+              </div>
+              <div class="title">Nothing logged yet</div>
+              <div class="hint">When you’re ready, Ebb can hold the quiet with you.</div>
+              <div class="pill-row"><span class="pill">Log today</span><span class="pill">Talk</span></div>
+            </div>
+            <div class="nav-dots">Today · Talk · You</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="moment-label">Talk companion</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+            <div class="talk-head">
+              <div class="mascot-slot">
+                <svg viewBox="0 0 120 120" fill="none">
+                  <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="#C2607A"/>
+                  <path d="M60 30c0 0-20 24-20 40C40 84 48.5 96 60 96c6 0 11.4-2.8 15.2-7.2C68 78 62 56 60 30Z" fill="#F5E0E6" opacity=".4"/>
+                  <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                  <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                  <ellipse cx="60" cy="74" rx="6" ry="4.2" fill="#2A2622" opacity=".26"/>
+                  <path d="M82 46c7-2 12 3.5 10 10" stroke="#E8B8C4" stroke-width="3" stroke-linecap="round" opacity=".75"/>
+                  <circle cx="94" cy="60" r="2.2" fill="#E8B8C4" opacity=".5"/>
+                </svg>
+              </div>
+              <div class="title">I’m listening</div>
+              <div class="sub">Say as little or as much as you need</div>
+            </div>
+            <div class="bubble-chat">Whenever you’re ready — Ebb is here for the soft parts too.</div>
+            <div class="composer">Type how you’re feeling…</div>
+            <div class="nav-dots">Today · Talk · You</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="moment-label">Onboarding welcome</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+            <div class="onboard">
+              <div class="mascot-slot">
+                <svg viewBox="0 0 120 120" fill="none">
+                  <path d="M60 16C60 16 28 50 28 72c0 18.778 14.327 34 32 34s32-15.222 32-34C92 50 60 16 60 16Z" fill="#C2607A"/>
+                  <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                  <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                  <path d="M52 72c3.5 4.2 12.5 4.2 16 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".4"/>
+                  <circle cx="28" cy="34" r="2.4" fill="#A24D64" opacity=".5"/>
+                  <circle cx="90" cy="30" r="2" fill="#D48A9A" opacity=".65"/>
+                  <circle cx="86" cy="48" r="1.5" fill="#E8D9C8"/>
+                  <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+                  <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+                </svg>
+              </div>
+              <div class="welcome">Meet Ebb</div>
+              <div class="copy">A calm companion for the days that rise and fall.</div>
+              <span class="cta">Continue</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="foot">
+    <p><b>Locked:</b> Dusty rose (#C2607A → #E8B8C4) · A · Simpler droplet · mid-body S / wave stroke removed. Face, cheeks, soft paper chrome kept. Optional micros: clean / highlight / slight crest — none restore the S.</p>
+  </footer>
+
+</div>
+</body>
+</html>

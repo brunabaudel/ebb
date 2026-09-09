@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ebb · Soft paper 01.2 · Luna &amp; Tide iterations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F8F3EC;
+    --paper-deep: #F0E9DF;
+    --card: #FFFCF8;
+    --line: #E6DDD2;
+    --line-strong: #D9CFC3;
+    --ink: #2A2622;
+    --ink-soft: #3D3832;
+    --muted: #7F746A;
+    --faint: #A89E93;
+    --rose: #C2607A;
+    --rose-soft: #D48A9A;
+    --rose-wash: #F5E0E6;
+    --rose-deep: #A24D64;
+    --teal: #5B9A8F;
+    --teal-soft: #8BB8B0;
+    --teal-wash: #E4F0ED;
+    --teal-deep: #3D756C;
+    --oat: #E8D9C8;
+    --oat-deep: #D4C4B0;
+    --cream: #FFF8F0;
+    --board: #F3EEE6;
+    --shadow: rgba(60, 40, 30, 0.08);
+    --shadow-lg: rgba(60, 40, 30, 0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--board);
+    color: var(--ink);
+    font-family: "DM Sans", system-ui, sans-serif;
+    line-height: 1.45;
+    padding: 48px 28px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .board-head {
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 10px;
+  }
+  .board-head h1 {
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 500;
+    font-size: clamp(32px, 4vw, 44px);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .board-head p {
+    max-width: 68ch;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .swatch i {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: block;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  }
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 22px 0 8px;
+  }
+  .toc a {
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    background: var(--teal-wash);
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .toc a.rose {
+    color: var(--rose-deep);
+    background: var(--rose-wash);
+  }
+  .toc a.duo {
+    color: var(--ink-soft);
+    background: var(--card);
+    border-color: var(--line);
+  }
+
+  .chapter {
+    margin-top: 48px;
+    margin-bottom: 12px;
+  }
+  .chapter-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .chapter-head h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 500;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+  }
+  .chapter-head .angle {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 52ch;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .tag.teal { color: var(--teal-deep); background: var(--teal-wash); }
+  .tag.rose { color: var(--rose-deep); background: var(--rose-wash); }
+  .tag.quiet { color: var(--muted); background: var(--paper-deep); }
+
+  .block {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 24px 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 28px -20px var(--shadow-lg);
+  }
+  .block h3 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 6px;
+  }
+  .block .blurb {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    max-width: 70ch;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+  }
+  .hero-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 16px 14px 18px;
+    text-align: center;
+  }
+  .hero-card .stage {
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 220px;
+    margin: 0 auto 12px;
+    background: var(--card);
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  .hero-card .stage svg { width: 78%; height: 78%; }
+  .hero-card .label {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .hero-card .note {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 28ch;
+    margin: 0 auto;
+  }
+  .hero-card .chip {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .expr-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 800px) {
+    .expr-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .expr {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 10px 12px;
+    text-align: center;
+  }
+  .expr svg { width: 72px; height: 72px; display: block; margin: 0 auto 10px; }
+  .expr span {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+  .expr small {
+    display: block;
+    font-size: 10px;
+    color: var(--faint);
+    margin-top: 2px;
+  }
+
+  .sizes {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+  }
+  .size { text-align: center; }
+  .size .bubble {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+  }
+  .size span { font-size: 11px; color: var(--faint); letter-spacing: 0.04em; }
+  .s128 .bubble { width: 148px; height: 148px; }
+  .s128 svg { width: 112px; height: 112px; }
+  .s64 .bubble { width: 88px; height: 88px; }
+  .s64 svg { width: 56px; height: 56px; }
+  .s32 .bubble { width: 52px; height: 52px; border-radius: 14px; }
+  .s32 svg { width: 28px; height: 28px; }
+
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 980px) {
+    .phones { grid-template-columns: 1fr; justify-items: center; }
+  }
+  .phone-wrap { text-align: center; }
+  .phone-wrap .moment-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 12px;
+  }
+  .phone {
+    width: 230px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 36px;
+    padding: 10px;
+    box-shadow:
+      0 0 0 8px #EDE6DC,
+      0 18px 40px -22px var(--shadow-lg);
+    text-align: left;
+  }
+  .phone-screen {
+    background: var(--paper);
+    border-radius: 28px;
+    min-height: 400px;
+    padding: 18px 16px 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .status {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+  .status .dots { letter-spacing: 2px; color: var(--faint); }
+  .empty {
+    margin-top: 36px;
+    text-align: center;
+    padding: 26px 12px 18px;
+    background: var(--card);
+    border: 1px dashed var(--line-strong);
+    border-radius: 18px;
+  }
+  .empty .mascot-slot {
+    width: 92px; height: 92px;
+    margin: 0 auto 12px;
+    display: grid; place-items: center;
+  }
+  .empty .mascot-slot svg { width: 84px; height: 84px; }
+  .empty .title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .empty .hint {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 22ch;
+    margin: 0 auto;
+  }
+  .pill-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+    justify-content: center;
+  }
+  .pill {
+    font-size: 10px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--rose-wash);
+    color: var(--rose-deep);
+    font-weight: 500;
+  }
+  .pill.teal { background: var(--teal-wash); color: var(--teal-deep); }
+  .nav-dots {
+    position: absolute;
+    bottom: 14px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 18px;
+    color: var(--faint); font-size: 10px; letter-spacing: 0.06em;
+  }
+
+  .talk-head {
+    text-align: center;
+    margin-top: 8px;
+  }
+  .talk-head .mascot-slot {
+    width: 100px; height: 100px;
+    margin: 0 auto 10px;
+    display: grid; place-items: center;
+  }
+  .talk-head .mascot-slot svg { width: 92px; height: 92px; }
+  .talk-head .title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .talk-head .sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .bubble-chat {
+    margin-top: 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px 16px 16px 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .composer {
+    margin-top: 14px;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--faint);
+  }
+
+  .onboard {
+    text-align: center;
+    padding-top: 28px;
+  }
+  .onboard .mascot-slot {
+    width: 120px; height: 120px;
+    margin: 0 auto 16px;
+    display: grid; place-items: center;
+  }
+  .onboard .mascot-slot svg { width: 110px; height: 110px; }
+  .onboard .welcome {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .onboard .copy {
+    font-size: 12.5px;
+    color: var(--muted);
+    max-width: 24ch;
+    margin: 0 auto 18px;
+  }
+  .cta {
+    display: inline-block;
+    background: var(--rose);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 999px;
+  }
+  .cta.teal { background: var(--teal); }
+
+  .duo-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 28px 20px;
+    display: grid;
+    place-items: center;
+    min-height: 280px;
+  }
+  .duo-stage svg { width: min(420px, 100%); height: auto; }
+  .duo-meta {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 700px) {
+    .duo-meta { grid-template-columns: 1fr; }
+  }
+  .duo-meta .cardlet {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+  .duo-meta .cardlet h4 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .duo-meta .cardlet p {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .foot {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .foot b { color: var(--ink-soft); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="board-head">
+    <div class="eyebrow">Ebb · Soft paper 01.2 · Iteration board</div>
+    <h1>Luna &amp; Tide — refinements</h1>
+    <p>Evolutions of the two favorites only (not Pebble / Moth / Ember). Same soft-paper language: warmer oat, dusty rose, soft teal, gentle faces, adult wellness. Pick a Tide style, a Luna style — or both as a pair.</p>
+    <div class="swatches">
+      <div class="swatch"><i style="background:#F8F3EC"></i>oat paper</div>
+      <div class="swatch"><i style="background:#C2607A"></i>dusty rose</div>
+      <div class="swatch"><i style="background:#5B9A8F"></i>soft teal</div>
+      <div class="swatch"><i style="background:#E8D9C8"></i>warm stone</div>
+      <div class="swatch"><i style="background:#FFFCF8"></i>card cream</div>
+    </div>
+    <div class="toc">
+      <a href="#tide">Tide iterations</a>
+      <a class="rose" href="#luna">Luna iterations</a>
+      <a class="duo" href="#duo">Tide × Luna duo</a>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- TIDE                                                         -->
+  <!-- ============================================================ -->
+  <section class="chapter" id="tide">
+    <div class="chapter-head">
+      <div>
+        <div class="tag teal">01 · Tide</div>
+        <h2>Tide iterations</h2>
+      </div>
+      <p class="angle">Baseline: soft teal droplet with a quiet wave mark and rose cheeks. Angles — <b>simpler</b> silhouette, <b>softer</b> oat-washed body, <b>more character</b> with a clearer crest.</p>
+    </div>
+
+    <!-- 1. Hero refinements -->
+    <div class="block">
+      <h3>Hero refinements</h3>
+      <p class="blurb">Three polish directions from the original droplet. Same DNA — teal body, gentle face, adult calm — different amounts of detail and personality.</p>
+      <div class="hero-grid">
+
+        <!-- TIDE A: Simpler -->
+        <div class="hero-card">
+          <div class="stage" aria-label="Tide simpler">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="tA-body" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#8BB8B0"/>
+                  <stop offset="1" stop-color="#5B9A8F"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+              <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#tA-body)"/>
+              <path d="M44 70c5.5-6.5 11-6.5 16 0s10.5 6.5 16 0" stroke="#E4F0ED" stroke-width="3.2" stroke-linecap="round" opacity=".5"/>
+              <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+              <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+              <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+              <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#C2607A" opacity=".2"/>
+              <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#C2607A" opacity=".2"/>
+            </svg>
+          </div>
+          <div class="label">A · Simpler</div>
+          <p class="note">Fewer gradients, clearer droplet, bigger readable face. Best for small UI.</p>
+          <div class="chip">polish · reduce</div>
+        </div>
+
+        <!-- TIDE B: Softer -->
+        <div class="hero-card">
+          <div class="stage" aria-label="Tide softer">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="tB-glow" cx="50%" cy="38%" r="55%">
+                  <stop offset="0%" stop-color="#B8D9D3" stop-opacity=".5"/>
+                  <stop offset="100%" stop-color="#5B9A8F" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="tB-body" x1="28" y1="24" x2="92" y2="102" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#A8CBC4"/>
+                  <stop offset=".5" stop-color="#7AADA4"/>
+                  <stop offset="1" stop-color="#5B9A8F"/>
+                </linearGradient>
+                <linearGradient id="tB-crest" x1="42" y1="30" x2="78" y2="70" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#FFFCF8" stop-opacity=".55"/>
+                  <stop offset="1" stop-color="#A8CBC4" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="60" cy="102" rx="34" ry="5.5" fill="#2A2622" opacity=".05"/>
+              <circle cx="60" cy="60" r="48" fill="url(#tB-glow)"/>
+              <!-- rounder, slightly squat droplet -->
+              <path d="M60 22c0 0-26 28-26 50 0 17.5 11.8 31 26 31s26-13.5 26-31C86 50 60 22 60 22Z" fill="url(#tB-body)"/>
+              <path d="M60 30c0 0-18 22-18 38 0 12 7.5 22 18 22 4.5 0 8.5-2 11.5-5.2C66 76 62 56 60 30Z" fill="url(#tB-crest)"/>
+              <path d="M43 69c5-7 11-7 17 0s11 7 17 0" stroke="#E4F0ED" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+              <circle cx="51" cy="61" r="3" fill="#2A2622" opacity=".48"/>
+              <circle cx="69" cy="61" r="3" fill="#2A2622" opacity=".48"/>
+              <path d="M55 71c2.6 2.6 7.4 2.6 10 0" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".34"/>
+              <ellipse cx="45" cy="67" rx="4.2" ry="2.5" fill="#D48A9A" opacity=".28"/>
+              <ellipse cx="75" cy="67" rx="4.2" ry="2.5" fill="#D48A9A" opacity=".28"/>
+            </svg>
+          </div>
+          <div class="label">B · Softer</div>
+          <p class="note">Rounder body, oat-washed highlight, dustier cheeks. Quieter presence.</p>
+          <div class="chip">polish · soften</div>
+        </div>
+
+        <!-- TIDE C: More character -->
+        <div class="hero-card">
+          <div class="stage" aria-label="Tide more character">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="tC-glow" cx="48%" cy="36%" r="58%">
+                  <stop offset="0%" stop-color="#B8D9D3" stop-opacity=".45"/>
+                  <stop offset="100%" stop-color="#5B9A8F" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="tC-body" x1="30" y1="18" x2="90" y2="104" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#8BB8B0"/>
+                  <stop offset=".55" stop-color="#5B9A8F"/>
+                  <stop offset="1" stop-color="#3D756C"/>
+                </linearGradient>
+                <linearGradient id="tC-foam" x1="40" y1="26" x2="82" y2="58" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#E4F0ED"/>
+                  <stop offset="1" stop-color="#8BB8B0" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="60" cy="102" rx="33" ry="5.5" fill="#2A2622" opacity=".06"/>
+              <circle cx="60" cy="58" r="47" fill="url(#tC-glow)"/>
+              <!-- droplet with soft crest notch at top -->
+              <path d="M60 16c-2 8-4 12-4 12C42 42 28 54 28 72c0 18.778 14.327 34 32 34s32-15.222 32-34C92 54 78 42 64 28c0 0-2-4-4-12Z" fill="url(#tC-body)"/>
+              <path d="M60 28c0 0-20 24-20 40.5C40 82 48.5 94 60 94c5.5 0 10.4-2.4 14-6.4C67 78 62 58 60 28Z" fill="url(#tC-foam)" opacity=".65"/>
+              <!-- double wave mark -->
+              <path d="M40 66c6-7 12-7 18 0s12 7 18 0" stroke="#E4F0ED" stroke-width="3.2" stroke-linecap="round" opacity=".55"/>
+              <path d="M44 74c4.5-4.5 9-4.5 13.5 0s9 4.5 13.5 0" stroke="#E4F0ED" stroke-width="2.2" stroke-linecap="round" opacity=".32"/>
+              <circle cx="50" cy="58" r="3.1" fill="#2A2622" opacity=".55"/>
+              <circle cx="70" cy="58" r="3.1" fill="#2A2622" opacity=".55"/>
+              <!-- tiny highlight dots in eyes -->
+              <circle cx="51.2" cy="56.8" r="0.9" fill="#FFFCF8" opacity=".55"/>
+              <circle cx="71.2" cy="56.8" r="0.9" fill="#FFFCF8" opacity=".55"/>
+              <path d="M54 69c3.2 3.6 8.8 3.6 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".4"/>
+              <ellipse cx="43" cy="65" rx="4" ry="2.4" fill="#C2607A" opacity=".24"/>
+              <ellipse cx="77" cy="65" rx="4" ry="2.4" fill="#C2607A" opacity=".24"/>
+            </svg>
+          </div>
+          <div class="label">C · More character</div>
+          <p class="note">Soft crest, double wave, eye glints. Still adult — just a little more “Tide.”</p>
+          <div class="chip">polish · character</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Expression sheet (using style A as base for clarity, with C accents) -->
+    <div class="block">
+      <h3>Expression sheet</h3>
+      <p class="blurb">Built on <b>A · Simpler</b> for readability across states. Idle is the default companion face.</p>
+      <div class="expr-grid">
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#5B9A8F"/>
+            <path d="M22 38c4-5 8-5 12 0s8 5 12 0" stroke="#E4F0ED" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>
+            <circle cx="26" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+            <circle cx="38" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+            <path d="M28 41c2.4 2.4 5.6 2.4 8 0" stroke="#2A2622" stroke-width="1.8" stroke-linecap="round" opacity=".36"/>
+            <ellipse cx="22" cy="38" rx="2.6" ry="1.6" fill="#C2607A" opacity=".22"/>
+            <ellipse cx="42" cy="38" rx="2.6" ry="1.6" fill="#C2607A" opacity=".22"/>
+          </svg>
+          <span>Idle</span>
+          <small>default companion</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#5B9A8F"/>
+            <path d="M32 14c0 0-12 15-12 24.5C20 46.5 25.2 53 32 53c3.4 0 6.5-1.6 8.7-4.1C36.5 44 33.5 34 32 14Z" fill="#E4F0ED" opacity=".4"/>
+            <circle cx="26" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+            <circle cx="38" cy="34" r="2.4" fill="#2A2622" opacity=".52"/>
+            <ellipse cx="32" cy="42" rx="3.4" ry="2.4" fill="#2A2622" opacity=".26"/>
+            <path d="M44 26c4-1 7 2 6 6" stroke="#8BB8B0" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+            <circle cx="50" cy="34" r="1.3" fill="#8BB8B0" opacity=".55"/>
+          </svg>
+          <span>Listening</span>
+          <small>Talk companion</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 10C32 10 16 28 16 39c0 9.4 7.2 17 16 17s16-7.6 16-17C48 28 32 10 32 10Z" fill="#8BB8B0"/>
+            <path d="M24 33c2.4-.9 4.8-.1 5.8 2M34.2 35c1.2-2.1 3.6-2.9 5.6-1.7" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity=".42"/>
+            <path d="M28 42c2.4 1.6 5.6 1.6 8 0" stroke="#2A2622" stroke-width="1.7" stroke-linecap="round" opacity=".3"/>
+            <ellipse cx="32" cy="22" rx="8" ry="3" fill="#FFFCF8" opacity=".22"/>
+          </svg>
+          <span>Resting</span>
+          <small>empty / migraine-low</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 6C32 6 12 28 12 41c0 11.6 9 21 20 21s20-9.4 20-21C52 28 32 6 32 6Z" fill="#5B9A8F"/>
+            <circle cx="25" cy="33" r="2.5" fill="#2A2622" opacity=".52"/>
+            <circle cx="39" cy="33" r="2.5" fill="#2A2622" opacity=".52"/>
+            <path d="M26 41c3.4 4.6 8.6 4.6 12 0" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity=".4"/>
+            <circle cx="14" cy="18" r="2.1" fill="#C2607A" opacity=".55"/>
+            <circle cx="50" cy="16" r="1.7" fill="#D48A9A" opacity=".7"/>
+            <circle cx="48" cy="26" r="1.3" fill="#E8D9C8"/>
+            <ellipse cx="21" cy="38" rx="2.4" ry="1.5" fill="#C2607A" opacity=".28"/>
+            <ellipse cx="43" cy="38" rx="2.4" ry="1.5" fill="#C2607A" opacity=".28"/>
+          </svg>
+          <span>Happy / saved</span>
+          <small>log confirmed</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#5B9A8F"/>
+            <circle cx="26" cy="34" r="2.4" fill="#2A2622" opacity=".5"/>
+            <circle cx="38" cy="34" r="2.4" fill="#2A2622" opacity=".5"/>
+            <path d="M28 43c2.6-1.2 5.4-1.2 8 0" stroke="#2A2622" stroke-width="1.8" stroke-linecap="round" opacity=".34"/>
+            <path d="M24 28c1.2-1.6 3.2-1.6 4.4 0M36 28c1.2-1.6 3.2-1.6 4.4 0" stroke="#2A2622" stroke-width="1.5" stroke-linecap="round" opacity=".22"/>
+            <ellipse cx="22" cy="38" rx="2.5" ry="1.5" fill="#C2607A" opacity=".18"/>
+            <ellipse cx="42" cy="38" rx="2.5" ry="1.5" fill="#C2607A" opacity=".18"/>
+          </svg>
+          <span>Gentle concern</span>
+          <small>hard day check-in</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Size strip -->
+    <div class="block">
+      <h3>Size strip</h3>
+      <p class="blurb">128 / 64 / 32 — face and droplet must still read at the smallest chip size.</p>
+      <div class="sizes">
+        <div class="size s128">
+          <div class="bubble">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#5B9A8F"/>
+              <path d="M22 38c4-5 8-5 12 0s8 5 12 0" stroke="#E4F0ED" stroke-width="2.6" stroke-linecap="round" opacity=".5"/>
+              <circle cx="26" cy="34" r="2.5" fill="#2A2622" opacity=".52"/>
+              <circle cx="38" cy="34" r="2.5" fill="#2A2622" opacity=".52"/>
+              <path d="M28 41c2.4 2.5 5.6 2.5 8 0" stroke="#2A2622" stroke-width="1.9" stroke-linecap="round" opacity=".36"/>
+              <ellipse cx="22" cy="38" rx="2.5" ry="1.5" fill="#C2607A" opacity=".22"/>
+              <ellipse cx="42" cy="38" rx="2.5" ry="1.5" fill="#C2607A" opacity=".22"/>
+            </svg>
+          </div>
+          <span>128</span>
+        </div>
+        <div class="size s64">
+          <div class="bubble">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#5B9A8F"/>
+              <circle cx="26" cy="34" r="2.6" fill="#2A2622" opacity=".52"/>
+              <circle cx="38" cy="34" r="2.6" fill="#2A2622" opacity=".52"/>
+              <path d="M28 41c2.4 2.5 5.6 2.5 8 0" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".36"/>
+            </svg>
+          </div>
+          <span>64</span>
+        </div>
+        <div class="size s32">
+          <div class="bubble">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M32 8C32 8 14 28 14 40c0 10.5 8.1 19 18 19s18-8.5 18-19C50 28 32 8 32 8Z" fill="#5B9A8F"/>
+              <circle cx="26" cy="35" r="3.2" fill="#2A2622" opacity=".55"/>
+              <circle cx="38" cy="35" r="3.2" fill="#2A2622" opacity=".55"/>
+            </svg>
+          </div>
+          <span>32</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. In-app moments -->
+    <div class="block">
+      <h3>In-app moments</h3>
+      <p class="blurb">Soft paper 01.2 phone chrome — empty Today, Talk companion, onboarding welcome. Using <b>A · Simpler</b> + listening / idle expressions.</p>
+      <div class="phones">
+
+        <div class="phone-wrap">
+          <div class="moment-label">Empty Today</div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+              <div class="empty">
+                <div class="mascot-slot">
+                  <svg viewBox="0 0 120 120" fill="none">
+                    <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="#5B9A8F"/>
+                    <path d="M44 70c5.5-6.5 11-6.5 16 0s10.5 6.5 16 0" stroke="#E4F0ED" stroke-width="3.2" stroke-linecap="round" opacity=".5"/>
+                    <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+                    <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+                    <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38"/>
+                    <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#C2607A" opacity=".2"/>
+                    <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#C2607A" opacity=".2"/>
+                  </svg>
+                </div>
+                <div class="title">Nothing logged yet</div>
+                <div class="hint">When you’re ready, Tide can hold the quiet with you.</div>
+                <div class="pill-row"><span class="pill teal">Log today</span><span class="pill">Talk</span></div>
+              </div>
+              <div class="nav-dots">Today · Talk · You</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-wrap">
+          <div class="moment-label">Talk companion</div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+              <div class="talk-head">
+                <div class="mascot-slot">
+                  <svg viewBox="0 0 120 120" fill="none">
+                    <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="#5B9A8F"/>
+                    <path d="M60 30c0 0-20 24-20 40C40 84 48.5 96 60 96c6 0 11.4-2.8 15.2-7.2C68 78 62 56 60 30Z" fill="#E4F0ED" opacity=".4"/>
+                    <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                    <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                    <ellipse cx="60" cy="74" rx="6" ry="4.2" fill="#2A2622" opacity=".26"/>
+                    <path d="M82 46c7-2 12 3.5 10 10" stroke="#8BB8B0" stroke-width="3" stroke-linecap="round" opacity=".75"/>
+                    <circle cx="94" cy="60" r="2.2" fill="#8BB8B0" opacity=".5"/>
+                  </svg>
+                </div>
+                <div class="title">I’m listening</div>
+                <div class="sub">Say as little or as much as you need</div>
+              </div>
+              <div class="bubble-chat">Whenever you’re ready — Tide is here for the soft parts too.</div>
+              <div class="composer">Type how you’re feeling…</div>
+              <div class="nav-dots">Today · Talk · You</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-wrap">
+          <div class="moment-label">Onboarding welcome</div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+              <div class="onboard">
+                <div class="mascot-slot">
+                  <svg viewBox="0 0 120 120" fill="none">
+                    <path d="M60 16C60 16 28 50 28 72c0 18.778 14.327 34 32 34s32-15.222 32-34C92 50 60 16 60 16Z" fill="#5B9A8F"/>
+                    <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                    <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+                    <path d="M52 72c3.5 4.2 12.5 4.2 16 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".4"/>
+                    <circle cx="28" cy="34" r="2.4" fill="#C2607A" opacity=".5"/>
+                    <circle cx="90" cy="30" r="2" fill="#D48A9A" opacity=".65"/>
+                    <circle cx="86" cy="48" r="1.5" fill="#E8D9C8"/>
+                    <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#C2607A" opacity=".22"/>
+                    <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#C2607A" opacity=".22"/>
+                  </svg>
+                </div>
+                <div class="welcome">Meet Tide</div>
+                <div class="copy">A calm companion for the days that rise and fall.</div>
+                <span class="cta teal">Continue</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- LUNA                                                         -->
+  <!-- ============================================================ -->
+  <section class="chapter" id="luna">
+    <div class="chapter-head">
+      <div>
+        <div class="tag rose">02 · Luna</div>
+        <h2>Luna iterations</h2>
+      </div>
+      <p class="angle">Baseline: dusty-rose crescent cut from oat paper, sideways gentle face, tiny teal stars. Angles — <b>simpler</b> crescent, <b>softer</b> cream wash, <b>more character</b> with blush + constellation.</p>
+    </div>
+
+    <div class="block">
+      <h3>Hero refinements</h3>
+      <p class="blurb">Three polish directions from the original crescent. Same DNA — rose light side, oat cutout, quiet face — different silhouette strength and warmth.</p>
+      <div class="hero-grid">
+
+        <!-- LUNA A: Simpler -->
+        <div class="hero-card">
+          <div class="stage" aria-label="Luna simpler">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="lA-body" x1="36" y1="24" x2="88" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#E8B8C4"/>
+                  <stop offset="1" stop-color="#C2607A"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="60" cy="102" rx="28" ry="5" fill="#2A2622" opacity=".05"/>
+              <circle cx="56" cy="58" r="34" fill="url(#lA-body)"/>
+              <circle cx="72" cy="50" r="26" fill="#F8F3EC"/>
+              <circle cx="45" cy="50" r="3" fill="#2A2622" opacity=".5"/>
+              <circle cx="45" cy="66" r="3" fill="#2A2622" opacity=".5"/>
+              <path d="M38 56c-2.2 1.8-2.2 5.2 0 7" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".3"/>
+              <circle cx="90" cy="38" r="2.2" fill="#5B9A8F" opacity=".55"/>
+            </svg>
+          </div>
+          <div class="label">A · Simpler</div>
+          <p class="note">Thicker crescent, one star, clearer face. Strongest small-size read.</p>
+          <div class="chip">polish · reduce</div>
+        </div>
+
+        <!-- LUNA B: Softer -->
+        <div class="hero-card">
+          <div class="stage" aria-label="Luna softer">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="lB-glow" cx="52%" cy="45%" r="52%">
+                  <stop offset="0%" stop-color="#F5E0E6" stop-opacity=".75"/>
+                  <stop offset="100%" stop-color="#C2607A" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="lB-body" x1="38" y1="22" x2="92" y2="100" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#F0D8DE"/>
+                  <stop offset=".4" stop-color="#D48A9A"/>
+                  <stop offset="1" stop-color="#C2607A"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="60" cy="102" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+              <circle cx="62" cy="58" r="46" fill="url(#lB-glow)"/>
+              <circle cx="58" cy="58" r="36" fill="url(#lB-body)"/>
+              <circle cx="74" cy="49" r="29" fill="#F8F3EC"/>
+              <path d="M48 32c-11 8-16 20-14 34 2 14 12 25 26 28" stroke="#C2607A" stroke-width="5" stroke-linecap="round" opacity=".1"/>
+              <circle cx="46" cy="52" r="2.6" fill="#2A2622" opacity=".45"/>
+              <circle cx="46" cy="67" r="2.6" fill="#2A2622" opacity=".45"/>
+              <path d="M39 58c-2 1.6-2 5 0 6.6" stroke="#2A2622" stroke-width="1.8" stroke-linecap="round" opacity=".28"/>
+              <ellipse cx="41" cy="58" rx="2.8" ry="3.6" fill="#C2607A" opacity=".16"/>
+              <circle cx="92" cy="40" r="1.8" fill="#8BB8B0" opacity=".5"/>
+              <circle cx="88" cy="76" r="1.2" fill="#D48A9A" opacity=".45"/>
+            </svg>
+          </div>
+          <div class="label">B · Softer</div>
+          <p class="note">Creamier rose wash, softer edge tint, quieter stars. Night-calm.</p>
+          <div class="chip">polish · soften</div>
+        </div>
+
+        <!-- LUNA C: More character -->
+        <div class="hero-card">
+          <div class="stage" aria-label="Luna more character">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="lC-glow" cx="55%" cy="42%" r="50%">
+                  <stop offset="0%" stop-color="#F5E0E6" stop-opacity=".7"/>
+                  <stop offset="100%" stop-color="#C2607A" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="lC-body" x1="40" y1="18" x2="90" y2="102" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#F0D8DE"/>
+                  <stop offset=".45" stop-color="#D48A9A"/>
+                  <stop offset="1" stop-color="#A24D64"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="58" cy="102" rx="30" ry="5" fill="#2A2622" opacity=".06"/>
+              <circle cx="64" cy="56" r="44" fill="url(#lC-glow)"/>
+              <!-- slight tilt via offset cut -->
+              <circle cx="56" cy="60" r="36" fill="url(#lC-body)"/>
+              <circle cx="72" cy="48" r="27" fill="#F8F3EC"/>
+              <path d="M46 34c-12 9-17 22-14 36 3 15 14 26 30 28" stroke="#C2607A" stroke-width="6" stroke-linecap="round" opacity=".12"/>
+              <circle cx="44" cy="52" r="2.9" fill="#2A2622" opacity=".5"/>
+              <circle cx="44" cy="70" r="2.9" fill="#2A2622" opacity=".5"/>
+              <circle cx="45.1" cy="50.9" r="0.8" fill="#FFFCF8" opacity=".5"/>
+              <circle cx="45.1" cy="68.9" r="0.8" fill="#FFFCF8" opacity=".5"/>
+              <path d="M36 59c-2.6 2.2-2.6 6.2 0 8.4" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".34"/>
+              <ellipse cx="39" cy="60" rx="3.2" ry="4" fill="#C2607A" opacity=".2"/>
+              <!-- constellation -->
+              <circle cx="94" cy="34" r="2.2" fill="#5B9A8F" opacity=".6"/>
+              <circle cx="100" cy="52" r="1.3" fill="#8BB8B0" opacity=".55"/>
+              <circle cx="90" cy="78" r="1.5" fill="#D48A9A" opacity=".55"/>
+              <circle cx="102" cy="68" r="1" fill="#E8D9C8" opacity=".8"/>
+              <!-- tiny 4-point suggestion near top star -->
+              <path d="M94 28v4M92 30h4" stroke="#5B9A8F" stroke-width="1.2" stroke-linecap="round" opacity=".45"/>
+            </svg>
+          </div>
+          <div class="label">C · More character</div>
+          <p class="note">Slight tilt, blush, eye glints, tiny constellation. Still adult — lunar, not kitsch.</p>
+          <div class="chip">polish · character</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Expression sheet</h3>
+      <p class="blurb">Built on <b>A · Simpler</b> for a thick, readable crescent across states.</p>
+      <div class="expr-grid">
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="30" cy="32" r="20" fill="#D48A9A"/>
+            <circle cx="39" cy="27" r="14.5" fill="#F8F3EC"/>
+            <circle cx="24" cy="28" r="2.1" fill="#2A2622" opacity=".5"/>
+            <circle cx="24" cy="38" r="2.1" fill="#2A2622" opacity=".5"/>
+            <path d="M19 32c-1.6 1.4-1.6 4 0 5.4" stroke="#2A2622" stroke-width="1.6" stroke-linecap="round" opacity=".3"/>
+            <circle cx="50" cy="18" r="1.6" fill="#5B9A8F" opacity=".55"/>
+          </svg>
+          <span>Idle</span>
+          <small>default companion</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="30" cy="32" r="20" fill="#D48A9A"/>
+            <circle cx="38" cy="28" r="15" fill="#F8F3EC"/>
+            <circle cx="24" cy="28" r="2" fill="#2A2622" opacity=".5"/>
+            <circle cx="24" cy="38" r="2" fill="#2A2622" opacity=".5"/>
+            <ellipse cx="20" cy="33" rx="2.2" ry="1.6" fill="#2A2622" opacity=".24"/>
+            <path d="M44 18c3.2-.6 5.2 2 4.6 5" stroke="#8BB8B0" stroke-width="1.8" stroke-linecap="round" opacity=".75"/>
+            <circle cx="50" cy="26" r="1.2" fill="#8BB8B0" opacity=".5"/>
+          </svg>
+          <span>Listening</span>
+          <small>Talk companion</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="30" cy="32" r="20" fill="#C2607A"/>
+            <circle cx="39" cy="27" r="15.5" fill="#F8F3EC"/>
+            <path d="M22 27c1.8-.8 3.5.2 4 1.8M22 37c1.8.8 3.5-.2 4-1.8" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".4"/>
+            <path d="M18 32h4" stroke="#2A2622" stroke-width="1.6" stroke-linecap="round" opacity=".28"/>
+          </svg>
+          <span>Resting</span>
+          <small>empty / migraine-low</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="30" cy="32" r="20" fill="#D48A9A"/>
+            <circle cx="38" cy="28" r="15" fill="#F8F3EC"/>
+            <circle cx="24" cy="27" r="2.2" fill="#2A2622" opacity=".5"/>
+            <circle cx="24" cy="39" r="2.2" fill="#2A2622" opacity=".5"/>
+            <path d="M18 32c-1.6 2.2-1.6 5.4 0 7.6" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".35"/>
+            <circle cx="48" cy="14" r="2" fill="#5B9A8F" opacity=".65"/>
+            <circle cx="54" cy="24" r="1.4" fill="#C2607A" opacity=".45"/>
+            <circle cx="52" cy="34" r="1" fill="#E8D9C8"/>
+          </svg>
+          <span>Happy / saved</span>
+          <small>log confirmed</small>
+        </div>
+        <div class="expr">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="30" cy="32" r="20" fill="#D48A9A"/>
+            <circle cx="39" cy="27" r="14.5" fill="#F8F3EC"/>
+            <circle cx="24" cy="28" r="2.1" fill="#2A2622" opacity=".48"/>
+            <circle cx="24" cy="38" r="2.1" fill="#2A2622" opacity=".48"/>
+            <path d="M19 34c-1.2.6-1.2 2.4 0 3" stroke="#2A2622" stroke-width="1.5" stroke-linecap="round" opacity=".28"/>
+            <path d="M20 24c1-.9 2.4-.6 3 .4M20 42c1 .9 2.4.6 3-.4" stroke="#2A2622" stroke-width="1.3" stroke-linecap="round" opacity=".2"/>
+          </svg>
+          <span>Gentle concern</span>
+          <small>hard day check-in</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Size strip</h3>
+      <p class="blurb">128 / 64 / 32 — crescent silhouette must survive when the face drops out.</p>
+      <div class="sizes">
+        <div class="size s128">
+          <div class="bubble">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="30" cy="32" r="20" fill="#D48A9A"/>
+              <circle cx="39" cy="27" r="14.5" fill="#F8F3EC"/>
+              <circle cx="24" cy="28" r="2.2" fill="#2A2622" opacity=".5"/>
+              <circle cx="24" cy="38" r="2.2" fill="#2A2622" opacity=".5"/>
+              <path d="M19 32c-1.6 1.4-1.6 4 0 5.4" stroke="#2A2622" stroke-width="1.6" stroke-linecap="round" opacity=".3"/>
+              <circle cx="50" cy="18" r="1.8" fill="#5B9A8F" opacity=".55"/>
+            </svg>
+          </div>
+          <span>128</span>
+        </div>
+        <div class="size s64">
+          <div class="bubble">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="30" cy="32" r="20" fill="#D48A9A"/>
+              <circle cx="39" cy="27" r="14.5" fill="#F8F3EC"/>
+              <circle cx="24" cy="28" r="2.4" fill="#2A2622" opacity=".5"/>
+              <circle cx="24" cy="39" r="2.4" fill="#2A2622" opacity=".5"/>
+            </svg>
+          </div>
+          <span>64</span>
+        </div>
+        <div class="size s32">
+          <div class="bubble">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="30" cy="32" r="20" fill="#C2607A"/>
+              <circle cx="40" cy="26" r="14" fill="#F8F3EC"/>
+            </svg>
+          </div>
+          <span>32</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>In-app moments</h3>
+      <p class="blurb">Same Soft paper 01.2 chrome — empty Today, Talk, onboarding. Using <b>A · Simpler</b> + listening / idle.</p>
+      <div class="phones">
+
+        <div class="phone-wrap">
+          <div class="moment-label">Empty Today</div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+              <div class="empty">
+                <div class="mascot-slot">
+                  <svg viewBox="0 0 120 120" fill="none">
+                    <circle cx="56" cy="58" r="34" fill="#D48A9A"/>
+                    <circle cx="72" cy="50" r="26" fill="#F8F3EC"/>
+                    <circle cx="45" cy="50" r="3" fill="#2A2622" opacity=".5"/>
+                    <circle cx="45" cy="66" r="3" fill="#2A2622" opacity=".5"/>
+                    <path d="M38 56c-2.2 1.8-2.2 5.2 0 7" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".3"/>
+                    <circle cx="90" cy="38" r="2.2" fill="#5B9A8F" opacity=".55"/>
+                  </svg>
+                </div>
+                <div class="title">Nothing logged yet</div>
+                <div class="hint">Luna’s nearby if you want company in the quiet.</div>
+                <div class="pill-row"><span class="pill">Log today</span><span class="pill teal">Talk</span></div>
+              </div>
+              <div class="nav-dots">Today · Talk · You</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-wrap">
+          <div class="moment-label">Talk companion</div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+              <div class="talk-head">
+                <div class="mascot-slot">
+                  <svg viewBox="0 0 120 120" fill="none">
+                    <circle cx="56" cy="58" r="34" fill="#D48A9A"/>
+                    <circle cx="72" cy="50" r="26" fill="#F8F3EC"/>
+                    <circle cx="45" cy="50" r="2.9" fill="#2A2622" opacity=".5"/>
+                    <circle cx="45" cy="66" r="2.9" fill="#2A2622" opacity=".5"/>
+                    <ellipse cx="38" cy="58" rx="4" ry="3" fill="#2A2622" opacity=".22"/>
+                    <path d="M86 36c6-1.2 10 3.5 9 9.5" stroke="#8BB8B0" stroke-width="2.8" stroke-linecap="round" opacity=".75"/>
+                    <circle cx="96" cy="52" r="2" fill="#8BB8B0" opacity=".5"/>
+                  </svg>
+                </div>
+                <div class="title">I’m listening</div>
+                <div class="sub">Soft light for whatever you need to say</div>
+              </div>
+              <div class="bubble-chat">No rush. Luna can keep watch while you find the words.</div>
+              <div class="composer">Type how you’re feeling…</div>
+              <div class="nav-dots">Today · Talk · You</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-wrap">
+          <div class="moment-label">Onboarding welcome</div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status"><span>9:41</span><span class="dots">●●●</span></div>
+              <div class="onboard">
+                <div class="mascot-slot">
+                  <svg viewBox="0 0 120 120" fill="none">
+                    <circle cx="56" cy="58" r="34" fill="#D48A9A"/>
+                    <circle cx="72" cy="50" r="26" fill="#F8F3EC"/>
+                    <circle cx="45" cy="48" r="3" fill="#2A2622" opacity=".5"/>
+                    <circle cx="45" cy="68" r="3" fill="#2A2622" opacity=".5"/>
+                    <path d="M37 56c-2.4 2.2-2.4 6.4 0 8.6" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".34"/>
+                    <circle cx="92" cy="32" r="2.4" fill="#5B9A8F" opacity=".6"/>
+                    <circle cx="98" cy="48" r="1.5" fill="#C2607A" opacity=".4"/>
+                    <circle cx="88" cy="78" r="1.3" fill="#E8D9C8"/>
+                  </svg>
+                </div>
+                <div class="welcome">Meet Luna</div>
+                <div class="copy">A soft crescent for cyclical days and quieter nights.</div>
+                <span class="cta">Continue</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- DUO                                                          -->
+  <!-- ============================================================ -->
+  <section class="chapter" id="duo">
+    <div class="chapter-head">
+      <div>
+        <div class="tag quiet">03 · Pair</div>
+        <h2>Tide × Luna duo</h2>
+      </div>
+      <p class="angle">Optional coexistence — if she wants both. Tide as day/flow; Luna as night/cycle. Shared oat ground, no competing chrome.</p>
+    </div>
+
+    <div class="block">
+      <h3>Duo concept</h3>
+      <p class="blurb">Small scene: Tide (simpler) and Luna (simpler) sharing a quiet shelf of paper light. Useful for onboarding “choose one — or keep both as companions.”</p>
+      <div class="duo-stage" aria-label="Tide and Luna together">
+        <svg viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- soft ground -->
+          <ellipse cx="210" cy="190" rx="150" ry="14" fill="#2A2622" opacity=".04"/>
+          <path d="M40 188c40-18 90-28 170-28s130 10 170 28" stroke="#E6DDD2" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+
+          <!-- Tide (left) -->
+          <g transform="translate(70,28)">
+            <defs>
+              <linearGradient id="duoT" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#8BB8B0"/>
+                <stop offset="1" stop-color="#5B9A8F"/>
+              </linearGradient>
+            </defs>
+            <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#duoT)"/>
+            <path d="M44 70c5.5-6.5 11-6.5 16 0s10.5 6.5 16 0" stroke="#E4F0ED" stroke-width="3.2" stroke-linecap="round" opacity=".5"/>
+            <circle cx="50" cy="62" r="3.2" fill="#2A2622" opacity=".52"/>
+            <circle cx="70" cy="62" r="3.2" fill="#2A2622" opacity=".52"/>
+            <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity=".38"/>
+            <ellipse cx="44" cy="68" rx="3.4" ry="2.1" fill="#C2607A" opacity=".2"/>
+            <ellipse cx="76" cy="68" rx="3.4" ry="2.1" fill="#C2607A" opacity=".2"/>
+          </g>
+
+          <!-- soft linking mote -->
+          <circle cx="210" cy="100" r="3" fill="#E8D9C8"/>
+          <circle cx="210" cy="118" r="2" fill="#D48A9A" opacity=".45"/>
+          <circle cx="210" cy="82" r="2" fill="#8BB8B0" opacity=".5"/>
+
+          <!-- Luna (right) -->
+          <g transform="translate(230,30)">
+            <defs>
+              <linearGradient id="duoL" x1="36" y1="24" x2="88" y2="96" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#E8B8C4"/>
+                <stop offset="1" stop-color="#C2607A"/>
+              </linearGradient>
+            </defs>
+            <circle cx="56" cy="58" r="34" fill="url(#duoL)"/>
+            <circle cx="72" cy="50" r="26" fill="#F8F3EC"/>
+            <circle cx="45" cy="50" r="2.9" fill="#2A2622" opacity=".5"/>
+            <circle cx="45" cy="66" r="2.9" fill="#2A2622" opacity=".5"/>
+            <path d="M38 56c-2.2 1.8-2.2 5.2 0 7" stroke="#2A2622" stroke-width="1.9" stroke-linecap="round" opacity=".3"/>
+            <circle cx="90" cy="38" r="2.2" fill="#5B9A8F" opacity=".55"/>
+            <circle cx="96" cy="58" r="1.3" fill="#D48A9A" opacity=".4"/>
+          </g>
+
+          <!-- labels -->
+          <text x="130" y="208" text-anchor="middle" fill="#7F746A" font-family="DM Sans, system-ui, sans-serif" font-size="11" letter-spacing="0.08em">TIDE</text>
+          <text x="290" y="208" text-anchor="middle" fill="#7F746A" font-family="DM Sans, system-ui, sans-serif" font-size="11" letter-spacing="0.08em">LUNA</text>
+        </svg>
+      </div>
+      <div class="duo-meta">
+        <div class="cardlet">
+          <h4>How they share space</h4>
+          <p>Tide carries flow / day logging energy (teal). Luna carries cycle / evening calm (rose). Same face language so they feel like a set, not two products.</p>
+        </div>
+        <div class="cardlet">
+          <h4>Product use</h4>
+          <p>User picks a primary companion — or keeps both: Tide on Today empty states, Luna on evening / cycle moments. Duo mark for welcome or “companions” settings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>How to choose:</b> pick Tide A/B/C, Luna A/B/C, or Tide + Luna as a pair. Expressions and phone moments above use the <b>A · Simpler</b> read for clarity — heroes show the full polish range.</p>
+  </footer>
+
+</div>
+</body>
+</html>
