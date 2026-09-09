@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Soft paper 01 · polish passes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{background:#F4F2EE;color:#2A2926;font-family:"DM Sans",system-ui,sans-serif;line-height:1.45;padding:48px 32px 96px}
+.board-head{max-width:1480px;margin:0 auto 36px}
+.board-head .kicker{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#9A9690;margin-bottom:14px}
+.board-head h1{font-family:"DM Sans",sans-serif;font-weight:600;font-size:clamp(24px,3vw,34px);letter-spacing:-.02em;line-height:1.15;color:#1C1B19}
+.board-head p{margin-top:12px;max-width:78ch;font-size:15px;color:#5C5954}
+.board-head p b{color:#2A2926;font-weight:600}
+.legend{max-width:1480px;margin:0 auto 48px;padding:14px 18px;border:1px solid #E2DFD8;border-radius:10px;background:#FAFAF8;display:flex;flex-wrap:wrap;gap:16px 32px;font-size:13px;color:#5C5954}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend .mono{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;color:#9A9690;text-transform:uppercase}
+.dir{max-width:1480px;margin:0 auto 72px;padding-top:28px;border-top:1px solid #E2DFD8}
+.dir-head{margin-bottom:22px;max-width:860px}
+.dir-num{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#9A9690;margin-bottom:8px}
+.dir-head h2{font-size:21px;font-weight:600;letter-spacing:-.015em;color:#1C1B19;margin-bottom:6px}
+.dir-head .rationale{font-size:14.5px;color:#5C5954;line-height:1.5}
+.dir-head .meta{margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#9A9690;letter-spacing:.04em}
+.phones{display:flex;flex-wrap:wrap;gap:36px 28px;align-items:flex-start}
+.frame{display:flex;flex-direction:column;gap:10px}
+.frame .lbl{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9A9690;padding-left:6px}
+.frame .note{font-size:12.5px;color:#9A9690;padding-left:6px;max-width:330px;line-height:1.4}
+.phone{width:330px;height:715px;border-radius:46px;position:relative;overflow:hidden}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:100px;height:28px;background:#000;border-radius:18px;z-index:50}
+.statusbar{position:absolute;top:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;z-index:40}
+.statusbar .right{font-size:11px;opacity:.85;letter-spacing:.02em}
+.screen{position:absolute;inset:0;padding:54px 18px 18px;display:flex;flex-direction:column;overflow:hidden}
+.screen.has-tab{padding-bottom:86px}
+.tabbar{position:absolute;bottom:0;left:0;right:0;height:76px;display:flex;align-items:flex-start;justify-content:space-around;padding:10px 6px 0;z-index:40}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;min-width:58px;opacity:.55}
+.tab.on{opacity:1;font-weight:600}
+.tab .ic{font-size:18px;line-height:1}
+.pass-notes{max-width:1480px;margin:-40px auto 56px;padding:14px 18px;border-radius:10px;background:#FAFAF8;border:1px solid #E2DFD8;font-size:13px;color:#5C5954;line-height:1.5}
+.pass-notes b{color:#2A2926;font-weight:600}
+.foot{max-width:1480px;margin:48px auto 0;padding-top:24px;border-top:1px solid #E2DFD8;font-size:12.5px;color:#9A9690;line-height:1.5}
+
+/* Shared Soft paper primitives */
+.warm{color:var(--warm)}.cool{color:var(--cool)}
+.greet{font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:500;letter-spacing:-.01em;line-height:1.1}
+.date{font-size:12.5px;color:var(--muted);margin-top:3px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start}
+.icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--cool)}
+.phase{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:12px;font-weight:500;color:var(--cool);padding:5px 0;border-bottom:1.5px solid var(--cool-line)}
+.phase .dot{width:6px;height:6px;border-radius:50%;background:var(--cool)}
+.timeline{margin-top:20px;display:flex;flex-direction:column;gap:0;position:relative;padding-left:18px}
+.timeline::before{content:"";position:absolute;left:4px;top:6px;bottom:6px;width:1.5px;background:var(--line)}
+.tl-item{position:relative;padding:0 0 16px 14px}
+.tl-item::before{content:"";position:absolute;left:-18px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--card);border:2px solid var(--warm)}
+.tl-item.cycle::before{border-color:var(--cool);background:var(--cool)}
+.tl-item .when{font-size:11px;color:var(--faint);letter-spacing:.04em}
+.tl-item .what{font-size:14.5px;font-weight:500;margin-top:2px}
+.tl-item .detail{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.insight{margin-top:8px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.insight .q{font-family:"Cormorant Garamond",serif;font-size:18px;line-height:1.35;font-weight:500}
+.insight .q em{font-style:italic;color:var(--warm)}
+.cta-row{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:14px}
+.cta{padding:13px 12px;border-radius:14px;text-align:center;font-size:13.5px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.cta.primary{background:var(--warm);border-color:var(--warm);color:var(--on-warm)}
+.talk-screen{align-items:center;text-align:center}
+.talk-screen .back{align-self:flex-start;font-size:14px;color:var(--warm);font-weight:500;margin-bottom:8px}
+.talk-screen .hint{font-size:13px;color:var(--muted);margin-top:8px}
+.glow-wrap{margin:auto 0;position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center}
+.glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--glow-warm),var(--glow-cool) 55%,transparent 70%)}
+.mic-btn{width:72px;height:72px;border-radius:50%;background:var(--warm);color:var(--on-warm);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 28px -8px var(--glow-shadow);position:relative;z-index:2}
+.transcript{width:100%;margin-top:auto;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:16px;text-align:left;font-family:"Cormorant Garamond",serif;font-size:17px;line-height:1.4;font-style:italic;color:var(--ink-soft)}
+.transcript .live{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--warm);font-family:"DM Sans",sans-serif;font-style:normal;font-weight:600;margin-bottom:6px}
+.confirm .nav{font-size:14px;color:var(--warm);font-weight:500;margin-bottom:10px}
+.confirm h2{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:500;margin-bottom:4px}
+.confirm .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.draft{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 0 var(--line)}
+.draft .quote{font-family:"Cormorant Garamond",serif;font-size:16px;font-style:italic;color:var(--ink-soft);line-height:1.4;padding-bottom:12px;border-bottom:1px dashed var(--line-strong);margin-bottom:12px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:6px 11px;border-radius:999px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink-soft)}
+.chip.on-warm{background:var(--warm-wash);border-color:var(--warm);color:var(--warm-ink);font-weight:500}
+.chip.on-cool{background:var(--cool-wash);border-color:var(--cool);color:var(--cool-ink);font-weight:500}
+.save{margin-top:auto;padding:14px;border-radius:14px;background:var(--ink);color:var(--on-warm);text-align:center;font-weight:600;font-size:14.5px}
+.cal h2{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:500}
+.cal .month{font-size:12.5px;color:var(--muted);margin:2px 0 14px}
+.grid-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.dow{font-size:10px;color:var(--faint);padding:4px 0;font-weight:600}
+.day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;border-radius:10px;color:var(--ink);position:relative}
+.day.mute{color:var(--faint)}
+.day.today{background:var(--card);border:1.5px solid var(--cool);font-weight:600}
+.day .dot{width:4px;height:4px;border-radius:50%;margin-top:2px}
+.day .dot.p{background:var(--warm)}.day .dot.c{background:var(--cool)}
+.day.lut{background:var(--cool-wash)}
+.legend-row{margin-top:16px;display:flex;gap:14px;font-size:11.5px;color:var(--muted)}
+.legend-row i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* ========== A · Soft paper 01.1 — Tighten ========== */
+.a{--paper:#F7F3EE;--card:#FFFCF8;--line:#E4DBD0;--line-strong:#D9CFC3;--ink:#2A2622;--ink-soft:#3A3530;--muted:#7F746A;--faint:#A89E93;--warm:#C4786A;--warm-ink:#9A5648;--warm-wash:#F8E8E4;--cool:#5B9A8F;--cool-ink:#3D756C;--cool-wash:#E4F0ED;--cool-line:#A9CBC4;--on-warm:#FFFCF8;--glow-warm:rgba(196,120,106,.26);--glow-cool:rgba(91,154,143,.1);--glow-shadow:rgba(196,120,106,.5)}
+.a .phone{background:var(--paper);box-shadow:0 0 0 8px #E8E2DA,0 14px 32px -20px rgba(50,35,25,.16)}
+.a .statusbar{color:#3A3530}
+.a .screen{font-family:"DM Sans",system-ui,sans-serif;color:var(--ink);padding-left:20px;padding-right:20px}
+.a .tabbar{background:rgba(247,243,238,.96);border-top:1px solid var(--line);backdrop-filter:blur(10px)}
+.a .tab{color:var(--muted)}.a .tab.on{color:var(--warm)}
+.a .greet{font-size:27px;letter-spacing:-.015em}
+.a .date{font-size:12px;margin-top:4px;letter-spacing:.01em}
+.a .phase{margin-top:12px;padding:4px 0;border-bottom-width:1px;font-size:11.5px;letter-spacing:.02em}
+.a .insight{margin-top:14px;padding:12px 14px;border-radius:12px;border-width:1px}
+.a .insight .q{font-size:17px;line-height:1.32}
+.a .timeline{margin-top:16px;padding-left:16px}
+.a .timeline::before{width:1px;left:3px}
+.a .tl-item{padding:0 0 12px 12px}
+.a .tl-item::before{width:8px;height:8px;left:-16px;top:5px;border-width:1.5px}
+.a .tl-item .when{font-size:10.5px;letter-spacing:.05em}
+.a .tl-item .what{font-size:14px;margin-top:1px}
+.a .tl-item .detail{font-size:12px;margin-top:1px}
+.a .cta-row{gap:8px;padding-top:12px}
+.a .cta{padding:12px;border-radius:12px;font-size:13px}
+.a .icon-btn{width:30px;height:30px;border-width:1px}
+.a .draft{border-radius:12px;padding:14px;box-shadow:none;border-color:var(--line-strong)}
+.a .draft .quote{font-size:15.5px;padding-bottom:10px;margin-bottom:10px}
+.a .field{margin-bottom:10px}
+.a .field label{font-size:10px;margin-bottom:5px;letter-spacing:.14em}
+.a .chip{padding:5px 10px;font-size:12px;border-width:1px}
+.a .confirm h2{font-size:24px;margin-bottom:2px}
+.a .confirm .sub{margin-bottom:12px;font-size:12px}
+.a .confirm .nav{margin-bottom:8px;font-size:13.5px}
+.a .save{padding:13px;border-radius:12px;font-size:14px}
+.a .mic-btn{width:68px;height:68px;font-size:26px;box-shadow:0 6px 22px -8px var(--glow-shadow)}
+.a .glow-wrap{width:148px;height:148px}
+.a .transcript{border-radius:12px;padding:12px 14px;font-size:16px}
+.a .talk-screen .hint{font-size:12.5px}
+
+/* ========== B · Soft paper 01.2 — Softer touch ========== */
+.b{--paper:#F8F4EF;--card:#FFFCFA;--line:#EBE3D9;--line-strong:#E2D8CD;--ink:#2C2824;--ink-soft:#3D3832;--muted:#8A7F74;--faint:#B0A69B;--warm:#C67E72;--warm-ink:#9A5648;--warm-wash:#F9EBE7;--cool:#5B9A8F;--cool-ink:#3D756C;--cool-wash:#E6F1EE;--cool-line:#B8D4CE;--on-warm:#FFFCFA;--glow-warm:rgba(198,126,114,.22);--glow-cool:rgba(91,154,143,.14);--glow-shadow:rgba(198,126,114,.35)}
+.b .phone{background:var(--paper);box-shadow:0 0 0 8px #EFE9E2,0 10px 28px -18px rgba(60,40,30,.1)}
+.b .statusbar{color:#3D3832}
+.b .screen{font-family:"DM Sans",system-ui,sans-serif;color:var(--ink);padding-left:20px;padding-right:20px}
+.b .tabbar{background:rgba(248,244,239,.94);border-top:1px solid var(--line);backdrop-filter:blur(14px)}
+.b .tab{color:var(--muted)}.b .tab.on{color:var(--warm)}
+.b .greet{font-size:28px}
+.b .phase{margin-top:16px;padding:6px 0;border-bottom-width:1.5px}
+.b .insight{margin-top:16px;padding:16px 18px;border-radius:18px;border-color:transparent;box-shadow:0 4px 16px -12px rgba(60,40,30,.1);background:var(--card)}
+.b .insight .q{font-size:18px;line-height:1.38}
+.b .timeline{margin-top:20px}
+.b .tl-item{padding-bottom:18px}
+.b .tl-item::before{box-shadow:0 0 0 4px rgba(198,126,114,.1)}
+.b .tl-item.cycle::before{box-shadow:0 0 0 4px rgba(91,154,143,.14)}
+.b .cta{border-radius:16px;padding:14px 12px}
+.b .cta.primary{box-shadow:0 4px 14px -8px rgba(198,126,114,.4)}
+.b .draft{border-radius:20px;padding:18px;border-color:transparent;box-shadow:0 6px 22px -14px rgba(60,40,30,.12)}
+.b .draft .quote{border-bottom-style:dashed;padding-bottom:14px;margin-bottom:14px}
+.b .chip{padding:7px 13px;border-radius:999px;border-color:var(--line)}
+.b .chip.on-warm{border-color:transparent}
+.b .chip.on-cool{border-color:transparent}
+.b .save{border-radius:16px;padding:15px;box-shadow:0 4px 14px -10px rgba(44,40,36,.25)}
+.b .mic-btn{box-shadow:0 10px 32px -10px rgba(198,126,114,.4);background:linear-gradient(160deg,#C67E72,#BA7268)}
+.b .glow{opacity:.9}
+.b .glow-wrap{width:168px;height:168px}
+.b .transcript{border-radius:18px;border-color:transparent;box-shadow:0 4px 16px -12px rgba(60,40,30,.08);padding:16px 18px}
+.b .confirm h2{font-size:26px}
+.b .confirm .sub{margin-bottom:16px}
+.b .icon-btn{border-radius:50%;box-shadow:0 2px 8px -4px rgba(60,40,30,.08)}
+.b .day{border-radius:12px}
+.b .day.today{border-radius:12px;border-width:1.5px}
+
+/* ========== C · Soft paper 01.3 — Clearer hierarchy ========== */
+.c{--paper:#F7F3EE;--card:#FFFCF8;--line:#E8E0D6;--line-strong:#DED5CA;--ink:#2C2824;--ink-soft:#3D3832;--muted:#857A70;--faint:#A89E93;--warm:#C06E5E;--warm-ink:#8F4A3C;--warm-wash:#F7E6E1;--cool:#5B9A8F;--cool-ink:#3D756C;--cool-wash:#E4F0ED;--cool-line:#B8D4CE;--on-warm:#FFFCF8;--glow-warm:rgba(192,110,94,.2);--glow-cool:rgba(91,154,143,.1);--glow-shadow:rgba(192,110,94,.38)}
+.c .phone{background:var(--paper);box-shadow:0 0 0 8px #EDE8E1,0 16px 36px -22px rgba(60,40,30,.16)}
+.c .statusbar{color:#3D3832}
+.c .screen{font-family:"DM Sans",system-ui,sans-serif;color:var(--ink)}
+.c .tabbar{background:rgba(247,243,238,.95);border-top:1px solid var(--line);backdrop-filter:blur(10px)}
+.c .tab{color:var(--muted)}.c .tab.on{color:var(--warm)}
+.c .greet{font-size:30px;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+.c .date{font-size:12.5px;margin-top:4px}
+.c .phase{margin-top:12px;font-size:12px;font-weight:600;letter-spacing:.03em}
+.c .insight{margin-top:14px;padding:16px 16px 15px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,#FFFCF8 70%,#FBF3EF);box-shadow:0 1px 0 rgba(192,110,94,.06)}
+.c .insight .eyebrow{font-family:"DM Sans",sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--warm);margin-bottom:6px;font-style:normal}
+.c .insight .q{font-size:19px;line-height:1.32;color:var(--ink)}
+.c .insight .q em{color:var(--warm);font-weight:500}
+.c .timeline{margin-top:18px;opacity:.92}
+.c .tl-item .what{font-size:14px}
+.c .cta-row{gap:10px}
+.c .cta{border-radius:14px;font-weight:500}
+.c .cta.primary{background:var(--warm);border-color:var(--warm);font-weight:600;box-shadow:0 3px 12px -6px rgba(192,110,94,.45)}
+.c .talk-screen .back{color:var(--muted);font-weight:500}
+.c .talk-screen .hint{color:var(--faint);font-size:12.5px}
+.c .mic-btn{background:var(--warm);box-shadow:0 6px 24px -10px rgba(192,110,94,.4);width:70px;height:70px}
+.c .glow{opacity:.75}
+.c .glow-wrap{width:152px;height:152px}
+.c .transcript{border-radius:14px;opacity:.95}
+.c .transcript .live{color:var(--muted);letter-spacing:.12em}
+.c .confirm .nav{color:var(--muted);margin-bottom:8px}
+.c .confirm h2{font-size:28px;letter-spacing:-.015em;margin-bottom:2px}
+.c .confirm .sub{font-size:12.5px;margin-bottom:16px}
+.c .draft{border-radius:16px;padding:18px 16px;border:1px solid var(--line-strong);box-shadow:0 8px 28px -16px rgba(60,40,30,.18),0 1px 0 var(--line);position:relative}
+.c .draft::before{content:"";position:absolute;top:0;left:16px;right:16px;height:2px;border-radius:0 0 2px 2px;background:linear-gradient(90deg,var(--warm),transparent 70%);opacity:.55}
+.c .draft .quote{font-size:17px;padding-bottom:14px;margin-bottom:14px;color:var(--ink-soft)}
+.c .field label{color:var(--muted);letter-spacing:.1em}
+.c .chip.on-warm{background:var(--warm-wash);border-color:var(--warm);font-weight:600}
+.c .save{background:var(--warm);color:var(--on-warm);border-radius:14px;padding:15px;font-size:15px;box-shadow:0 4px 16px -8px rgba(192,110,94,.5)}
+.c .day.today{border-color:var(--cool);border-width:2px}
+</style>
+</head>
+<body>
+<header class="board-head">
+  <div class="kicker">Ebb · Soft paper refine</div>
+  <h1>Soft paper 01 — three polish passes</h1>
+  <p>Still <b>Soft paper</b>: light oat, soft rose + teal, Cormorant + DM Sans, timeline-first Today, ambient mic Talk, draft-card Confirm. Not rose-silk, not neo-brutal — careful polish of what she already likes. Pick A, B, or C.</p>
+</header>
+<div class="legend">
+  <span class="mono">Passes</span>
+  <span>Quiet board · attention on phones</span>
+  <span><i style="background:#C4786A"></i> Warm / symptoms</span>
+  <span><i style="background:#5B9A8F"></i> Cool / cycle</span>
+  <span>Today · Talk · Confirm (+ Calendar on B)</span>
+</div>
+
+<!-- ========== A · Tighten ========== -->
+<section class="dir a">
+  <div class="dir-head">
+    <div class="dir-num">A · Soft paper 01.1</div>
+    <h2>Tighten</h2>
+    <p class="rationale">Same Soft paper DNA with cleaner vertical rhythm, consistent padding, slightly sharper hairlines, and less muddy gray in muted text.</p>
+    <p class="meta">Cormorant + DM Sans · tighter type scale · 1px rules · denser timeline · crisp draft</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Today</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="hdr">
+            <div><div class="greet">Good evening</div><div class="date">Wed 9 Sep · Day 22</div></div>
+            <div class="icon-btn">▦</div>
+          </div>
+          <div class="phase"><span class="dot"></span> Late luteal</div>
+          <div class="insight"><div class="q">Third right-side migraine this cycle — all in the <em>luteal window</em>.</div></div>
+          <div class="timeline">
+            <div class="tl-item"><div class="when">Today · 18:40</div><div class="what warm">Migraine · right temple</div><div class="detail">Severity 3 · worse with movement</div></div>
+            <div class="tl-item"><div class="when">Yesterday · 09:12</div><div class="what">Light sensitivity</div><div class="detail">Mild · lasted ~2h</div></div>
+            <div class="tl-item cycle"><div class="when">Mon · cycle</div><div class="what cool">Period started</div><div class="detail">Logged via HealthKit</div></div>
+          </div>
+          <div class="cta-row"><div class="cta primary">Talk</div><div class="cta">Tap</div></div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">⬡</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">☰</span>More</div>
+        </div>
+      </div>
+      <div class="note">Tighter gaps, sharper 1px line, clearer muted gray.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Talk</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen talk-screen">
+          <div class="back">← Cancel</div>
+          <div class="hint">Speak naturally. Ebb maps it to your buttons.</div>
+          <div class="glow-wrap"><div class="glow"></div><div class="mic-btn">🎙️</div></div>
+          <div class="transcript"><div class="live">Listening</div>Dull one on the right, barely there — worse when I move…</div>
+        </div>
+      </div>
+      <div class="note">Slightly smaller mic + glow; same ambient capture.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Confirm</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen confirm">
+          <div class="nav">← Edit transcript</div>
+          <h2>Does this look right?</h2>
+          <div class="sub">Draft from your words · tap to fix</div>
+          <div class="draft">
+            <div class="quote">“Dull one on the right, barely there — worse when I move.”</div>
+            <div class="field"><label>Type</label><div class="chips"><span class="chip on-warm">Migraine</span><span class="chip">Headache</span><span class="chip">Aura</span></div></div>
+            <div class="field"><label>Location</label><div class="chips"><span class="chip on-warm">Right temple</span><span class="chip">Left</span><span class="chip">Behind eye</span></div></div>
+            <div class="field"><label>Severity</label><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip on-warm">3</span><span class="chip">4</span><span class="chip">5</span></div></div>
+            <div class="field"><label>Cycle context</label><div class="chips"><span class="chip on-cool">Late luteal</span><span class="chip">Day 22</span></div></div>
+          </div>
+          <div class="save">Save entry</div>
+        </div>
+      </div>
+      <div class="note">Crisper draft padding; hairline border; compact chips.</div>
+    </div>
+  </div>
+</section>
+<div class="pass-notes"><b>vs Soft paper 01:</b> Vertical rhythm tightened (12–14px item gaps vs 14–16), type scale stepped down slightly for greet/insight/chips, borders at 1px with clearer line tokens, muted/faint grays less muddy (cooler brown-gray). Structure unchanged.</div>
+
+<!-- ========== B · Softer touch ========== -->
+<section class="dir b">
+  <div class="dir-head">
+    <div class="dir-num">B · Soft paper 01.2</div>
+    <h2>Softer touch</h2>
+    <p class="rationale">Gentler shadows, rounder chips and cards, warmer oat paper, more breath between sections — same Soft paper structure, kinder edges.</p>
+    <p class="meta">Warmer oat · float cards · soft halo chips · breathy timeline · Calendar</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Today</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="hdr">
+            <div><div class="greet">Good evening</div><div class="date">Wed 9 Sep · Day 22</div></div>
+            <div class="icon-btn">▦</div>
+          </div>
+          <div class="phase"><span class="dot"></span> Late luteal</div>
+          <div class="insight"><div class="q">Third right-side migraine this cycle — all in the <em>luteal window</em>.</div></div>
+          <div class="timeline">
+            <div class="tl-item"><div class="when">Today · 18:40</div><div class="what warm">Migraine · right temple</div><div class="detail">Severity 3 · worse with movement</div></div>
+            <div class="tl-item"><div class="when">Yesterday · 09:12</div><div class="what">Light sensitivity</div><div class="detail">Mild · lasted ~2h</div></div>
+            <div class="tl-item cycle"><div class="when">Mon · cycle</div><div class="what cool">Period started</div><div class="detail">Logged via HealthKit</div></div>
+          </div>
+          <div class="cta-row"><div class="cta primary">Talk</div><div class="cta">Tap</div></div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">⬡</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">☰</span>More</div>
+        </div>
+      </div>
+      <div class="note">Floating insight; softer node halos; more air.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Talk</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen talk-screen">
+          <div class="back">← Cancel</div>
+          <div class="hint">Speak naturally. Ebb maps it to your buttons.</div>
+          <div class="glow-wrap"><div class="glow"></div><div class="mic-btn">🎙️</div></div>
+          <div class="transcript"><div class="live">Listening</div>Dull one on the right, barely there — worse when I move…</div>
+        </div>
+      </div>
+      <div class="note">Larger glow, softer mic gradient, float transcript.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Confirm</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen confirm">
+          <div class="nav">← Edit transcript</div>
+          <h2>Does this look right?</h2>
+          <div class="sub">Draft from your words · tap to fix</div>
+          <div class="draft">
+            <div class="quote">“Dull one on the right, barely there — worse when I move.”</div>
+            <div class="field"><label>Type</label><div class="chips"><span class="chip on-warm">Migraine</span><span class="chip">Headache</span><span class="chip">Aura</span></div></div>
+            <div class="field"><label>Location</label><div class="chips"><span class="chip on-warm">Right temple</span><span class="chip">Left</span><span class="chip">Behind eye</span></div></div>
+            <div class="field"><label>Severity</label><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip on-warm">3</span><span class="chip">4</span><span class="chip">5</span></div></div>
+            <div class="field"><label>Cycle context</label><div class="chips"><span class="chip on-cool">Late luteal</span><span class="chip">Day 22</span></div></div>
+          </div>
+          <div class="save">Save entry</div>
+        </div>
+      </div>
+      <div class="note">Pillowy draft card; borderless soft chips.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Calendar</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab cal">
+          <h2>September</h2>
+          <div class="month">Cycle day 22 · late luteal tint</div>
+          <div class="grid-cal">
+            <div class="dow">S</div><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div>
+            <div class="day mute">31</div><div class="day">1</div><div class="day">2</div><div class="day">3<span class="dot p"></span></div><div class="day">4</div><div class="day">5</div><div class="day">6</div>
+            <div class="day">7</div><div class="day">8<span class="dot c"></span></div><div class="day">9</div><div class="day">10</div><div class="day">11</div><div class="day">12</div><div class="day">13</div>
+            <div class="day lut">14</div><div class="day lut">15<span class="dot p"></span></div><div class="day lut">16</div><div class="day lut">17</div><div class="day lut">18</div><div class="day lut">19<span class="dot p"></span></div><div class="day lut">20</div>
+            <div class="day lut">21</div><div class="day lut today">22<span class="dot p"></span></div><div class="day lut">23</div><div class="day lut">24</div><div class="day lut">25</div><div class="day">26</div><div class="day">27</div>
+            <div class="day">28</div><div class="day">29</div><div class="day">30</div><div class="day mute">1</div><div class="day mute">2</div><div class="day mute">3</div><div class="day mute">4</div>
+          </div>
+          <div class="legend-row"><span><i style="background:#C67E72"></i> Migraine</span><span><i style="background:#5B9A8F"></i> Period</span><span>Rounder day cells</span></div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">⬡</span>Patterns</div>
+          <div class="tab on"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">☰</span>More</div>
+        </div>
+      </div>
+      <div class="note">Same grid, softer corners + warmer oat.</div>
+    </div>
+  </div>
+</section>
+<div class="pass-notes"><b>vs Soft paper 01:</b> Paper nudged warmer (#F8F4EF), shadows softer/diffused, insight &amp; draft float without hard borders, chips more padded and borderless when selected, timeline nodes get soft halos, more vertical breath. Structure same.</div>
+
+<!-- ========== C · Clearer hierarchy ========== -->
+<section class="dir c">
+  <div class="dir-head">
+    <div class="dir-num">C · Soft paper 01.3</div>
+    <h2>Clearer hierarchy</h2>
+    <p class="rationale">Stronger Today header and insight, Confirm draft as the hero moment, Talk calmer and quieter — rose CTAs a touch more confident without going loud.</p>
+    <p class="meta">Insight eyebrow · hero draft · calmer Talk · confident rose Save</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Today</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="hdr">
+            <div><div class="greet">Good evening</div><div class="date">Wed 9 Sep · Day 22</div></div>
+            <div class="icon-btn">▦</div>
+          </div>
+          <div class="phase"><span class="dot"></span> Late luteal</div>
+          <div class="insight">
+            <div class="eyebrow">Pattern</div>
+            <div class="q">Third right-side migraine this cycle — all in the <em>luteal window</em>.</div>
+          </div>
+          <div class="timeline">
+            <div class="tl-item"><div class="when">Today · 18:40</div><div class="what warm">Migraine · right temple</div><div class="detail">Severity 3 · worse with movement</div></div>
+            <div class="tl-item"><div class="when">Yesterday · 09:12</div><div class="what">Light sensitivity</div><div class="detail">Mild · lasted ~2h</div></div>
+            <div class="tl-item cycle"><div class="when">Mon · cycle</div><div class="what cool">Period started</div><div class="detail">Logged via HealthKit</div></div>
+          </div>
+          <div class="cta-row"><div class="cta primary">Talk</div><div class="cta">Tap</div></div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">⬡</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">☰</span>More</div>
+        </div>
+      </div>
+      <div class="note">Larger greet; Pattern eyebrow; insight leads.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Talk</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen talk-screen">
+          <div class="back">← Cancel</div>
+          <div class="hint">Speak naturally. Ebb maps it to your buttons.</div>
+          <div class="glow-wrap"><div class="glow"></div><div class="mic-btn">🎙️</div></div>
+          <div class="transcript"><div class="live">Listening</div>Dull one on the right, barely there — worse when I move…</div>
+        </div>
+      </div>
+      <div class="note">Calmer chrome — muted back/live, quieter glow.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Confirm</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen confirm">
+          <div class="nav">← Edit transcript</div>
+          <h2>Does this look right?</h2>
+          <div class="sub">Draft from your words · tap to fix</div>
+          <div class="draft">
+            <div class="quote">“Dull one on the right, barely there — worse when I move.”</div>
+            <div class="field"><label>Type</label><div class="chips"><span class="chip on-warm">Migraine</span><span class="chip">Headache</span><span class="chip">Aura</span></div></div>
+            <div class="field"><label>Location</label><div class="chips"><span class="chip on-warm">Right temple</span><span class="chip">Left</span><span class="chip">Behind eye</span></div></div>
+            <div class="field"><label>Severity</label><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip on-warm">3</span><span class="chip">4</span><span class="chip">5</span></div></div>
+            <div class="field"><label>Cycle context</label><div class="chips"><span class="chip on-cool">Late luteal</span><span class="chip">Day 22</span></div></div>
+          </div>
+          <div class="save">Save entry</div>
+        </div>
+      </div>
+      <div class="note">Hero draft + rose Save — Confirm is the moment.</div>
+    </div>
+  </div>
+</section>
+<div class="pass-notes"><b>vs Soft paper 01:</b> Greet + insight stepped up (eyebrow “Pattern”, larger Cormorant), timeline slightly de-emphasized; Talk back/Listening calmed to muted; Confirm draft elevates with soft top accent + deeper shadow; Save uses confident rose instead of ink — still Soft paper, not loud.</div>
+
+<footer class="foot">
+  Soft paper 01 polish · A Tighten · B Softer touch · C Clearer hierarchy · warm = pain · cool = cycle<br>
+  Path: docs/symptom-tracker-soft-paper-refine.html
+</footer>
+</body>
+</html>

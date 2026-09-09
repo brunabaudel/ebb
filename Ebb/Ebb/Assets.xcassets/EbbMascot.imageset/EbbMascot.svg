@@ -1,0 +1,15 @@
+<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ebb-grad" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8B8C4"/>
+      <stop offset="1" stop-color="#C2607A"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity="0.05"/>
+  <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#ebb-grad)"/>
+  <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity="0.52"/>
+  <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity="0.52"/>
+  <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity="0.38" fill="none"/>
+  <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity="0.28"/>
+  <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity="0.28"/>
+</svg>

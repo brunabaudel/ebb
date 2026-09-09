@@ -73,10 +73,7 @@ struct TalkView: View {
 
             Spacer(minLength: 28)
 
-            TalkOrb(isAnimating: speechCapture.isListening, reduceMotion: reduceMotion)
-                .padding(.bottom, 18)
-
-            TalkWaveBars(isAnimating: speechCapture.isListening, reduceMotion: reduceMotion)
+            TalkListeningScene(isAnimating: speechCapture.isListening, reduceMotion: reduceMotion)
                 .padding(.bottom, 32)
 
             LiveTranscriptCard(
@@ -161,9 +158,9 @@ struct TalkView: View {
     }
 }
 
-// MARK: - Orb
+// MARK: - Listening scene
 
-private struct TalkOrb: View {
+private struct TalkListeningScene: View {
     let isAnimating: Bool
     let reduceMotion: Bool
 
@@ -174,30 +171,55 @@ private struct TalkOrb: View {
         ZStack {
             if isAnimating && !reduceMotion {
                 Circle()
-                    .stroke(theme.pain.opacity(0.35), lineWidth: 2)
-                    .frame(width: 168, height: 168)
-                    .scaleEffect(breathe ? 1.08 : 0.94)
-                    .opacity(breathe ? 0.35 : 0.75)
+                    .fill(
+                        RadialGradient(
+                            colors: [theme.pain.opacity(0.22), theme.cycleDim.opacity(0.14), .clear],
+                            center: .center,
+                            startRadius: 20,
+                            endRadius: 100
+                        )
+                    )
+                    .frame(width: 200, height: 200)
+                    .scaleEffect(breathe ? 1.06 : 0.94)
+                    .opacity(breathe ? 0.85 : 1)
                     .animation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true), value: breathe)
             }
 
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [theme.pain, theme.painDim],
-                        center: .center,
-                        startRadius: 8,
-                        endRadius: 74
-                    )
-                )
-                .frame(width: 148, height: 148)
-                .overlay {
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 34, weight: .semibold))
-                        .foregroundStyle(theme.onPain)
+            ZStack(alignment: .bottomTrailing) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [theme.surface, theme.painDim.opacity(0.65)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .shadow(color: theme.pain.opacity(theme.fabShadowOpacity), radius: 18, y: 6)
+
+                    EbbMascot(variant: .listen, size: 88)
                 }
-                .accessibilityLabel(isAnimating ? "Listening" : "Microphone")
+                .frame(width: 108, height: 108)
+
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.onPain)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        LinearGradient(
+                            colors: [theme.pain, theme.pain.opacity(0.88)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        in: Circle()
+                    )
+                    .shadow(color: theme.pain.opacity(theme.fabShadowOpacity), radius: 8, y: 3)
+                    .offset(x: 8, y: 8)
+                    .accessibilityHidden(true)
+            }
+            .accessibilityLabel(isAnimating ? "Ebb is listening" : "Ebb ready to listen")
         }
+        .frame(width: 200, height: 200)
         .onAppear {
             if isAnimating && !reduceMotion {
                 breathe = true
@@ -206,59 +228,6 @@ private struct TalkOrb: View {
         .onChange(of: isAnimating) { _, listening in
             breathe = listening && !reduceMotion
         }
-    }
-}
-
-// MARK: - Wave bars
-
-private struct TalkWaveBars: View {
-    let isAnimating: Bool
-    let reduceMotion: Bool
-
-    @Environment(\.theme) private var theme
-
-    private let barHeights: [CGFloat] = [10, 18, 26, 14, 30, 16, 22]
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 5) {
-            ForEach(barHeights.indices, id: \.self) { index in
-                TalkWaveBar(
-                    baseHeight: barHeights[index],
-                    isAnimating: isAnimating,
-                    reduceMotion: reduceMotion,
-                    delay: Double(index) * 0.08
-                )
-                .foregroundStyle(theme.pain)
-            }
-        }
-        .frame(height: 34)
-        .accessibilityHidden(true)
-    }
-}
-
-private struct TalkWaveBar: View {
-    let baseHeight: CGFloat
-    let isAnimating: Bool
-    let reduceMotion: Bool
-    let delay: Double
-
-    @State private var expanded = false
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 2)
-            .frame(width: 4, height: expanded ? baseHeight + 8 : baseHeight)
-            .animation(
-                isAnimating && !reduceMotion
-                    ? .easeInOut(duration: 0.55).repeatForever(autoreverses: true).delay(delay)
-                    : .default,
-                value: expanded
-            )
-            .onAppear {
-                expanded = isAnimating && !reduceMotion
-            }
-            .onChange(of: isAnimating) { _, listening in
-                expanded = listening && !reduceMotion
-            }
     }
 }
 
@@ -299,7 +268,7 @@ private struct LiveTranscriptCard: View {
                 ScrollView {
                     HStack(alignment: .lastTextBaseline, spacing: 0) {
                         Text(displayText)
-                            .font(.body.monospaced())
+                            .font(theme.isLight ? .system(.body, design: .serif).italic() : .body.monospaced())
                             .foregroundStyle(theme.text)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -320,13 +289,8 @@ private struct LiveTranscriptCard: View {
                 }
             }
         }
-        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(theme.line, lineWidth: 1)
-        }
+        .themeCard(padding: 14, cornerRadius: theme.isLight ? 16 : 16)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Live transcript. \(transcript)")
     }

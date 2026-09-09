@@ -15,8 +15,8 @@ struct SelectablePill: View {
             Text(label)
                 .font(.subheadline.weight(isSelected ? .semibold : .regular))
                 .foregroundStyle(foregroundColor)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, theme.chipHorizontalPadding)
+                .padding(.vertical, theme.chipVerticalPadding)
                 .background(backgroundColor, in: Capsule())
                 .overlay {
                     Capsule()

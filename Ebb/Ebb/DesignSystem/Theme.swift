@@ -36,8 +36,8 @@ struct Theme: Equatable, Sendable, Identifiable {
 }
 
 extension Theme {
-    /// True for the one theme that stays free forever.
-    var isFreeDefault: Bool { id == Theme.plumEmber.id }
+    /// Themes available without Ebb+ (default + legacy free option).
+    var isFreeDefault: Bool { id == Theme.softPaper.id || id == Theme.plumEmber.id }
 
     static func theme(for id: String) -> Theme? {
         all.first { $0.id == id }
@@ -108,7 +108,24 @@ extension Theme {
         ok: Color(hex: 0x88B0A8)
     )
 
-    /// The one light option.
+    /// Soft paper 01.2 — default light theme (`symptom-tracker-soft-paper-01-2-full.html`).
+    static let softPaper = Theme(
+        id: "soft-paper",
+        name: "Soft paper",
+        base: Color(hex: 0xF8F4EF),
+        surface: Color(hex: 0xFFFCFA),
+        line: Color(hex: 0xEBE3D9),
+        text: Color(hex: 0x2C2824),
+        muted: Color(hex: 0x8A7F74),
+        pain: Color(hex: 0xC67E72),
+        painDim: Color(hex: 0xF9EBE7),
+        onPain: Color(hex: 0xFFFCFA),
+        cycle: Color(hex: 0x5B9A8F),
+        cycleDim: Color(hex: 0xE6F1EE),
+        ok: Color(hex: 0x5B9A8F)
+    )
+
+    /// Premium light palette (legacy; Soft paper is the default light theme).
     static let oatRose = Theme(
         id: "oat-rose",
         name: "Oat & Rose",
@@ -141,13 +158,16 @@ extension Theme {
         ok: Color(hex: 0x8FB39A)
     )
 
-    static let all: [Theme] = [.plumEmber, .tidewater, .nocturne, .ashSage, .oatRose, .mossClay]
+    static let all: [Theme] = [.softPaper, .plumEmber, .tidewater, .nocturne, .ashSage, .oatRose, .mossClay]
+
+    /// First-run default when no saved preference exists.
+    static let defaultTheme: Theme = .softPaper
 }
 
 // MARK: - Environment injection
 
 extension EnvironmentValues {
-    @Entry var theme: Theme = .plumEmber
+    @Entry var theme: Theme = .softPaper
 }
 
 // MARK: - Hex construction (theme layer only)

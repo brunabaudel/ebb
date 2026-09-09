@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — Soft paper 01.2 · full app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{background:#F4F2EE;color:#2A2926;font-family:"DM Sans",system-ui,sans-serif;line-height:1.45;padding:48px 32px 96px}
+
+.board-head{max-width:1480px;margin:0 auto 36px}
+.board-head .kicker{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#9A9690;margin-bottom:14px}
+.board-head h1{font-family:"DM Sans",sans-serif;font-weight:600;font-size:clamp(24px,3vw,34px);letter-spacing:-.02em;line-height:1.15;color:#1C1B19}
+.board-head p{margin-top:12px;max-width:82ch;font-size:15px;color:#5C5954}
+.board-head p b{color:#2A2926;font-weight:600}
+
+.legend{max-width:1480px;margin:0 auto 48px;padding:14px 18px;border:1px solid #E2DFD8;border-radius:10px;background:#FAFAF8;display:flex;flex-wrap:wrap;gap:16px 32px;font-size:13px;color:#5C5954}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend .mono{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;color:#9A9690;text-transform:uppercase}
+
+.dir{max-width:1480px;margin:0 auto 72px;padding-top:28px;border-top:1px solid #E2DFD8}
+.dir-head{margin-bottom:22px;max-width:900px}
+.dir-num{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#9A9690;margin-bottom:8px}
+.dir-head h2{font-size:21px;font-weight:600;letter-spacing:-.015em;color:#1C1B19;margin-bottom:6px}
+.dir-head .rationale{font-size:14.5px;color:#5C5954;line-height:1.5}
+.dir-head .meta{margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#9A9690;letter-spacing:.04em}
+
+.phones{display:flex;flex-wrap:wrap;gap:36px 28px;align-items:flex-start}
+.frame{display:flex;flex-direction:column;gap:10px}
+.frame .lbl{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9A9690;padding-left:6px}
+.frame .note{font-size:12.5px;color:#9A9690;padding-left:6px;max-width:330px;line-height:1.4}
+
+.phone{width:330px;height:715px;border-radius:46px;position:relative;overflow:hidden}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:100px;height:28px;background:#000;border-radius:18px;z-index:50}
+.statusbar{position:absolute;top:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:12.5px;font-weight:600;z-index:40}
+.statusbar .right{font-size:11px;opacity:.85;letter-spacing:.02em}
+.screen{position:absolute;inset:0;padding:54px 20px 18px;display:flex;flex-direction:column;overflow:hidden}
+.screen.has-tab{padding-bottom:86px}
+.tabbar{position:absolute;bottom:0;left:0;right:0;height:76px;display:flex;align-items:flex-start;justify-content:space-around;padding:10px 6px 0;z-index:40}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;min-width:58px;opacity:.55}
+.tab.on{opacity:1;font-weight:600}
+.tab .ic{font-size:18px;line-height:1}
+
+.pass-notes{max-width:1480px;margin:-40px auto 56px;padding:14px 18px;border-radius:10px;background:#FAFAF8;border:1px solid #E2DFD8;font-size:13px;color:#5C5954;line-height:1.5}
+.pass-notes b{color:#2A2926;font-weight:600}
+.foot{max-width:1480px;margin:48px auto 0;padding-top:24px;border-top:1px solid #E2DFD8;font-size:12.5px;color:#9A9690;line-height:1.5}
+
+/* Soft paper 01.2 tokens + primitives */
+.sp{--paper:#F8F4EF;--card:#FFFCFA;--line:#EBE3D9;--line-strong:#E2D8CD;--ink:#2C2824;--ink-soft:#3D3832;--muted:#8A7F74;--faint:#B0A69B;--warm:#C67E72;--warm-ink:#9A5648;--warm-wash:#F9EBE7;--cool:#5B9A8F;--cool-ink:#3D756C;--cool-wash:#E6F1EE;--cool-line:#B8D4CE;--on-warm:#FFFCFA;--glow-warm:rgba(198,126,114,.22);--glow-cool:rgba(91,154,143,.14);--glow-shadow:rgba(198,126,114,.35)}
+.sp .phone{background:var(--paper);box-shadow:0 0 0 8px #EFE9E2,0 10px 28px -18px rgba(60,40,30,.1)}
+.sp .statusbar{color:#3D3832}
+.sp .screen{font-family:"DM Sans",system-ui,sans-serif;color:var(--ink)}
+.sp .tabbar{background:rgba(248,244,239,.94);border-top:1px solid var(--line);backdrop-filter:blur(14px)}
+.sp .tab{color:var(--muted)}.sp .tab.on{color:var(--warm)}
+
+.warm{color:var(--warm)}.cool{color:var(--cool)}
+.greet{font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:500;letter-spacing:-.01em;line-height:1.1}
+.date{font-size:12.5px;color:var(--muted);margin-top:3px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start}
+.icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--cool);box-shadow:0 2px 8px -4px rgba(60,40,30,.08)}
+.phase{display:inline-flex;align-items:center;gap:6px;margin-top:16px;font-size:12px;font-weight:500;color:var(--cool);padding:6px 0;border-bottom:1.5px solid var(--cool-line)}
+.phase .dot{width:6px;height:6px;border-radius:50%;background:var(--cool)}
+.timeline{margin-top:20px;display:flex;flex-direction:column;gap:0;position:relative;padding-left:18px}
+.timeline::before{content:"";position:absolute;left:4px;top:6px;bottom:6px;width:1.5px;background:var(--line)}
+.tl-item{position:relative;padding:0 0 18px 14px}
+.tl-item::before{content:"";position:absolute;left:-18px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--card);border:2px solid var(--warm);box-shadow:0 0 0 4px rgba(198,126,114,.1)}
+.tl-item.cycle::before{border-color:var(--cool);background:var(--cool);box-shadow:0 0 0 4px rgba(91,154,143,.14)}
+.tl-item .when{font-size:11px;color:var(--faint);letter-spacing:.04em}
+.tl-item .what{font-size:14.5px;font-weight:500;margin-top:2px}
+.tl-item .detail{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.insight{margin-top:16px;padding:16px 18px;background:var(--card);border-radius:18px;border-color:transparent;box-shadow:0 4px 16px -12px rgba(60,40,30,.1)}
+.insight .q{font-family:"Cormorant Garamond",serif;font-size:18px;line-height:1.38;font-weight:500}
+.insight .q em{font-style:italic;color:var(--warm)}
+.cta-row{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:14px}
+.cta{padding:14px 12px;border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.cta.primary{background:var(--warm);border-color:var(--warm);color:var(--on-warm);box-shadow:0 4px 14px -8px rgba(198,126,114,.4)}
+.talk-screen{align-items:center;text-align:center}
+.talk-screen .back{align-self:flex-start;font-size:14px;color:var(--warm);font-weight:500;margin-bottom:8px}
+.talk-screen .hint{font-size:13px;color:var(--muted);margin-top:8px}
+.glow-wrap{margin:auto 0;position:relative;width:168px;height:168px;display:flex;align-items:center;justify-content:center}
+.glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--glow-warm),var(--glow-cool) 55%,transparent 70%);opacity:.9}
+.mic-btn{width:72px;height:72px;border-radius:50%;background:linear-gradient(160deg,#C67E72,#BA7268);color:var(--on-warm);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 10px 32px -10px rgba(198,126,114,.4);position:relative;z-index:2}
+.transcript{width:100%;margin-top:auto;padding:16px 18px;background:var(--card);border-radius:18px;border-color:transparent;box-shadow:0 4px 16px -12px rgba(60,40,30,.08);text-align:left;font-family:"Cormorant Garamond",serif;font-size:17px;line-height:1.4;font-style:italic;color:var(--ink-soft)}
+.transcript .live{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--warm);font-family:"DM Sans",sans-serif;font-style:normal;font-weight:600;margin-bottom:6px}
+.confirm .nav{font-size:14px;color:var(--warm);font-weight:500;margin-bottom:10px}
+.confirm h2{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:500;margin-bottom:4px}
+.confirm .sub{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+.draft{background:var(--card);border-radius:20px;padding:18px;border-color:transparent;box-shadow:0 6px 22px -14px rgba(60,40,30,.12)}
+.draft .quote{font-family:"Cormorant Garamond",serif;font-size:16px;font-style:italic;color:var(--ink-soft);line-height:1.4;padding-bottom:14px;border-bottom:1px dashed var(--line-strong);margin-bottom:14px}
+.field{margin-bottom:12px}
+.field label,.fl{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft)}
+.chip.on-warm{background:var(--warm-wash);border-color:transparent;color:var(--warm-ink);font-weight:500}
+.chip.on-cool{background:var(--cool-wash);border-color:transparent;color:var(--cool-ink);font-weight:500}
+.save{margin-top:auto;padding:15px;border-radius:16px;background:var(--ink);color:var(--on-warm);text-align:center;font-weight:600;font-size:14.5px;box-shadow:0 4px 14px -10px rgba(44,40,36,.25)}
+.cal h2{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:500}
+.cal .month{font-size:12.5px;color:var(--muted);margin:2px 0 14px}
+.grid-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.dow{font-size:10px;color:var(--faint);padding:4px 0;font-weight:600}
+.day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;border-radius:12px;color:var(--ink);position:relative}
+.day.mute{color:var(--faint)}
+.day.today{background:var(--card);border:1.5px solid var(--cool);font-weight:600;border-radius:12px}
+.day .dot{width:4px;height:4px;border-radius:50%;margin-top:2px}
+.day .dot.p{background:var(--warm)}.day .dot.c{background:var(--cool)}
+.day.lut{background:var(--cool-wash)}
+.legend-row{margin-top:16px;display:flex;gap:14px;font-size:11.5px;color:var(--muted)}
+.legend-row i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* Shared app chrome for new screens */
+.nav{font-size:14px;color:var(--warm);font-weight:500;margin-bottom:10px}
+.title-serif{font-family:"Cormorant Garamond",serif;font-weight:500;letter-spacing:-.01em;line-height:1.15}
+.subcopy{font-size:13px;color:var(--muted);line-height:1.5;margin-top:8px}
+.progress{display:flex;gap:6px;margin-bottom:18px}
+.progress i{flex:1;height:3px;border-radius:3px;background:var(--line)}
+.progress i.on{background:var(--warm)}
+.progress i.done{background:var(--warm);opacity:.35}
+.float{background:var(--card);border-radius:18px;box-shadow:0 4px 16px -12px rgba(60,40,30,.1);padding:16px}
+.float.lg{border-radius:20px;padding:18px;box-shadow:0 6px 22px -14px rgba(60,40,30,.12)}
+.btn{padding:15px;border-radius:16px;text-align:center;font-weight:600;font-size:14.5px;background:var(--warm);color:var(--on-warm);box-shadow:0 4px 14px -8px rgba(198,126,114,.4)}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.ink{background:var(--ink);box-shadow:0 4px 14px -10px rgba(44,40,36,.25)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.spacer{flex:1}
+.mono-lbl{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:500}
+
+.toggle{width:42px;height:26px;border-radius:999px;background:var(--line-strong);position:relative;flex:0 0 auto}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--card);box-shadow:0 1px 4px rgba(60,40,30,.12);transition:left .15s}
+.toggle.on{background:var(--cool)}
+.toggle.on.warm{background:var(--warm)}
+.toggle.on::after{left:19px}
+
+.set-row{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line)}
+.set-row:last-child{border-bottom:none}
+.set-row .ic{width:34px;height:34px;border-radius:12px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--cool);flex:0 0 auto}
+.set-row .ic.warm{color:var(--warm)}
+.set-row .body{flex:1;min-width:0}
+.set-row .t{font-size:14px;font-weight:500}
+.set-row .s{font-size:12px;color:var(--muted);margin-top:1px}
+.set-row .chev{color:var(--faint);font-size:18px;font-weight:300}
+.set-row.hi .ic{background:var(--warm-wash);color:var(--warm)}
+.set-row.hi .t{color:var(--warm-ink)}
+
+.cloud-pill{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--cool-ink);background:var(--cool-wash);padding:6px 12px;border-radius:999px;font-weight:500}
+.cloud-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--cool)}
+
+.perm{display:flex;align-items:center;gap:12px}
+.perm .ic{width:40px;height:40px;border-radius:14px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--cool);flex:0 0 auto}
+.perm .ic.warm{color:var(--warm);background:var(--warm-wash)}
+.perm .body{flex:1}
+.perm .t{font-size:14px;font-weight:500}
+.perm .s{font-size:12px;color:var(--muted);margin-top:2px}
+
+.stepper{display:flex;align-items:center;justify-content:center;gap:28px;padding:8px 0 4px}
+.stepper .pm{width:40px;height:40px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted)}
+.stepper .val{font-family:"Cormorant Garamond",serif;font-size:48px;font-weight:500;line-height:1;color:var(--cool-ink);text-align:center}
+.stepper .unit{font-size:12px;color:var(--muted);text-align:center;margin-top:2px}
+
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice .opt{padding:14px 12px;border-radius:16px;background:var(--paper);border:1px solid var(--line);text-align:center}
+.choice .opt.on{background:var(--cool-wash);border-color:transparent;box-shadow:0 4px 14px -10px rgba(91,154,143,.25)}
+.choice .opt .e{font-size:18px;margin-bottom:4px;color:var(--faint)}
+.choice .opt.on .e{color:var(--cool)}
+.choice .opt .t{font-size:13px;font-weight:600}
+.choice .opt .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ttile{background:var(--card);border-radius:16px;padding:9px;box-shadow:0 4px 14px -12px rgba(60,40,30,.1);opacity:.55}
+.ttile.sel{opacity:1;box-shadow:0 0 0 2px var(--warm),0 6px 18px -12px rgba(198,126,114,.35)}
+.t-band{border-radius:12px;padding:10px;height:64px;display:flex;flex-direction:column;justify-content:space-between}
+.t-band .row{display:flex;justify-content:space-between;align-items:center}
+.t-phase{font-size:8px;font-weight:700;letter-spacing:.06em;border:1px solid currentColor;border-radius:999px;padding:2px 6px}
+.t-dots{display:flex;gap:4px}
+.t-dots i{width:8px;height:8px;border-radius:50%}
+.t-aa{font-family:"Cormorant Garamond",serif;font-size:16px}
+.t-name{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:600;padding:6px 2px 2px}
+.check{width:16px;height:16px;border-radius:50%;background:var(--warm);color:var(--on-warm);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.ttile.sel .check{display:flex}
+
+.pdf{background:var(--card);border-radius:18px;overflow:hidden;box-shadow:0 6px 22px -14px rgba(60,40,30,.12);flex:1;display:flex;flex-direction:column}
+.pdf .ph{padding:14px 16px;background:linear-gradient(180deg,#FFFCFA,#F6F0E9);border-bottom:1px solid var(--line)}
+.pdf .brand{font-family:"Cormorant Garamond",serif;font-size:18px;font-weight:500}
+.pdf .range{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--faint);margin-top:4px}
+.pdf .block{padding:12px 16px;border-bottom:1px solid var(--line)}
+.pdf .block:last-child{border-bottom:none}
+.pdf .k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:6px}
+.pdf .v{font-size:12.5px;color:var(--ink-soft);line-height:1.45}
+.pdf .v b.w{color:var(--warm-ink)}.pdf .v b.c{color:var(--cool-ink)}
+.mini-bars{display:flex;flex-direction:column;gap:7px}
+.mini-bars .r{display:flex;align-items:center;gap:8px;font-size:11.5px}
+.mini-bars .nm{width:78px;color:var(--muted);flex:0 0 auto}
+.mini-bars .tr{flex:1;height:6px;border-radius:999px;background:var(--paper);overflow:hidden}
+.mini-bars .fl{height:100%;border-radius:999px;background:var(--warm)}
+
+.sev{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.sev .s{aspect-ratio:1;border-radius:10px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);font-weight:500}
+.sev .s.fill{background:var(--warm-wash);border-color:transparent;color:var(--warm-ink)}
+.sev .s.cur{background:var(--warm);border-color:transparent;color:var(--on-warm);font-weight:700;box-shadow:0 3px 10px -6px rgba(198,126,114,.45)}
+
+.danger{margin-top:10px;text-align:center;color:var(--warm-ink);font-size:13.5px;font-weight:500;padding:12px;border:1px dashed var(--line-strong);border-radius:14px;background:transparent}
+
+.empty-hero{margin:auto 0;text-align:center;padding:8px 8px 16px}
+.empty-mark{width:72px;height:72px;border-radius:50%;margin:0 auto 16px;background:var(--card);box-shadow:0 6px 22px -12px rgba(60,40,30,.12);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--warm);position:relative}
+.empty-mark.cool{color:var(--cool)}
+.empty-hero h3{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:500;margin-bottom:8px}
+.empty-hero p{font-size:13px;color:var(--muted);line-height:1.5;max-width:28ch;margin:0 auto}
+
+.edu{margin-top:auto;padding:14px 16px;background:var(--card);border-radius:16px;box-shadow:0 4px 16px -12px rgba(60,40,30,.08)}
+.edu .k{font-family:"Cormorant Garamond",serif;font-size:15px;font-weight:500;color:var(--cool-ink);margin-bottom:6px}
+.edu p{font-size:12.5px;color:var(--muted);line-height:1.45}
+.edu p b{color:var(--ink);font-weight:600}
+
+.rem .ttl{font-size:14.5px;font-weight:500}
+.rem .sub{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:6px}
+.rem .ic{width:40px;height:40px;border-radius:14px;background:var(--cool-wash);color:var(--cool);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto}
+.rem .ic.warm{background:var(--warm-wash);color:var(--warm)}
+
+.pat-cap{font-size:13.5px;color:var(--muted);line-height:1.5;margin-top:6px;margin-bottom:14px}
+.pat-cap b{color:var(--cool-ink);font-weight:600}
+.cycle-axis{position:relative;height:56px;margin:8px 0 6px;background:var(--paper);border-radius:14px;padding:18px 12px 10px}
+.cycle-axis .band{position:absolute;top:14px;bottom:14px;border-radius:8px;background:var(--cool-wash)}
+.cycle-axis .track{position:relative;height:3px;background:var(--line);border-radius:2px;margin-top:10px}
+.cycle-axis .mdot{position:absolute;top:50%;width:10px;height:10px;border-radius:50%;background:var(--warm);transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(198,126,114,.15)}
+.phase-bars{display:flex;gap:6px;margin-top:10px;align-items:flex-end;height:52px}
+.phase-bars i{flex:1;border-radius:8px 8px 4px 4px;background:var(--warm-wash)}
+.phase-bars i.hi{background:var(--warm)}
+.phase-labs{display:flex;gap:6px;margin-top:6px;font-size:9.5px;color:var(--faint);text-align:center}
+.phase-labs span{flex:1}
+.trig-row{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12.5px}
+.trig-row .nm{width:86px;color:var(--muted)}
+.trig-row .bar{flex:1;height:7px;border-radius:999px;background:var(--paper);overflow:hidden}
+.trig-row .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#C67E72,#D49A90)}
+
+.brand-mark{width:88px;height:88px;border-radius:28px;margin:auto auto 0;background:linear-gradient(160deg,#FFF8F4,#F3E4DE);box-shadow:0 8px 28px -14px rgba(198,126,114,.35);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-size:42px;font-weight:500;font-style:italic;color:var(--warm)}
+.welcome-copy{text-align:center;margin-top:22px}
+.welcome-copy h1{font-family:"Cormorant Garamond",serif;font-size:42px;font-weight:500;letter-spacing:-.02em}
+.welcome-copy .promise{font-family:"Cormorant Garamond",serif;font-size:18px;font-style:italic;color:var(--warm);margin-top:10px;line-height:1.35}
+.welcome-copy .blurb{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.5;max-width:28ch;margin-left:auto;margin-right:auto}
+
+.privacy-list{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+.privacy-list .item{display:flex;gap:12px;align-items:flex-start}
+.privacy-list .dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:0 0 auto}
+.privacy-list .dot.cool{background:var(--cool)}
+.privacy-list .dot.warm{background:var(--warm)}
+.privacy-list .dot.ink{background:var(--ink-soft);opacity:.45}
+.privacy-list .t{font-size:14px;font-weight:600}
+.privacy-list .s{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+.pay-badge{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;color:var(--warm);border:1px solid var(--line-strong);border-radius:8px;padding:4px 8px;align-self:flex-start}
+.pay-title{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:500;line-height:1.15;margin-top:12px}
+.pay-title em{font-style:italic;color:var(--warm)}
+.pay-feats{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.pay-feat{display:flex;gap:10px;font-size:13px;color:var(--muted);align-items:flex-start}
+.pay-feat .ck{color:var(--warm);font-weight:700}
+.pay-feat b{color:var(--ink);font-weight:600}
+.pay-privacy{margin-top:14px;font-size:11.5px;color:var(--cool-ink);background:var(--cool-wash);border-radius:12px;padding:10px 12px}
+.plan{border-radius:16px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;position:relative}
+.plan.sel{background:var(--card);border-color:transparent;box-shadow:0 0 0 1.5px var(--warm),0 6px 18px -12px rgba(198,126,114,.3)}
+.plan .pl-l{flex:1}
+.plan .pl-name{font-size:13.5px;font-weight:600}
+.plan .pl-sub{font-size:11px;color:var(--faint);margin-top:2px}
+.plan .pl-price{font-size:13.5px;font-weight:700;text-align:right}
+.plan .pl-price .per{font-size:10px;color:var(--faint);font-weight:400;display:block}
+.plan .tag{position:absolute;top:-9px;left:14px;font-family:"JetBrains Mono",monospace;font-size:8.5px;letter-spacing:.1em;background:var(--warm);color:var(--on-warm);padding:2px 7px;border-radius:6px;font-weight:700}
+.pay-note{text-align:center;font-size:11px;color:var(--faint);margin-top:10px}
+.pay-x{align-self:flex-end;font-size:16px;color:var(--faint);margin-bottom:4px}
+
+.entry-when{font-size:12.5px;color:var(--muted);margin-top:2px;margin-bottom:14px}
+.badge-edit{font-size:11px;font-weight:600;color:var(--warm-ink);background:var(--warm-wash);padding:5px 10px;border-radius:999px}
+
+/* Ebb mascot · Dusty rose · no S-mark · composed scenes only (not UI chrome) */
+.ebb-svg{display:block;width:100%;height:100%}
+
+/* Welcome · large hero illustration */
+.brand-mark{width:112px;height:112px;border-radius:36px;margin:auto auto 0;padding:12px;background:linear-gradient(160deg,#FFF8F4,#F5E0E6);box-shadow:0 10px 32px -14px rgba(198,126,114,.38);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.brand-mark .ebb-svg{width:88px;height:88px}
+
+/* Empty · Today / Patterns · soft illustration wells */
+.empty-mark{width:108px;height:108px;border-radius:50%;margin:0 auto 18px;background:linear-gradient(165deg,#FFFCFA,#F6E8EC);box-shadow:0 8px 28px -14px rgba(60,40,30,.14);display:flex;align-items:center;justify-content:center;font-size:0;color:transparent;position:relative}
+.empty-mark .ebb-svg{width:84px;height:84px}
+.empty-mark.rest{width:96px;height:96px;background:linear-gradient(165deg,#FFFCFA,#F0E8E4)}
+.empty-mark.rest .ebb-svg{width:72px;height:72px}
+.empty-hero{margin:auto 0;text-align:center;padding:12px 10px 18px}
+.empty-hero h3{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:500;margin-bottom:8px}
+.empty-hero p{font-size:13px;color:var(--muted);line-height:1.5;max-width:28ch;margin:0 auto}
+
+/* Talk · Ebb is the listening presence at center */
+.talk-scene{margin:auto 0;position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
+.talk-scene .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--glow-warm),var(--glow-cool) 55%,transparent 72%);opacity:.95}
+.talk-scene .ebb-focus{position:relative;z-index:2;width:108px;height:108px;border-radius:50%;background:linear-gradient(160deg,#FFF8F4,#F5E0E6);box-shadow:0 12px 36px -14px rgba(198,126,114,.42);display:flex;align-items:center;justify-content:center;padding:10px}
+.talk-scene .ebb-focus .ebb-svg{width:88px;height:88px}
+.talk-scene .mic-hint{position:absolute;bottom:6px;right:18px;z-index:3;width:40px;height:40px;border-radius:50%;background:linear-gradient(160deg,#C67E72,#BA7268);color:var(--on-warm);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 6px 18px -8px rgba(198,126,114,.45)}
+
+/* Confirm · saved — dedicated success scene */
+.saved-scene{margin:auto 0;text-align:center;padding:8px 8px 12px}
+.saved-well{width:120px;height:120px;border-radius:40px;margin:0 auto 20px;background:linear-gradient(160deg,#FFF8F4,#F5E0E6);box-shadow:0 10px 32px -14px rgba(198,126,114,.36);display:flex;align-items:center;justify-content:center;padding:14px}
+.saved-well .ebb-svg{width:92px;height:92px}
+.saved-scene h3{font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:500;margin-bottom:8px}
+.saved-scene p{font-size:13.5px;color:var(--muted);line-height:1.5;max-width:26ch;margin:0 auto}
+.saved-chip{display:inline-flex;align-items:center;gap:6px;margin-top:16px;font-size:12px;font-weight:500;color:var(--cool-ink);background:var(--cool-wash);padding:6px 12px;border-radius:999px}
+
+/* Privacy · calm composed illustration (optional one more) */
+.privacy-scene{margin-top:18px;padding:18px 16px 16px;background:var(--card);border-radius:20px;box-shadow:0 6px 22px -14px rgba(60,40,30,.1);text-align:center}
+.privacy-scene .ebb-illust{width:72px;height:72px;margin:0 auto 12px;border-radius:24px;background:linear-gradient(160deg,#FFF8F4,#F0E4E8);display:flex;align-items:center;justify-content:center;padding:8px}
+.privacy-scene .ebb-illust .ebb-svg{width:56px;height:56px}
+.privacy-scene .whisper{font-size:14px;color:var(--muted);line-height:1.45;font-family:"Cormorant Garamond",serif;font-style:italic;max-width:28ch;margin:0 auto}
+
+/* Paywall · soft illustration block with Ebb+ copy */
+.pay-illust{margin:8px 0 4px;padding:16px 14px;border-radius:20px;background:linear-gradient(165deg,#FFFCFA,#F6E8EC);box-shadow:0 6px 22px -14px rgba(60,40,30,.1);display:flex;align-items:center;gap:14px}
+.pay-illust .ebb-block{width:64px;height:64px;flex:0 0 auto;border-radius:20px;background:linear-gradient(160deg,#FFF8F4,#F5E0E6);display:flex;align-items:center;justify-content:center;padding:6px;box-shadow:0 4px 14px -8px rgba(198,126,114,.28)}
+.pay-illust .ebb-block .ebb-svg{width:52px;height:52px}
+.pay-illust .pay-illust-copy{font-family:"Cormorant Garamond",serif;font-size:15px;font-style:italic;color:var(--ink-soft);line-height:1.35}
+
+
+/* Add entry · log chooser / Tap / Guided */
+.choose-stack{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.choose-card{display:flex;align-items:center;gap:14px;padding:16px 16px;background:var(--card);border-radius:18px;box-shadow:0 4px 16px -12px rgba(60,40,30,.1);text-align:left}
+.choose-card.primary{box-shadow:0 0 0 1.5px var(--warm),0 6px 18px -12px rgba(198,126,114,.28)}
+.choose-card .ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;background:var(--paper);color:var(--muted)}
+.choose-card.primary .ic{background:var(--warm-wash);color:var(--warm)}
+.choose-card .ic.cool{background:var(--cool-wash);color:var(--cool)}
+.choose-card .t{font-size:15px;font-weight:600}
+.choose-card .s{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+.choose-card .chev{margin-left:auto;color:var(--faint);font-size:18px;font-weight:300}
+
+.tap-scroll{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:0;min-height:0}
+.tap-scroll .inner{overflow:hidden;flex:1;padding-bottom:8px}
+.tap-scroll .field{margin-bottom:14px}
+.tap-scroll .hint-line{font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.scale-row{display:flex;gap:6px}
+.scale-row .sc{flex:1;aspect-ratio:1.15;border-radius:12px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--muted)}
+.scale-row .sc.on{background:var(--warm);border-color:transparent;color:var(--on-warm);font-weight:700;box-shadow:0 3px 10px -6px rgba(198,126,114,.4)}
+
+.g-strip{background:var(--card);border-radius:14px;padding:10px 12px;box-shadow:0 3px 12px -10px rgba(60,40,30,.08);margin-bottom:14px}
+.g-strip .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600}
+.g-strip .line{font-family:"Cormorant Garamond",serif;font-size:15px;line-height:1.35;color:var(--ink-soft)}
+.g-strip .line .fill{color:var(--warm-ink);font-weight:600;border-bottom:1px dotted var(--warm);padding-bottom:1px}
+.g-strip .line .dim{color:var(--faint)}
+.g-strip .line .cool-fill{color:var(--cool-ink);font-weight:600;border-bottom:1px dotted var(--cool);padding-bottom:1px}
+.g-prog{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.g-prog .bar{flex:1;height:3px;border-radius:3px;background:var(--line);overflow:hidden}
+.g-prog .bar i{display:block;height:100%;background:var(--warm);border-radius:3px}
+.g-prog .n{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);letter-spacing:.04em}
+.g-q{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:500;text-align:center;line-height:1.2;margin-bottom:6px}
+.g-sub{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:22px;line-height:1.4}
+.sev-hero{text-align:center;margin:8px 0 6px}
+.sev-hero .num{font-family:"Cormorant Garamond",serif;font-size:56px;font-weight:500;line-height:1;color:var(--warm-ink)}
+.sev-hero .word{font-size:13px;color:var(--muted);margin-top:4px}
+.slider{margin:16px 8px 8px;position:relative;height:28px}
+.slider .track{position:absolute;left:0;right:0;top:12px;height:4px;border-radius:4px;background:var(--line)}
+.slider .fill{position:absolute;left:0;top:12px;height:4px;border-radius:4px;background:var(--warm)}
+.slider .thumb{position:absolute;top:4px;width:20px;height:20px;border-radius:50%;background:var(--warm);box-shadow:0 4px 12px -4px rgba(198,126,114,.5);transform:translateX(-50%)}
+.slider-labs{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);padding:0 4px;margin-bottom:8px}
+.g-nav{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line)}
+.g-nav .back,.g-nav .skip{font-size:13.5px;color:var(--muted);font-weight:500}
+.g-nav .next{font-size:13.5px;color:var(--warm);font-weight:600}
+.g-nav .skip{opacity:.85}
+
+.loc-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.loc-pill{font-size:13px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft)}
+.loc-pill.on{background:var(--warm-wash);border-color:transparent;color:var(--warm-ink);font-weight:500}
+
+.big-yn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.big-yn .opt{padding:16px;border-radius:16px;background:var(--paper);border:1px solid var(--line);text-align:center;font-size:15px;font-weight:600}
+.big-yn .opt.on{background:var(--warm-wash);border-color:transparent;color:var(--warm-ink);box-shadow:0 4px 14px -10px rgba(198,126,114,.25)}
+
+.review-card{background:var(--card);border-radius:20px;padding:20px 18px;box-shadow:0 6px 22px -14px rgba(60,40,30,.12);text-align:left}
+.review-card .full{font-family:"Cormorant Garamond",serif;font-size:18px;line-height:1.45;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line-strong)}
+.review-card .full .w{color:var(--warm-ink);font-weight:600}
+.review-card .full .c{color:var(--cool-ink);font-weight:600}
+.review-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-top:1px solid var(--line)}
+.review-row:first-of-type{border-top:none;padding-top:0}
+.review-row .lbl{color:var(--muted)}
+.review-row .val{color:var(--faint);font-style:italic}
+.review-hint{text-align:center;font-size:12px;color:var(--faint);margin-top:12px}
+.tap-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tap-nav .close{font-size:14px;color:var(--warm);font-weight:500}
+.tap-nav .ttl{font-size:14px;font-weight:600;color:var(--ink)}
+.tap-nav .act{font-size:14px;color:var(--warm);font-weight:600}
+
+.cal-head{display:flex;justify-content:space-between;align-items:flex-start}
+.set-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+</style>
+</head>
+<body>
+
+<!-- Ebb · Dusty rose · clean (no mid-body S) · shared symbols · composed scenes only -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+  <defs>
+    <linearGradient id="ebb-grad" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8B8C4"/>
+      <stop offset="1" stop-color="#C2607A"/>
+    </linearGradient>
+    <!-- Idle / default companion -->
+    <symbol id="ebb" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+      <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#ebb-grad)"/>
+      <circle cx="50" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+      <circle cx="70" cy="62" r="3.4" fill="#2A2622" opacity=".52"/>
+      <path d="M54 73c3.2 3.2 8.8 3.2 12 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".38" fill="none"/>
+      <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+      <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+    </symbol>
+    <!-- Happy / welcome -->
+    <symbol id="ebb-happy" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="102" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+      <path d="M60 16C60 16 28 50 28 72c0 18.778 14.327 34 32 34s32-15.222 32-34C92 50 60 16 60 16Z" fill="url(#ebb-grad)"/>
+      <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+      <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+      <path d="M52 72c3.5 4.2 12.5 4.2 16 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity=".4" fill="none"/>
+      <circle cx="28" cy="34" r="2.4" fill="#A24D64" opacity=".5"/>
+      <circle cx="90" cy="30" r="2" fill="#D48A9A" opacity=".65"/>
+      <circle cx="86" cy="48" r="1.5" fill="#E8D9C8"/>
+      <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+      <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity=".28"/>
+    </symbol>
+    <!-- Resting / empty Patterns -->
+    <symbol id="ebb-rest" viewBox="0 0 64 64">
+      <path d="M32 10C32 10 16 28 16 39c0 9.4 7.2 17 16 17s16-7.6 16-17C48 28 32 10 32 10Z" fill="#D48A9A"/>
+      <path d="M24 33c2.4-.9 4.8-.1 5.8 2M34.2 35c1.2-2.1 3.6-2.9 5.6-1.7" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity=".42" fill="none"/>
+      <path d="M28 42c2.4 1.6 5.6 1.6 8 0" stroke="#2A2622" stroke-width="1.7" stroke-linecap="round" opacity=".3" fill="none"/>
+      <ellipse cx="32" cy="22" rx="8" ry="3" fill="#FFFCF8" opacity=".22"/>
+    </symbol>
+    <!-- Listening / Talk -->
+    <symbol id="ebb-listen" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+      <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#ebb-grad)"/>
+      <path d="M60 30c0 0-20 24-20 40C40 84 48.5 96 60 96c6 0 11.4-2.8 15.2-7.2C68 78 62 56 60 30Z" fill="#F5E0E6" opacity=".4"/>
+      <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+      <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity=".52"/>
+      <ellipse cx="60" cy="74" rx="6" ry="4.2" fill="#2A2622" opacity=".26"/>
+      <path d="M82 46c7-2 12 3.5 10 10" stroke="#E8B8C4" stroke-width="3" stroke-linecap="round" opacity=".75" fill="none"/>
+      <circle cx="94" cy="60" r="2.2" fill="#E8B8C4" opacity=".5"/>
+    </symbol>
+    <!-- Mild concern / trust · Privacy -->
+    <symbol id="ebb-concern" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="100" rx="30" ry="5" fill="#2A2622" opacity=".05"/>
+      <path d="M60 22C60 22 32 52 32 72c0 16.569 12.536 30 28 30s28-13.431 28-30C88 52 60 22 60 22Z" fill="url(#ebb-grad)"/>
+      <circle cx="50" cy="60" r="3.2" fill="#2A2622" opacity=".52"/>
+      <circle cx="70" cy="60" r="3.2" fill="#2A2622" opacity=".52"/>
+      <path d="M49 56c1.2-2.2 3.6-2.4 4.8-.4" stroke="#2A2622" stroke-width="1.6" stroke-linecap="round" opacity=".35" fill="none"/>
+      <path d="M66.2 55.6c1.2-2.2 3.6-2.4 4.8-.4" stroke="#2A2622" stroke-width="1.6" stroke-linecap="round" opacity=".35" fill="none"/>
+      <path d="M55 76c2.8-2.2 7.2-2.2 10 0" stroke="#2A2622" stroke-width="2" stroke-linecap="round" opacity=".32" fill="none"/>
+      <ellipse cx="44" cy="68" rx="3.4" ry="2" fill="#A24D64" opacity=".22"/>
+      <ellipse cx="76" cy="68" rx="3.4" ry="2" fill="#A24D64" opacity=".22"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="board-head">
+  <div class="kicker">Ebb · Soft paper 01.2 · locked</div>
+  <h1>Soft paper 01.2 — Softer touch · full app</h1>
+  <p>Bruna locked <b>Soft paper 01.2 Softer touch</b>. This board expands that DNA across the rest of the product: <b>add-entry</b> (Talk · Tap · Guided Log), onboarding, settings, appearance, reminders, doctor export, entry edit, empties, Patterns, and a tasteful Ebb+ paywall. Warmer oat, float cards, gentler shadows, rounder chips, more breath — rose = pain, teal = cycle. <b>Ebb</b> (Dusty rose droplet, no S-mark) appears only as rare composed illustration moments — Welcome hero, empty states, Talk listening presence, Confirm saved, Privacy scene, Paywall block — never as header stickers on Tap / Guided forms.</p>
+</header>
+<div class="legend">
+  <span class="mono">DNA</span>
+  <span>Quiet board · Soft paper 01.2 only</span>
+  <span><i style="background:#C67E72"></i> Warm / pain</span>
+  <span><i style="background:#5B9A8F"></i> Cool / cycle</span>
+  <span>Cormorant + DM Sans · float cards · breath</span>
+  <span>Ebb · composed scenes only (not chrome)</span>
+</div>
+
+<!-- ========== CORE LOCKED ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">00 · Core (locked)</div>
+    <h2>Today · Calendar</h2>
+    <p class="rationale">Source of truth reprint from Soft paper 01.2 — do not restyle. Logging surfaces live in <b>Add entry</b> below (Talk / Tap / Guided + Confirm).</p>
+    <p class="meta">Warmer oat #F8F4EF · float insight/draft · soft halos · rounder chips</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Today</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="hdr">
+            <div><div class="greet">Good evening</div><div class="date">Wed 9 Sep · Day 22</div></div>
+            <div class="icon-btn">▦</div>
+          </div>
+          <div class="phase"><span class="dot"></span> Late luteal</div>
+          <div class="insight"><div class="q">Third right-side migraine this cycle — all in the <em>luteal window</em>.</div></div>
+          <div class="timeline">
+            <div class="tl-item"><div class="when">Today · 18:40</div><div class="what warm">Migraine · right temple</div><div class="detail">Severity 3 · worse with movement</div></div>
+            <div class="tl-item"><div class="when">Yesterday · 09:12</div><div class="what">Light sensitivity</div><div class="detail">Mild · lasted ~2h</div></div>
+            <div class="tl-item cycle"><div class="when">Mon · cycle</div><div class="what cool">Period started</div><div class="detail">Logged via HealthKit</div></div>
+          </div>
+          <div class="cta-row"><div class="cta primary">Talk</div><div class="cta">Tap</div></div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">⬡</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">☰</span>More</div>
+        </div>
+      </div>
+      <div class="note">Locked core · float insight · no mascot chrome.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Calendar</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab cal">
+          <div class="cal-head">
+            <div>
+              <h2>September</h2>
+              <div class="month">Cycle day 22 · late luteal tint</div>
+            </div>
+          </div>
+          <div class="grid-cal">
+            <div class="dow">S</div><div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div>
+            <div class="day mute">31</div><div class="day">1</div><div class="day">2</div><div class="day">3<span class="dot p"></span></div><div class="day">4</div><div class="day">5</div><div class="day">6</div>
+            <div class="day">7</div><div class="day">8<span class="dot c"></span></div><div class="day">9</div><div class="day">10</div><div class="day">11</div><div class="day">12</div><div class="day">13</div>
+            <div class="day lut">14</div><div class="day lut">15<span class="dot p"></span></div><div class="day lut">16</div><div class="day lut">17</div><div class="day lut">18</div><div class="day lut">19<span class="dot p"></span></div><div class="day lut">20</div>
+            <div class="day lut">21</div><div class="day lut today">22<span class="dot p"></span></div><div class="day lut">23</div><div class="day lut">24</div><div class="day lut">25</div><div class="day">26</div><div class="day">27</div>
+            <div class="day">28</div><div class="day">29</div><div class="day">30</div><div class="day mute">1</div><div class="day mute">2</div><div class="day mute">3</div><div class="day mute">4</div>
+          </div>
+          <div class="legend-row"><span><i style="background:#C67E72"></i> Migraine</span><span><i style="background:#5B9A8F"></i> Period</span></div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">⬡</span>Patterns</div>
+          <div class="tab on"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">☰</span>More</div>
+        </div>
+      </div>
+      <div class="note">Locked core · luteal wash · no mascot chrome.</div>
+    </div>
+  </div>
+</section>
+<div class="pass-notes"><b>Locked core.</b> Exact Soft paper 01.2 Softer touch — warmer oat, float cards, gentler shadows, rounder chips, more breath. Add-entry + everything below inherit these tokens.</div>
+
+
+<!-- ========== ADD ENTRY ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">00.5 · Add entry</div>
+    <h2>Add entry · Talk · Tap · Guided Log · Confirm</h2>
+    <p class="rationale">End-to-end logging in Soft paper DNA. Chooser gives equal Talk / Tap / Guided. Tap is the blank schema chart. Guided is one question at a time with a live sentence. Talk still maps to Confirm. Ebb only on Talk + Confirm · saved — never stickered onto forms.</p>
+    <p class="meta">Content DNA from TapLog / GuidedLog / Confirm / Talk · Soft paper 01.2 chrome only</p>
+  </div>
+  <div class="phones">
+
+    <div class="frame">
+      <div class="lbl">Today · log chooser</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="nav">← Today</div>
+          <div class="title-serif" style="font-size:28px">How do you want to log?</div>
+          <div class="subcopy">Same chart either way — pick what feels easiest right now.</div>
+          <div class="choose-stack">
+            <div class="choose-card primary">
+              <div class="ic">🎙</div>
+              <div><div class="t">Talk</div><div class="s">Say how you feel — Ebb fills the buttons</div></div>
+              <div class="chev">›</div>
+            </div>
+            <div class="choose-card">
+              <div class="ic">⊞</div>
+              <div><div class="t">Tap</div><div class="s">Full chart · pills &amp; scales · nothing prefilled</div></div>
+              <div class="chev">›</div>
+            </div>
+            <div class="choose-card">
+              <div class="ic cool">→</div>
+              <div><div class="t">Guided Log</div><div class="s">One calm question at a time · live sentence</div></div>
+              <div class="chev">›</div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="mono-lbl" style="text-align:center">All paths write the same schema</div>
+        </div>
+      </div>
+      <div class="note">Equal entry points · Guided is in product (new-entry Tap path).</div>
+    </div>
+
+    <div class="frame">
+      <div class="lbl">Tap</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="tap-nav"><span class="close">Close</span><span class="ttl">Log symptoms</span><span class="act">Save</span></div>
+          <div class="tap-scroll">
+            <div class="inner">
+              <div class="hint-line">Update what applies. Leave anything blank. Nothing prefilled.</div>
+              <div class="field"><label>Migraine / headache</label><div class="chips"><span class="chip">Yes</span><span class="chip">No</span></div></div>
+              <div class="field"><label>Severity</label><div class="scale-row"><div class="sc">1</div><div class="sc">2</div><div class="sc">3</div><div class="sc">4</div><div class="sc">5</div></div></div>
+              <div class="field"><label>Location</label><div class="chips"><span class="chip">Right side</span><span class="chip">Left side</span><span class="chip">Temple</span><span class="chip">Behind the eye</span><span class="chip">Forehead</span></div></div>
+              <div class="field"><label>Pain quality</label><div class="chips"><span class="chip">Throbbing</span><span class="chip">Dull</span><span class="chip">Sharp</span><span class="chip">Pressure</span></div></div>
+              <div class="field"><label>Worse with movement</label><div class="chips"><span class="chip">Yes</span><span class="chip">No</span></div></div>
+              <div class="field"><label>Possible triggers</label><div class="chips"><span class="chip">Poor sleep</span><span class="chip">Skipped meal</span><span class="chip">Stress</span><span class="chip">Weather</span></div></div>
+              <div class="field"><label>Bleeding</label><div class="chips"><span class="chip">None</span><span class="chip">Spotting</span><span class="chip">Light</span><span class="chip">Medium</span><span class="chip">Heavy</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note">SchemaForm DNA · blank chart · no mascot · soft chips.</div>
+    </div>
+
+    <div class="frame">
+      <div class="lbl">Guided Log · severity</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="tap-nav"><span class="close">Close</span><span class="ttl">Log symptoms</span><span class="act">Save</span></div>
+          <div class="g-strip">
+            <div class="tag">Building entry · tap a word to edit</div>
+            <div class="line"><span class="fill">—/5 headache</span> on my <span class="dim">location?</span></div>
+          </div>
+          <div class="g-prog"><div class="bar"><i style="width:29%"></i></div><span class="n">2 / 7</span></div>
+          <div class="g-q">How bad is it?</div>
+          <div class="g-sub">1 is barely there. 5 is disabling.</div>
+          <div class="sev-hero"><div class="num">3</div><div class="word">moderate</div></div>
+          <div class="slider"><div class="track"></div><div class="fill" style="width:50%"></div><div class="thumb" style="left:50%"></div></div>
+          <div class="slider-labs"><span>barely there</span><span>disabling</span></div>
+          <div class="g-nav"><span class="back">← Back</span><span class="skip">Skip</span><span class="next">Next →</span></div>
+        </div>
+      </div>
+      <div class="note">Mid-flow focus · severity slider · live sentence strip.</div>
+    </div>
+
+    <div class="frame">
+      <div class="lbl">Guided Log · context</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="tap-nav"><span class="close">Close</span><span class="ttl">Log symptoms</span><span class="act">Save</span></div>
+          <div class="g-strip">
+            <div class="tag">Building entry · tap a word to edit</div>
+            <div class="line"><span class="fill">3/5</span> headache on my <span class="fill">right side</span>, <span class="fill">throbbing</span>.</div>
+          </div>
+          <div class="g-prog"><div class="bar"><i style="width:86%"></i></div><span class="n">6 / 7</span></div>
+          <div class="g-q">Anything else today?</div>
+          <div class="g-sub">Cycle &amp; triggers — skip what doesn’t apply.</div>
+          <div class="field" style="margin-top:4px"><label style="color:var(--cool);letter-spacing:.12em">Bleeding</label><div class="chips"><span class="chip">None</span><span class="chip">Spotting</span><span class="chip">Light</span><span class="chip">Medium</span><span class="chip">Heavy</span></div></div>
+          <div class="field"><label>Possible triggers</label><div class="chips"><span class="chip on-warm">Poor sleep</span><span class="chip">Skipped meal</span><span class="chip">Stress</span><span class="chip">Weather</span></div></div>
+          <div class="g-nav"><span class="back">← Back</span><span class="skip">Skip</span><span class="next">Review →</span></div>
+        </div>
+      </div>
+      <div class="note">Symptoms / triggers step · cool bleeding · warm pain chips.</div>
+    </div>
+
+    <div class="frame">
+      <div class="lbl">Guided Log · review</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="tap-nav"><span class="close">Close</span><span class="ttl">Log symptoms</span><span class="act">Save</span></div>
+          <div class="spacer"></div>
+          <div class="mono-lbl" style="text-align:center;margin-bottom:10px">Tap a word to edit</div>
+          <div class="review-card">
+            <div class="full">I'm having a <span class="w">3/5 throbbing</span> headache on my <span class="w">right side</span>. Triggered by <span class="w">poor sleep</span>.</div>
+            <div class="review-row"><span class="lbl">Aura</span><span class="val">Not set</span></div>
+            <div class="review-row"><span class="lbl">Bleeding</span><span class="val">Not set</span></div>
+            <div class="review-row"><span class="lbl">Relief taken</span><span class="val">Not set</span></div>
+          </div>
+          <div class="review-hint">Sentence + quiet blanks · jump back to any step</div>
+          <div class="spacer"></div>
+          <div class="save">Save entry</div>
+        </div>
+      </div>
+      <div class="note">Guided review · sentence summary before save · no mascot.</div>
+    </div>
+
+    <div class="frame">
+      <div class="lbl">Talk</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen talk-screen">
+          <div class="back">← Cancel</div>
+          <div class="hint">Speak naturally. Ebb maps it to your buttons.</div>
+          <div class="talk-scene" aria-label="Ebb listening">
+            <div class="glow"></div>
+            <div class="ebb-focus"><svg class="ebb-svg" viewBox="0 0 120 120"><use href="#ebb-listen"/></svg></div>
+            <div class="mic-hint">🎙️</div>
+          </div>
+          <div class="transcript"><div class="live">Listening</div>Dull one on the right, barely there — worse when I move…</div>
+        </div>
+      </div>
+      <div class="note">Ebb as listening presence · calm focus, mic as accent.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Confirm</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen confirm">
+          <div class="nav">← Edit transcript</div>
+          <h2>Does this look right?</h2>
+          <div class="sub">Draft from your words · tap to fix</div>
+          <div class="draft">
+            <div class="quote">“Dull one on the right, barely there — worse when I move.”</div>
+            <div class="field"><label>Type</label><div class="chips"><span class="chip on-warm">Migraine</span><span class="chip">Headache</span><span class="chip">Aura</span></div></div>
+            <div class="field"><label>Location</label><div class="chips"><span class="chip on-warm">Right temple</span><span class="chip">Left</span><span class="chip">Behind eye</span></div></div>
+            <div class="field"><label>Severity</label><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip on-warm">3</span><span class="chip">4</span><span class="chip">5</span></div></div>
+            <div class="field"><label>Cycle context</label><div class="chips"><span class="chip on-cool">Late luteal</span><span class="chip">Day 22</span></div></div>
+          </div>
+          <div class="save">Save entry</div>
+        </div>
+      </div>
+      <div class="note">Locked core · draft only · saved scene is separate.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Confirm · saved</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="saved-scene">
+            <div class="saved-well" aria-label="Ebb happy">
+              <svg class="ebb-svg" viewBox="0 0 120 120"><use href="#ebb-happy"/></svg>
+            </div>
+            <h3>Saved</h3>
+            <p>Your words are on the timeline — quiet, private, yours.</p>
+            <div class="saved-chip"><span class="cool">●</span> Late luteal · Day 22</div>
+          </div>
+          <div class="spacer"></div>
+          <div class="btn ghost">Back to Today</div>
+        </div>
+      </div>
+      <div class="note">Dedicated success scene · Ebb celebration · not a sticker.</div>
+    </div>
+  </div>
+</section>
+<div class="pass-notes"><b>Add entry.</b> Chooser → Talk / Tap / Guided → Confirm. Soft paper chrome only; content from product schema + GuidedLog steps. Ebb stays on Talk + Confirm · saved.</div>
+
+<!-- ========== ONBOARDING ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">01 · First run</div>
+    <h2>Onboarding</h2>
+    <p class="rationale">Quiet welcome → honest privacy → optional helpers → light cycle setup. Soft paper chrome, no rose-silk drama.</p>
+    <p class="meta">Progress hairlines · float cards · Cormorant titles · rose CTA</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Onboarding · Welcome</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="progress"><i class="on"></i><i></i><i></i><i></i></div>
+          <div class="brand-mark" aria-label="Ebb">
+            <svg class="ebb-svg" viewBox="0 0 120 120"><use href="#ebb-happy"/></svg>
+          </div>
+          <div class="welcome-copy">
+            <h1>Ebb</h1>
+            <div class="promise">You talk. It fills the buttons.</div>
+            <div class="blurb">On-device tracking for menstrual migraine — private, no account, zero lecture. Ebb’s along for the calm bits.</div>
+          </div>
+          <div class="spacer"></div>
+          <div class="btn">Let’s go</div>
+        </div>
+      </div>
+      <div class="note">Ebb as Welcome hero · Dusty rose · large composed mark.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Onboarding · Privacy</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:41</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="progress"><i class="done"></i><i class="on"></i><i></i><i></i></div>
+          <div class="title-serif" style="font-size:26px;margin-top:4px;">Built for your notes,<br>not a diagnosis.</div>
+          <p class="subcopy">Ebb is a self-tracker. It doesn’t diagnose, treat, or replace your clinician — and that’s the point.</p>
+          <div class="privacy-scene" aria-label="Ebb">
+            <div class="ebb-illust"><svg class="ebb-svg" viewBox="0 0 120 120"><use href="#ebb-concern"/></svg></div>
+            <div class="whisper">Your notes stay yours. Ebb’s just here for the calm bits.</div>
+          </div>
+          <div class="privacy-list">
+            <div class="item"><div class="dot cool"></div><div><div class="t">No account</div><div class="s">Nothing to sign up for. Open the app and start.</div></div></div>
+            <div class="item"><div class="dot ink"></div><div><div class="t">Stays on your devices</div><div class="s">Local first. Optional private iCloud via CloudKit — never a public cloud.</div></div></div>
+            <div class="item"><div class="dot warm"></div><div><div class="t">You own the export</div><div class="s">Hand a calm PDF to your doctor when you want. Your call.</div></div></div>
+          </div>
+          <div class="spacer"></div>
+          <div class="btn">I understand</div>
+        </div>
+      </div>
+      <div class="note">Calm Privacy scene · Ebb concern · teal/oat/rose dots.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Onboarding · Permissions</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:42</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="progress"><i class="done"></i><i class="done"></i><i class="on"></i><i></i></div>
+          <div class="title-serif" style="font-size:24px;">A few optional helpers</div>
+          <p class="subcopy">Flip on what helps. Everything can wait — change later in Settings.</p>
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="float"><div class="perm"><div class="ic">◐</div><div class="body"><div class="t">Cycle from Health</div><div class="s">Read period data from Apple Health</div></div><div class="toggle on"></div></div></div>
+            <div class="float"><div class="perm"><div class="ic warm">◉</div><div class="body"><div class="t">Microphone</div><div class="s">Talk to fill the symptom buttons</div></div><div class="toggle on warm"></div></div></div>
+            <div class="float"><div class="perm"><div class="ic">🔔</div><div class="body"><div class="t">Notifications</div><div class="s">Gentle luteal-window nudges</div></div><div class="toggle"></div></div></div>
+            <div class="float"><div class="perm"><div class="ic">🔒</div><div class="body"><div class="t">Face ID lock</div><div class="s">Require Face ID to open Ebb</div></div><div class="toggle on"></div></div></div>
+          </div>
+          <div class="spacer"></div>
+          <div class="btn">Continue</div>
+        </div>
+      </div>
+      <div class="note">Float perms · cool Health / warm mic · no peek mascot.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Onboarding · Cycle basics</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:42</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="progress"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
+          <div class="title-serif" style="font-size:24px;">Your typical cycle</div>
+          <p class="subcopy">A starting guess. Ebb learns from what you log — this is just day one.</p>
+          <div class="float lg" style="margin-top:18px;">
+            <div class="mono-lbl" style="text-align:center;">Typical length</div>
+            <div class="stepper">
+              <div class="pm">−</div>
+              <div><div class="val">28</div><div class="unit">days</div></div>
+              <div class="pm">+</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <div class="mono-lbl" style="margin-bottom:10px;">Do you get aura?</div>
+            <div class="choice">
+              <div class="opt"><div class="e">—</div><div class="t">No / unsure</div><div class="s">Skip for now</div></div>
+              <div class="opt on"><div class="e">✦</div><div class="t">Yes, sometimes</div><div class="s">We’ll track it</div></div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="btn">Start tracking</div>
+          <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--faint);">Change anytime</div>
+        </div>
+      </div>
+      <div class="note">Teal cycle · soft CTA · no mascot chrome.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SETTINGS & APPEARANCE ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">02 · Control</div>
+    <h2>Settings · Appearance · Reminders</h2>
+    <p class="rationale">Quiet hub with Soft paper as the selected light default. Other themes muted. Reminders stay soft — luteal cool, sleep warm.</p>
+    <p class="meta">Float list cards · Soft paper selected · muted alt themes</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Settings hub</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:18</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="set-head">
+            <div class="title-serif" style="font-size:28px;">Settings</div>
+          </div>
+          <div style="margin-top:12px;"><div class="cloud-pill"><span class="dot"></span> iCloud private · synced</div></div>
+          <div class="float" style="margin-top:14px;padding:6px 14px;">
+            <div class="set-row"><div class="ic">◐</div><div class="body"><div class="t">Appearance</div><div class="s">Soft paper · light</div></div><div class="chev">›</div></div>
+            <div class="set-row"><div class="ic warm">🔔</div><div class="body"><div class="t">Reminders</div><div class="s">Luteal nudge · Sleep</div></div><div class="chev">›</div></div>
+            <div class="set-row"><div class="ic">💊</div><div class="body"><div class="t">Medications</div><div class="s">Triptans, preventives…</div></div><div class="chev">›</div></div>
+            <div class="set-row"><div class="ic">♥</div><div class="body"><div class="t">Health</div><div class="s">Cycle length · Aura · HealthKit</div></div><div class="chev">›</div></div>
+            <div class="set-row"><div class="ic">🔒</div><div class="body"><div class="t">Privacy lock</div><div class="s">Face ID on</div></div><div class="chev">›</div></div>
+          </div>
+          <div class="float" style="margin-top:10px;padding:6px 14px;">
+            <div class="set-row hi"><div class="ic">📄</div><div class="body"><div class="t">Export for doctor</div><div class="s">Calm PDF · last 3 months</div></div><div class="chev" style="color:var(--warm);">›</div></div>
+            <div class="set-row"><div class="ic">ℹ</div><div class="body"><div class="t">About Ebb</div><div class="s">v1.0 · Disclaimer</div></div><div class="chev">›</div></div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">◎</span>Today</div>
+            <div class="tab"><span class="ic">⬡</span>Patterns</div>
+            <div class="tab"><span class="ic">▦</span>Calendar</div>
+            <div class="tab on"><span class="ic">☰</span>More</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Quiet hub · export rose wash · no mascot chrome.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Appearance / theme</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:19</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="nav">← Settings</div>
+          <div class="title-serif" style="font-size:24px;">Appearance</div>
+          <p class="subcopy">Pick a theme — the whole app re-skins. Symptoms stay warm; cycle stays cool.</p>
+          <div class="mono-lbl" style="margin:16px 0 10px;">Theme</div>
+          <div class="theme-grid">
+            <div class="ttile sel">
+              <div class="t-band" style="background:#F8F4EF;color:#2C2824;">
+                <div class="row"><span class="t-phase" style="color:#5B9A8F;">LUTEAL</span><span class="t-dots"><i style="background:#C67E72"></i><i style="background:#5B9A8F"></i></span></div>
+                <span class="t-aa">Aa</span>
+              </div>
+              <div class="t-name">Soft paper<span class="check">✓</span></div>
+            </div>
+            <div class="ttile">
+              <div class="t-band" style="background:#1A1620;color:#EDE6F0;">
+                <div class="row"><span class="t-phase" style="color:#9D8FC7;">LUTEAL</span><span class="t-dots"><i style="background:#E89B8B"></i><i style="background:#9D8FC7"></i></span></div>
+                <span class="t-aa">Aa</span>
+              </div>
+              <div class="t-name">Plum &amp; Ember<span class="check">✓</span></div>
+            </div>
+            <div class="ttile">
+              <div class="t-band" style="background:#0F1E1C;color:#E4EFEA;">
+                <div class="row"><span class="t-phase" style="color:#82B6C9;">LUTEAL</span><span class="t-dots"><i style="background:#E8B07A"></i><i style="background:#82B6C9"></i></span></div>
+                <span class="t-aa">Aa</span>
+              </div>
+              <div class="t-name">Tidewater<span class="check">✓</span></div>
+            </div>
+            <div class="ttile">
+              <div class="t-band" style="background:#15131F;color:#E9E6F2;">
+                <div class="row"><span class="t-phase" style="color:#8593D4;">LUTEAL</span><span class="t-dots"><i style="background:#E29AAD"></i><i style="background:#8593D4"></i></span></div>
+                <span class="t-aa">Aa</span>
+              </div>
+              <div class="t-name">Nocturne<span class="check">✓</span></div>
+            </div>
+            <div class="ttile">
+              <div class="t-band" style="background:#16151A;color:#EAE8EE;">
+                <div class="row"><span class="t-phase" style="color:#9DB89E;">LUTEAL</span><span class="t-dots"><i style="background:#D98A86"></i><i style="background:#9DB89E"></i></span></div>
+                <span class="t-aa">Aa</span>
+              </div>
+              <div class="t-name">Ash &amp; Sage<span class="check">✓</span></div>
+            </div>
+            <div class="ttile">
+              <div class="t-band" style="background:#181511;color:#ECE5DA;">
+                <div class="row"><span class="t-phase" style="color:#9DAE79;">LUTEAL</span><span class="t-dots"><i style="background:#DB8662"></i><i style="background:#9DAE79"></i></span></div>
+                <span class="t-aa">Aa</span>
+              </div>
+              <div class="t-name">Moss &amp; Clay<span class="check">✓</span></div>
+            </div>
+          </div>
+          <p style="margin-top:auto;font-size:12px;color:var(--faint);line-height:1.45;">Soft paper is the light default. Other themes stay available — muted until chosen. Ebb stays dusty-rose in her composed scenes.</p>
+        </div>
+      </div>
+      <div class="note">Soft paper selected + rose ring · no companion chip.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Reminders</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:22</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="nav">← Settings</div>
+          <div class="title-serif" style="font-size:24px;">Reminders</div>
+          <p class="subcopy">Soft nudges — never nagging. Off by default unless you flip them on.</p>
+          <div class="float lg rem" style="margin-top:18px;display:flex;gap:12px;">
+            <div class="ic">◐</div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div class="ttl">Luteal-window nudge</div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="sub">A gentle check-in around days −5 to −1, when migraines often cluster.</div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+                <span class="mono-lbl">Time</span>
+                <span class="chip on-cool" style="padding:5px 11px;">18:30</span>
+              </div>
+            </div>
+          </div>
+          <div class="float lg rem" style="margin-top:10px;display:flex;gap:12px;">
+            <div class="ic warm">☾</div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div class="ttl">Sleep log reminder</div>
+                <div class="toggle warm"></div>
+              </div>
+              <div class="sub">Optional evening prompt to note how you slept — a common migraine trigger.</div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:8px;opacity:.45;">
+                <span class="mono-lbl">Time</span>
+                <span class="chip" style="padding:5px 11px;">21:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="edu" style="margin-top:auto;">
+            <div class="k">Why these two</div>
+            <p>Cycle timing and sleep are the highest-signal, lowest-friction nudges. Everything else stays on you.</p>
+          </div>
+        </div>
+      </div>
+      <div class="note">Luteal cool / sleep warm · no mascot chrome.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== EXPORT & ENTRY ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">03 · Care &amp; edit</div>
+    <h2>Doctor export · Entry detail</h2>
+    <p class="rationale">Calm PDF you can hand a neurologist. Entry edit reuses Confirmed chip DNA — float draft, soft severity, quiet delete.</p>
+    <p class="meta">Warm migraine counts · cool cycle context · ink Save</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Doctor export</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:19</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="nav">← Settings</div>
+          <div class="title-serif" style="font-size:22px;">Export for doctor</div>
+          <p class="subcopy" style="margin-bottom:8px;">A quiet summary — cycle ↔ migraine, top triggers, date range. Yours to share.</p>
+          <div class="pdf">
+            <div class="ph">
+              <div class="brand">Ebb summary</div>
+              <div class="range">JUN 9 – SEP 9</div>
+            </div>
+            <div class="block">
+              <div class="k">Pattern</div>
+              <div class="v"><b class="w">12 migraines</b> across <b class="c">3 cycles</b>. Most cluster in the <b class="c">late luteal</b> window (days −5 to −1).</div>
+            </div>
+            <div class="block">
+              <div class="k">Top triggers logged</div>
+              <div class="mini-bars">
+                <div class="r"><span class="nm">Poor sleep</span><div class="tr"><div class="fl" style="width:82%"></div></div></div>
+                <div class="r"><span class="nm">Stress</span><div class="tr"><div class="fl" style="width:64%"></div></div></div>
+                <div class="r"><span class="nm">Skipped meal</span><div class="tr"><div class="fl" style="width:48%"></div></div></div>
+              </div>
+            </div>
+            <div class="block">
+              <div class="k">Severity mix</div>
+              <div class="v">Mild 3 · Moderate <b class="w">6</b> · Severe 3 · Avg <b>3.2 / 5</b></div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:14px;">
+            <div class="btn ghost" style="padding:13px;font-size:13.5px;">Save</div>
+            <div class="btn" style="padding:13px;font-size:13.5px;">Share…</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Float PDF · share with care · no mascot chrome.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Entry detail / Edit</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:20</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="nav">← Today</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="title-serif" style="font-size:26px;">Migraine</div>
+            <div class="badge-edit">Edit</div>
+          </div>
+          <div class="entry-when">Yesterday · 16:40 · Late luteal</div>
+          <div class="float lg">
+            <div class="field">
+              <label>Severity</label>
+              <div class="sev">
+                <div class="s fill">1</div><div class="s fill">2</div><div class="s fill">3</div><div class="s cur">4</div><div class="s">5</div>
+              </div>
+            </div>
+            <div class="field"><label>Location</label><div class="chips"><span class="chip on-warm">Right temple</span><span class="chip">Left</span><span class="chip">Behind eye</span><span class="chip">Neck</span></div></div>
+            <div class="field"><label>Symptoms</label><div class="chips"><span class="chip on-warm">Throbbing</span><span class="chip on-warm">Nausea</span><span class="chip">Light sens.</span><span class="chip">Aura</span></div></div>
+            <div class="field" style="margin-bottom:0"><label>Possible triggers</label><div class="chips"><span class="chip on-warm">Poor sleep</span><span class="chip">Stress</span><span class="chip on-cool">Hormonal</span></div></div>
+          </div>
+          <div class="spacer"></div>
+          <div class="save">Save changes</div>
+          <div class="danger">Delete entry</div>
+        </div>
+      </div>
+      <div class="note">Confirm chip DNA · quiet dashed delete.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== EMPTY & PATTERNS ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">04 · First weeks &amp; synthesis</div>
+    <h2>Empty states · Patterns</h2>
+    <p class="rationale">Honest empties — inviting, never guilt. Populated Patterns keeps Soft paper float cards and warm/cool semantics.</p>
+    <p class="meta">Empty = breath · Patterns = luteal band + rose dots</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Empty · Today</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:12</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="hdr">
+            <div><div class="greet">Good morning</div><div class="date">Day 1 with Ebb</div></div>
+            <div class="chip on-cool" style="padding:6px 11px;font-size:11.5px;">Getting started</div>
+          </div>
+          <div class="empty-hero">
+            <div class="empty-mark" aria-label="Ebb">
+              <svg class="ebb-svg" viewBox="0 0 120 120"><use href="#ebb"/></svg>
+            </div>
+            <h3>Blank page — in a good way</h3>
+            <p>When something shows up — migraine, period day, or just how you slept — Talk or Tap. Ebb can hold the quiet with you.</p>
+          </div>
+          <div class="cta-row">
+            <div class="cta primary">Talk</div>
+            <div class="cta">Tap</div>
+          </div>
+          <div class="tabbar">
+            <div class="tab on"><span class="ic">◎</span>Today</div>
+            <div class="tab"><span class="ic">⬡</span>Patterns</div>
+            <div class="tab"><span class="ic">▦</span>Calendar</div>
+            <div class="tab"><span class="ic">☰</span>More</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Ebb empty illustration well · same CTAs · no fake entries.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Empty · Patterns</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>9:14</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="title-serif" style="font-size:28px;">Patterns</div>
+          <div class="empty-hero" style="padding-top:20px;">
+            <div class="empty-mark rest" aria-label="Ebb resting">
+              <svg class="ebb-svg" viewBox="0 0 64 64"><use href="#ebb-rest"/></svg>
+            </div>
+            <h3>Needs a few cycles</h3>
+            <p>Patterns settle after roughly two to three cycles of logs. Ebb’s resting until there’s enough signal.</p>
+          </div>
+          <div class="edu">
+            <div class="k">What you’ll see later</div>
+            <p>Migraines against your <b>luteal window</b>, top triggers, and a calm timeline — when there’s enough signal to trust.</p>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">◎</span>Today</div>
+            <div class="tab on"><span class="ic">⬡</span>Patterns</div>
+            <div class="tab"><span class="ic">▦</span>Calendar</div>
+            <div class="tab"><span class="ic">☰</span>More</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Ebb resting scene · soft education · no fake charts.</div>
+    </div>
+    <div class="frame">
+      <div class="lbl">Patterns · populated</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:05</span><span class="right">●●● WiFi</span></div>
+        <div class="screen has-tab">
+          <div class="title-serif" style="font-size:28px;">Patterns</div>
+          <div class="pat-cap">Your migraines <b>cluster in the luteal phase</b> — the days before your period.</div>
+          <div class="float">
+            <div class="mono-lbl">This cycle · day 22</div>
+            <div class="cycle-axis">
+              <div class="band" style="left:52%;right:6%;"></div>
+              <div class="track">
+                <div class="mdot" style="left:58%"></div>
+                <div class="mdot" style="left:72%"></div>
+                <div class="mdot" style="left:84%"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:4px;">
+              <span>Day 1</span><span class="cool" style="font-weight:500;">Luteal</span><span>Day 28</span>
+            </div>
+          </div>
+          <div class="float" style="margin-top:10px;">
+            <div class="mono-lbl">By phase</div>
+            <div class="phase-bars">
+              <i style="height:18%"></i><i style="height:22%"></i><i style="height:28%"></i><i class="hi" style="height:92%"></i>
+            </div>
+            <div class="phase-labs"><span>Menst.</span><span>Foll.</span><span>Ov.</span><span>Luteal</span></div>
+          </div>
+          <div class="insight" style="margin-top:10px;">
+            <div class="q" style="font-size:16px;">All 3 attacks followed <em>poor sleep</em> in the luteal window.</div>
+          </div>
+          <div class="float" style="margin-top:10px;padding:12px 14px;">
+            <div class="mono-lbl">Top triggers</div>
+            <div class="trig-row"><span class="nm">Poor sleep</span><div class="bar"><div class="fill" style="width:86%"></div></div></div>
+            <div class="trig-row"><span class="nm">Stress</span><div class="bar"><div class="fill" style="width:58%"></div></div></div>
+            <div class="trig-row"><span class="nm">Skipped meal</span><div class="bar"><div class="fill" style="width:40%"></div></div></div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><span class="ic">◎</span>Today</div>
+            <div class="tab on"><span class="ic">⬡</span>Patterns</div>
+            <div class="tab"><span class="ic">▦</span>Calendar</div>
+            <div class="tab"><span class="ic">☰</span>More</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Float insight · luteal teal · rose dots · no mascot chrome.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PAYWALL ========== -->
+<section class="dir sp">
+  <div class="dir-head">
+    <div class="dir-num">05 · Optional · Ebb+</div>
+    <h2>Paywall</h2>
+    <p class="rationale">Tasteful Soft paper paywall — gate the payoff, never the logging. Same oat paper, float plans, rose CTA.</p>
+    <p class="meta">Privacy chip in teal · annual selected · logging stays free</p>
+  </div>
+  <div class="phones">
+    <div class="frame">
+      <div class="lbl">Paywall · Ebb Plus</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="statusbar"><span>21:31</span><span class="right">●●● WiFi</span></div>
+        <div class="screen">
+          <div class="pay-x">✕</div>
+          <div class="pay-badge">EBB+</div>
+          <div class="pay-illust" aria-label="Ebb">
+            <div class="ebb-block"><svg class="ebb-svg" viewBox="0 0 120 120"><use href="#ebb"/></svg></div>
+            <div class="pay-illust-copy">Patterns, doctor PDF, full history — still private, still on your phone.</div>
+          </div>
+          <div class="pay-title">See what’s behind your migraines — and <em>bring it to your doctor.</em></div>
+          <div class="pay-feats">
+            <div class="pay-feat"><span class="ck">✓</span><span><b>Patterns &amp; predictions</b> · triggers, luteal-risk forecast</span></div>
+            <div class="pay-feat"><span class="ck">✓</span><span><b>Doctor PDF export</b> · your full summary, on demand</span></div>
+            <div class="pay-feat"><span class="ck">✓</span><span><b>Full history</b> · every cycle, not just the last three</span></div>
+            <div class="pay-feat"><span class="ck">✓</span><span><b>All themes</b> · Soft paper plus the rest</span></div>
+          </div>
+          <div class="pay-privacy">🔒 Still 100% on your phone. Premium never changes that.</div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+            <div class="plan sel">
+              <span class="tag">BEST VALUE · 7-DAY FREE TRIAL</span>
+              <div class="pl-l"><div class="pl-name">Yearly</div><div class="pl-sub">Cancel anytime</div></div>
+              <div class="pl-price">€39<span class="per">/ year</span></div>
+            </div>
+            <div class="plan">
+              <div class="pl-l"><div class="pl-name">Monthly</div><div class="pl-sub">Flexible</div></div>
+              <div class="pl-price">€4.99<span class="per">/ month</span></div>
+            </div>
+          </div>
+          <div class="btn" style="margin-top:16px;">Start free trial</div>
+          <div class="pay-note">Logging stays free forever · Restore purchase</div>
+        </div>
+      </div>
+      <div class="note">Ebb illustration block · gate insight — not Talk.</div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  Soft paper 01.2 Softer touch · full app coverage · Add entry end-to-end · warm = pain · cool = cycle<br>
+  Path: docs/symptom-tracker-soft-paper-01-2-full.html · Ebb (Dusty rose, no S) as composed scenes only: Welcome hero · Privacy · Empty Today · Empty Patterns · Talk listening · Confirm · saved · Paywall — never on Tap / Guided forms
+</footer>
+</body>
+</html>

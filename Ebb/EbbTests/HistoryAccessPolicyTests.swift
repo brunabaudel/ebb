@@ -86,9 +86,18 @@ struct HistoryAccessPolicyTests {
 
 @Suite("Theme preferences")
 struct ThemePreferencesTests {
-    @Test func defaultThemeIsPlumEmber() {
+    @Test func defaultThemeIsSoftPaper() {
         let defaults = UserDefaults(suiteName: "ThemePreferencesTests.default")!
         defaults.removePersistentDomain(forName: "ThemePreferencesTests.default")
+        let preferences = ThemePreferences(defaults: defaults)
+        #expect(preferences.selectedThemeID == Theme.softPaper.id)
+        #expect(preferences.effectiveTheme(isEbbPlus: false) == .softPaper)
+    }
+
+    @Test func savedThemePreferenceIsPreserved() {
+        let defaults = UserDefaults(suiteName: "ThemePreferencesTests.saved")!
+        defaults.removePersistentDomain(forName: "ThemePreferencesTests.saved")
+        defaults.set(Theme.plumEmber.id, forKey: "ebb.appearance.selectedThemeID")
         let preferences = ThemePreferences(defaults: defaults)
         #expect(preferences.selectedThemeID == Theme.plumEmber.id)
         #expect(preferences.effectiveTheme(isEbbPlus: false) == .plumEmber)
@@ -101,10 +110,10 @@ struct ThemePreferencesTests {
 
         #expect(!preferences.canUse(.nocturne, isEbbPlus: false))
         #expect(preferences.select(.nocturne, isEbbPlus: false) == false)
-        #expect(preferences.effectiveTheme(isEbbPlus: false) == .plumEmber)
+        #expect(preferences.effectiveTheme(isEbbPlus: false) == .softPaper)
 
         #expect(preferences.select(.nocturne, isEbbPlus: true))
         #expect(preferences.effectiveTheme(isEbbPlus: true) == .nocturne)
-        #expect(preferences.effectiveTheme(isEbbPlus: false) == .plumEmber)
+        #expect(preferences.effectiveTheme(isEbbPlus: false) == .softPaper)
     }
 }

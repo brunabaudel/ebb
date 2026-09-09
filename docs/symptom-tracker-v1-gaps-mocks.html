@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ebb — v1 gaps · Design board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#120e18;
+    --ink:#1A1424;
+    --surface:#2A2234;
+    --raised:#342A40;
+    --line:#463A52;
+    --text:#F4ECF7;
+    --muted:#B8A9C2;
+    --faint:#857690;
+    --coral:#FF8F7A;
+    --coral-bright:#FFB4A4;
+    --coral-dim:#8a4a42;
+    --lav:#B39BE8;
+    --lav-bright:#D0BEFF;
+    --lav-dim:#5a4a7a;
+    --sage:#8FCBB0;
+    --sage-dim:#3d5a4c;
+    --peach:#FFC9A8;
+    --gold:#F0C878;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{
+    background:
+      radial-gradient(ellipse 70% 45% at 8% 12%, #ff8f7a33 0%, transparent 55%),
+      radial-gradient(ellipse 55% 40% at 92% 8%, #b39be855 0%, transparent 50%),
+      radial-gradient(ellipse 50% 35% at 70% 55%, #8fcbb022 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 15% 78%, #ffc9a828 0%, transparent 45%),
+      linear-gradient(165deg, #160f1c 0%, #120e18 40%, #1a1224 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:"Figtree",system-ui,sans-serif;
+    line-height:1.45;
+    padding:52px 28px 110px;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      radial-gradient(circle, #ff8f7a44 1.2px, transparent 1.2px),
+      radial-gradient(circle, #b39be844 1px, transparent 1px);
+    background-size:48px 48px, 36px 36px;
+    background-position:0 0, 18px 22px;
+    opacity:.35;
+  }
+  body > *{position:relative;z-index:1}
+
+  .board-head{max-width:1240px;margin:0 auto 36px;}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    font-size:15px;color:var(--lav-bright);
+    background:linear-gradient(135deg,#2a1f3a,#3a2848);
+    border:1.5px solid var(--lav-dim);
+    padding:7px 16px 8px;border-radius:999px;
+    box-shadow:0 4px 0 #4a3860, 0 8px 24px -8px #b39be866;
+    margin-bottom:22px;transform:rotate(-1.5deg);
+  }
+  .kicker .spark{font-style:normal}
+  .board-head h1{
+    font-family:"Fraunces",serif;font-weight:600;
+    font-size:clamp(38px,5.5vw,62px);line-height:1.02;
+    letter-spacing:-.02em;max-width:18ch;
+  }
+  .board-head h1 em{
+    font-style:italic;font-weight:500;
+    background:linear-gradient(120deg,var(--coral-bright),var(--coral),#ff6b8a);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .board-head p{color:var(--muted);max-width:62ch;margin-top:18px;font-size:16.5px;line-height:1.55;}
+
+  .flow-note{
+    max-width:1240px;margin:0 auto 56px;padding:20px 24px 20px 28px;
+    border-radius:22px;
+    background:linear-gradient(120deg,#3a2430ee,#2a1e32ee 55%,#241e38ee);
+    border:1.5px solid var(--coral-dim);
+    box-shadow:0 0 40px -12px #ff8f7a55, inset 0 1px 0 #ff8f7a33;
+    font-size:14.5px;color:var(--muted);line-height:1.6;
+    position:relative;
+  }
+  .flow-note::before{
+    content:"✦";
+    position:absolute;top:-12px;left:22px;
+    font-size:18px;color:var(--coral);
+    background:var(--page);padding:0 8px;
+  }
+  .flow-note b{color:var(--text);font-weight:700;}
+  .flow-note em{color:var(--coral-bright);font-style:normal;font-weight:700;}
+
+  .section{max-width:1240px;margin:0 auto 22px;}
+  .section .sk{
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    font-size:14px;color:var(--peach);margin-bottom:6px;
+    display:inline-block;transform:rotate(-1deg);
+  }
+  .section h2{
+    font-family:"Fraunces",serif;font-weight:600;
+    font-size:30px;letter-spacing:-.015em;
+  }
+  .section p{color:var(--muted);font-size:14.5px;margin-top:8px;max-width:56ch;}
+
+  .wavy{
+    max-width:1240px;margin:8px auto 40px;height:18px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 12' fill='none'%3E%3Cpath d='M0 6 Q20 0 40 6 T80 6 T120 6 T160 6 T200 6 T240 6' stroke='%23B39BE8' stroke-width='2' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E") repeat-x center;
+    background-size:240px 12px;opacity:.9;
+  }
+
+  /* Zig-zag onboarding row */
+  .zig{
+    display:flex;flex-wrap:wrap;gap:52px 42px;justify-content:center;
+    max-width:1240px;margin:0 auto 80px;align-items:flex-start;
+  }
+  .zig .frame-wrap:nth-child(odd) .phone-mat{transform:rotate(-2.8deg);}
+  .zig .frame-wrap:nth-child(even) .phone-mat{transform:rotate(2.6deg);}
+  .zig .frame-wrap:nth-child(odd){margin-top:0;}
+  .zig .frame-wrap:nth-child(even){margin-top:36px;}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,340px));
+    gap:56px 44px;justify-content:center;max-width:1240px;margin:0 auto 80px;
+  }
+  .grid .frame-wrap:nth-child(3n+1) .phone-mat{transform:rotate(-2.4deg);}
+  .grid .frame-wrap:nth-child(3n+2) .phone-mat{transform:rotate(2.2deg);}
+  .grid .frame-wrap:nth-child(3n) .phone-mat{transform:rotate(-1.8deg);}
+
+  .frame-wrap{display:flex;flex-direction:column;gap:14px;width:340px;}
+
+  .scr-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    font-size:13.5px;color:var(--lav-bright);
+    padding-left:2px;
+  }
+  .scr-badge .num{
+    font-style:normal;font-family:"Figtree",sans-serif;font-weight:700;
+    font-size:12px;width:26px;height:26px;border-radius:50%;
+    background:linear-gradient(145deg,var(--coral),#ff6b8a);
+    color:#2a1210;display:inline-flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 0 #8a3a42, 0 6px 16px -4px #ff8f7a88;
+  }
+
+  .phone-mat{
+    padding:14px 12px 18px;
+    border-radius:56px;
+    background:linear-gradient(160deg,#ff8f7a33,#b39be844 50%,#8fcbb028);
+    box-shadow:0 18px 40px -18px #000a, inset 0 1px 0 #fff2;
+    transition:transform .25s ease;
+  }
+  .phone-mat.mat-lav{background:linear-gradient(160deg,#b39be855,#ff8f7a28 60%,#ffc9a830);}
+  .phone-mat.mat-sage{background:linear-gradient(160deg,#8fcbb040,#b39be838 55%,#ff8f7a22);}
+  .phone-mat.mat-peach{background:linear-gradient(160deg,#ffc9a848,#ff8f7a35 50%,#b39be830);}
+
+  .phone{
+    width:316px;height:700px;border-radius:44px;background:var(--ink);
+    border:1.5px solid #4a3a58;
+    box-shadow:
+      0 0 0 8px #1e1628,
+      0 28px 60px -24px #000c,
+      inset 0 0 0 1px #ffffff10,
+      0 0 48px -16px #ff8f7a44;
+    position:relative;overflow:hidden;margin:0 auto;
+  }
+  .phone::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:50;
+    background:radial-gradient(ellipse 80% 40% at 50% -5%, #ff8f7a18, transparent 55%);
+  }
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:100px;height:27px;background:#000;border-radius:18px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12.5px;font-weight:600;color:var(--text);z-index:30;}
+  .statusbar .dots{display:flex;gap:5px;align-items:center;opacity:.85;font-size:11px;}
+  .screen{position:absolute;inset:0;padding:56px 20px 20px;display:flex;flex-direction:column;overflow:hidden;}
+  .screen.has-tabbar{padding-bottom:86px;}
+  .tabbar{
+    position:absolute;bottom:0;left:0;right:0;height:76px;
+    background:linear-gradient(180deg,#1e1628cc,#16101ecc);
+    border-top:1px solid var(--line);backdrop-filter:blur(14px);
+    display:flex;align-items:flex-start;justify-content:space-around;padding:10px 8px 0;z-index:30;
+  }
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--faint);min-width:56px;}
+  .tab.on{color:var(--coral-bright);}
+  .tab .ic{font-size:17px;line-height:1;}
+
+  .annot{
+    font-size:13px;color:var(--faint);max-width:316px;margin:0 auto;
+    background:linear-gradient(135deg,#3a2e28,#2e2438);
+    border:1.5px dashed #6a5850;
+    border-radius:14px;padding:12px 14px;
+    box-shadow:3px 4px 0 #1a1018;
+    transform:rotate(-0.8deg);
+    line-height:1.45;
+  }
+  .annot b{color:var(--peach);font-weight:700;}
+  .frame-wrap:nth-child(even) .annot{transform:rotate(1deg);border-color:#5a4a70;background:linear-gradient(135deg,#2e2438,#3a2e28);}
+
+  .nav-back{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--coral-bright);font-weight:600;margin:-4px 0 12px;}
+  .nav-back .arr{font-size:22px;line-height:1;font-weight:400;}
+
+  .btn{
+    border-radius:999px;padding:15px 18px;text-align:center;
+    font-weight:700;font-size:15px;border:2px solid transparent;
+    box-shadow:0 4px 0 #0004, 0 8px 20px -8px #0008;
+    letter-spacing:.01em;
+  }
+  .btn.primary{
+    background:linear-gradient(145deg,var(--coral-bright),var(--coral) 55%,#ff6b8a);
+    color:#2a1210;border-color:#ffb4a466;
+    box-shadow:0 4px 0 #8a3a42, 0 10px 24px -6px #ff8f7a88;
+  }
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--text);font-weight:600;box-shadow:0 3px 0 #0003;}
+  .btn.sage{background:linear-gradient(145deg,#a8dcc0,var(--sage));color:#142820;box-shadow:0 4px 0 #3d5a4c;}
+  .btn.sm{padding:11px 14px;font-size:13.5px;}
+  .btn-row{display:flex;gap:10px;}
+  .btn-row .btn{flex:1;}
+
+  .card{
+    background:linear-gradient(160deg,var(--surface),#261e30);
+    border:1.5px solid var(--line);border-radius:20px;padding:14px 15px;
+    box-shadow:0 6px 16px -10px #0008;
+  }
+  .card+.card{margin-top:10px;}
+  .card.raised{background:linear-gradient(160deg,var(--raised),#2e2438);}
+  .card .ttl{font-size:14.5px;font-weight:600;}
+  .card .sub{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45;}
+  .mono-lbl{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);}
+
+  .toggle{width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;flex:0 0 auto;box-shadow:inset 0 2px 4px #0004;}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--text);transition:.2s;box-shadow:0 2px 4px #0005;}
+  .toggle.on{background:var(--sage);}
+  .toggle.on::after{left:21px;background:#142820;}
+  .toggle.warm.on{background:linear-gradient(90deg,var(--coral),#ff6b8a);}
+  .toggle.warm.on::after{background:#2a1210;}
+  .toggle.cool.on{background:linear-gradient(90deg,var(--lav),#9b7fd4);}
+  .toggle.cool.on::after{background:#1a1430;}
+
+  .perm{display:flex;align-items:center;gap:12px;}
+  .perm .ic{
+    width:40px;height:40px;border-radius:14px;
+    background:var(--raised);border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;
+    box-shadow:0 3px 0 #0003;
+  }
+  .perm .ic.lav{border-color:var(--lav-dim);background:linear-gradient(145deg,#342850,#241f33);color:var(--lav-bright);box-shadow:0 3px 0 #3a2a58,0 0 12px -2px #b39be866;}
+  .perm .ic.coral{border-color:var(--coral-dim);background:linear-gradient(145deg,#3a2830,#2e2229);color:var(--coral-bright);box-shadow:0 3px 0 #5a3038,0 0 12px -2px #ff8f7a66;}
+  .perm .ic.sage{border-color:var(--sage-dim);background:linear-gradient(145deg,#243830,#1f2a24);color:var(--sage);box-shadow:0 3px 0 #2a4034;}
+  .perm .body{flex:1;min-width:0;}
+  .perm .body .t{font-size:14px;font-weight:600;}
+  .perm .body .s{font-size:12px;color:var(--faint);margin-top:2px;}
+
+  .pills{display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{
+    font-size:12.5px;padding:7px 13px;border-radius:999px;
+    border:1.5px solid var(--line);color:var(--muted);background:transparent;
+  }
+  .pill.on{
+    color:#2a1210;background:linear-gradient(145deg,var(--coral-bright),var(--coral));
+    border-color:#ffb4a4;font-weight:700;
+    box-shadow:0 3px 0 #8a3a42, 0 6px 14px -6px #ff8f7a88;
+    transform:rotate(-1deg);
+  }
+  .pill.lav-on{
+    color:#1a1430;background:linear-gradient(145deg,var(--lav-bright),var(--lav));
+    border-color:var(--lav-bright);font-weight:700;
+    box-shadow:0 3px 0 #5a4a7a, 0 6px 14px -6px #b39be888;
+    transform:rotate(1deg);
+  }
+  .pill.ghost-on{
+    color:var(--coral-bright);background:#3a2830;
+    border-color:var(--coral);font-weight:700;
+    box-shadow:0 2px 0 #5a3038;
+  }
+
+  .sev-meter{display:flex;gap:5px;}
+  .sev-meter .s{
+    flex:1;height:34px;border-radius:11px;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--faint);
+  }
+  .sev-meter .s.fill{background:#3a2830;border-color:var(--coral-dim);color:var(--coral-bright);}
+  .sev-meter .s.cur{
+    background:linear-gradient(145deg,var(--coral-bright),var(--coral));
+    border-color:var(--coral-bright);color:#2a1210;font-weight:700;
+    box-shadow:0 3px 0 #8a3a42;transform:translateY(-2px);
+  }
+
+  .stepper{display:flex;align-items:center;justify-content:center;gap:18px;margin:8px 0;}
+  .stepper .pm{
+    width:44px;height:44px;border-radius:16px;border:1.5px solid var(--line);
+    background:var(--raised);display:flex;align-items:center;justify-content:center;
+    font-size:22px;color:var(--text);box-shadow:0 3px 0 #0004;
+  }
+  .stepper .val{font-family:"Fraunces",serif;font-size:48px;font-weight:600;font-style:italic;line-height:1;min-width:72px;text-align:center;color:var(--lav-bright);}
+  .stepper .unit{font-size:12px;color:var(--faint);text-align:center;margin-top:4px;}
+
+  .choice{display:flex;gap:10px;}
+  .choice .opt{
+    flex:1;border-radius:20px;border:1.5px solid var(--line);
+    background:var(--surface);padding:16px 12px;text-align:center;
+    box-shadow:0 4px 0 #0003;
+  }
+  .choice .opt.on{
+    border-color:var(--lav);background:linear-gradient(160deg,#342850,#241f33);
+    box-shadow:0 4px 0 #4a3860, 0 0 20px -6px #b39be888;
+  }
+  .choice .opt .e{font-size:24px;margin-bottom:6px;}
+  .choice .opt .t{font-size:13.5px;font-weight:700;}
+  .choice .opt .s{font-size:11.5px;color:var(--faint);margin-top:3px;}
+
+  .set-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line);}
+  .set-row:last-child{border-bottom:none;}
+  .set-row .ic{
+    width:34px;height:34px;border-radius:12px;background:var(--raised);
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto;
+    box-shadow:0 2px 0 #0003;
+  }
+  .set-row .body{flex:1;min-width:0;}
+  .set-row .body .t{font-size:14.5px;font-weight:500;}
+  .set-row .body .s{font-size:11.5px;color:var(--faint);margin-top:1px;}
+  .set-row .chev{color:var(--faint);font-size:16px;}
+  .set-row.hi{
+    background:linear-gradient(90deg,#3a2830,transparent);
+    margin:0 -8px;padding:13px 12px;border-radius:14px;
+    border:1.5px solid var(--coral-dim);
+    box-shadow:0 0 20px -8px #ff8f7a66;
+  }
+  .set-row.hi .ic{background:#3a2830;border:1.5px solid var(--coral-dim);color:var(--coral-bright);}
+  .set-row.hi .body .t{color:var(--coral-bright);font-weight:700;}
+
+  .cloud-pill{
+    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+    color:#142820;background:linear-gradient(145deg,#a8dcc0,var(--sage));
+    border:1.5px solid #a8dcc0;padding:7px 13px;border-radius:999px;
+    box-shadow:0 3px 0 #3d5a4c, 0 6px 14px -6px #8fcbb088;
+    transform:rotate(-1deg);
+  }
+  .cloud-pill .dot{width:7px;height:7px;border-radius:50%;background:#142820;box-shadow:0 0 6px #fff8;}
+
+  .pdf{
+    background:linear-gradient(180deg,#221c2c,#1a1522);
+    border:1.5px solid var(--line);border-radius:18px;padding:14px;
+    flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;
+    box-shadow:inset 0 1px 0 #fff1;
+  }
+  .pdf .ph{display:flex;justify-content:space-between;align-items:baseline;}
+  .pdf .ph .brand{font-family:"Fraunces",serif;font-size:16px;font-weight:600;font-style:italic;}
+  .pdf .ph .range{font-family:"JetBrains Mono",monospace;font-size:9.5px;color:var(--faint);letter-spacing:.06em;}
+  .pdf .block{background:var(--surface);border-radius:12px;padding:10px 11px;border:1px solid #3a3242;}
+  .pdf .block .k{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:5px;}
+  .pdf .block .v{font-size:12.5px;line-height:1.45;color:var(--muted);}
+  .pdf .block .v b{color:var(--text);font-weight:600;}
+  .pdf .block .v .c{color:var(--coral-bright);}
+  .pdf .block .v .l{color:var(--lav-bright);}
+  .mini-bars{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+  .mini-bars .r{display:flex;align-items:center;gap:8px;font-size:11px;}
+  .mini-bars .nm{width:70px;color:var(--muted);}
+  .mini-bars .tr{flex:1;height:6px;border-radius:4px;background:#2a2431;overflow:hidden;}
+  .mini-bars .fl{height:100%;background:linear-gradient(90deg,var(--coral-dim),var(--coral-bright));border-radius:4px;}
+
+  .empty-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 8px;}
+  .empty-hero .mark{
+    width:80px;height:80px;border-radius:28px;
+    background:radial-gradient(circle at 38% 30%,#ffd0c4,var(--coral) 48%,#c45a50);
+    box-shadow:0 0 48px -6px #ff8f7a99, 0 8px 0 #8a3a42;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces",serif;font-size:32px;font-weight:600;font-style:italic;
+    color:#2a1210;margin-bottom:20px;
+    position:relative;
+  }
+  .empty-hero .mark .doodle{
+    position:absolute;font-style:normal;font-size:16px;
+  }
+  .empty-hero .mark .d1{top:-8px;right:-10px;transform:rotate(18deg);}
+  .empty-hero .mark .d2{bottom:-4px;left:-12px;transform:rotate(-20deg);font-size:14px;}
+  .empty-hero h2{font-family:"Fraunces",serif;font-weight:600;font-size:24px;letter-spacing:-.01em;}
+  .empty-hero p{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.55;max-width:26ch;}
+
+  .cta-row{display:flex;gap:11px;width:100%;}
+  .cta{
+    flex:1;border-radius:22px;padding:14px;text-align:center;
+    font-weight:700;font-size:14.5px;border:2px solid transparent;
+  }
+  .cta.talk{
+    background:linear-gradient(145deg,var(--coral-bright),var(--coral));
+    color:#2a1210;box-shadow:0 4px 0 #8a3a42, 0 10px 22px -8px #ff8f7a99;
+  }
+  .cta.tap{
+    background:transparent;border-color:var(--line);color:var(--text);
+    box-shadow:0 3px 0 #0003;
+  }
+  .cta .ml{display:flex;align-items:center;justify-content:center;gap:8px;}
+  .cta .hint{font-weight:500;font-size:11px;margin-top:3px;opacity:.75;}
+
+  .soft-edu{
+    margin-top:auto;
+    background:linear-gradient(160deg,#2e2640,#241e32);
+    border:1.5px solid var(--lav-dim);border-radius:18px;padding:15px;
+    text-align:left;box-shadow:0 0 24px -10px #b39be866;
+  }
+  .soft-edu .k{
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    font-size:13px;color:var(--lav-bright);margin-bottom:8px;
+  }
+  .soft-edu p{font-size:13px;color:var(--muted);line-height:1.5;}
+  .soft-edu p b{color:var(--text);font-weight:600;}
+
+  .progress{display:flex;gap:6px;margin-bottom:18px;}
+  .progress i{flex:1;height:4px;border-radius:3px;background:var(--line);}
+  .progress i.on{background:linear-gradient(90deg,var(--coral),var(--coral-bright));box-shadow:0 0 8px #ff8f7a88;}
+  .progress i.done{background:var(--coral-dim);}
+
+  .brand-mark{
+    width:96px;height:96px;border-radius:32px;
+    background:radial-gradient(circle at 35% 28%,#ffd0c4,var(--coral) 42%,#c45a50 100%);
+    box-shadow:0 0 56px -8px #ff8f7aaa, 0 10px 0 #8a3a42;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces",serif;font-size:40px;font-weight:600;font-style:italic;
+    color:#2a1210;margin:auto auto 0;
+    position:relative;
+  }
+  .brand-mark .sparkle{
+    position:absolute;font-style:normal;font-size:18px;
+  }
+  .brand-mark .s1{top:-6px;right:-8px;transform:rotate(15deg);}
+  .brand-mark .s2{bottom:2px;left:-10px;transform:rotate(-25deg);font-size:14px;}
+
+  .welcome-copy{text-align:center;margin-top:26px;}
+  .welcome-copy h1{font-family:"Fraunces",serif;font-weight:600;font-size:38px;letter-spacing:-.02em;}
+  .welcome-copy .promise{
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    font-size:18px;color:var(--coral-bright);margin-top:14px;line-height:1.35;
+  }
+  .welcome-copy .blurb{font-size:13.5px;color:var(--muted);margin-top:12px;line-height:1.5;max-width:28ch;margin-left:auto;margin-right:auto;}
+
+  .privacy-list{display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+  .privacy-list .item{display:flex;gap:12px;align-items:flex-start;}
+  .privacy-list .dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex:0 0 auto;}
+  .privacy-list .dot.sage{background:var(--sage);box-shadow:0 0 10px var(--sage);}
+  .privacy-list .dot.lav{background:var(--lav-bright);box-shadow:0 0 10px var(--lav);}
+  .privacy-list .dot.coral{background:var(--coral-bright);box-shadow:0 0 10px var(--coral);}
+  .privacy-list .t{font-size:14px;font-weight:700;}
+  .privacy-list .s{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4;}
+
+  .field{margin-top:14px;}
+  .field .fl{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:9px;}
+
+  .entry-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .entry-meta .when{font-size:13px;color:var(--muted);}
+  .entry-meta .badge{
+    font-family:"Fraunces",serif;font-style:italic;font-weight:500;
+    font-size:12px;color:#2a1210;
+    background:linear-gradient(145deg,var(--coral-bright),var(--coral));
+    border:1.5px solid #ffb4a4;padding:4px 11px;border-radius:999px;
+    box-shadow:0 2px 0 #8a3a42;transform:rotate(2deg);
+  }
+
+  .danger{
+    margin-top:auto;text-align:center;color:#f0a0a0;font-size:14px;font-weight:600;
+    padding:12px;border:1.5px dashed #6a4040;border-radius:16px;background:#2a1a1e;
+  }
+
+  .rem-card{display:flex;gap:12px;align-items:flex-start;}
+  .rem-card .ic{
+    width:42px;height:42px;border-radius:15px;
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;
+    box-shadow:0 3px 0 #0003;
+  }
+  .rem-card .ic.lav{background:linear-gradient(145deg,#342850,#241f33);border:1.5px solid var(--lav-dim);color:var(--lav-bright);box-shadow:0 3px 0 #3a2a58;}
+  .rem-card .ic.coral{background:linear-gradient(145deg,#3a2830,#2e2229);border:1.5px solid var(--coral-dim);color:var(--coral-bright);box-shadow:0 3px 0 #5a3038;}
+
+  .footer{
+    max-width:1240px;margin:56px auto 0;padding-top:28px;
+    border-top:1.5px dashed var(--line);color:var(--faint);font-size:13px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  }
+  .footer .fm{font-family:"Fraunces",serif;font-style:italic;color:var(--lav);}
+
+  .spacer{flex:1;}
+
+  .phase-pill{
+    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+    color:#1a1430;background:linear-gradient(145deg,var(--lav-bright),var(--lav));
+    border:1.5px solid var(--lav-bright);padding:7px 12px;border-radius:999px;
+    box-shadow:0 3px 0 #5a4a7a;transform:rotate(1.5deg);
+  }
+  .phase-pill .dot{width:7px;height:7px;border-radius:50%;background:#1a1430;}
+
+  .pattern-ring{
+    width:72px;height:72px;border-radius:50%;
+    border:2.5px dashed var(--lav);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--lav-bright);font-size:26px;margin-bottom:18px;
+    box-shadow:0 0 28px -6px #b39be888;
+    position:relative;background:radial-gradient(circle,#b39be822,transparent 70%);
+  }
+  .pattern-ring .orb{
+    position:absolute;width:10px;height:10px;border-radius:50%;
+    background:var(--lav-bright);box-shadow:0 0 10px var(--lav);
+    top:-2px;right:8px;
+  }
+  .pattern-ring .orb2{
+    position:absolute;width:7px;height:7px;border-radius:50%;
+    background:var(--coral-bright);box-shadow:0 0 8px var(--coral);
+    bottom:4px;left:2px;
+  }
+
+  .title-fun{
+    font-family:"Fraunces",serif;font-weight:600;letter-spacing:-.015em;
+  }
+</style>
+</head>
+<body>
+
+<div class="board-head">
+  <div class="kicker"><span class="spark">✨</span> Ebb · design board · a little more joy</div>
+  <h1>Ebb — <em>v1 gaps</em></h1>
+  <p>Still-to-design screens from the product spec: onboarding, settings, doctor export, entry edit, empty states, and reminders. Same meanings as always — warm coral = pain, cool lavender = cycle — just with more personality.</p>
+</div>
+
+<div class="flow-note">
+  <b>Scope.</b> These frames close the gaps between a working log loop and a shippable v1 — first-run trust, privacy lock, HealthKit / mic / notifications, and the calm PDF you can hand your neurologist. <em>No fake data</em> on empty states; copy stays warm, a little cheeky, never clinical.
+</div>
+
+<!-- ===================== ONBOARDING ===================== -->
+<div class="section">
+  <div class="sk">✦ 01 · First run · zig-zag</div>
+  <h2>Onboarding</h2>
+  <p>Brand wink → honest disclaimer → permissions as stickers → light cycle setup. Four phones; one friendly story.</p>
+</div>
+<div class="wavy"></div>
+
+<div class="zig">
+
+  <!-- 1 Welcome -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">1</span> Welcome · the wink</div>
+    <div class="phone-mat mat-peach">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="progress"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="brand-mark">E<span class="sparkle s1">✦</span><span class="sparkle s2">〰️</span></div>
+        <div class="welcome-copy">
+          <h1>Ebb</h1>
+          <div class="promise">You talk. It fills the buttons.</div>
+          <div class="blurb">On-device tracking for menstrual migraine — private, no account, zero lecture.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn primary">Let’s go →</div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Brand wink.</b> Bigger italic mark, soft glow, one promise. No feature dump — just “let’s go.”</div>
+  </div>
+
+  <!-- 2 Privacy -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">2</span> Privacy · soft honesty</div>
+    <div class="phone-mat mat-lav">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="progress"><i class="done"></i><i class="on"></i><i></i><i></i></div>
+        <div class="title-fun" style="font-size:24px;margin-top:4px;">Built for your notes,<br><em style="color:var(--coral-bright);font-style:italic;">not</em> a diagnosis.</div>
+        <p style="color:var(--muted);font-size:13.5px;margin-top:10px;line-height:1.5;">Ebb is a self-tracker. It doesn’t diagnose, treat, or replace your clinician — and that’s the point.</p>
+        <div class="privacy-list" style="margin-top:22px;">
+          <div class="item">
+            <div class="dot sage"></div>
+            <div>
+              <div class="t">No account 🌱</div>
+              <div class="s">Nothing to sign up for. Open the app and start.</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="dot lav"></div>
+            <div>
+              <div class="t">Stays on your devices</div>
+              <div class="s">Local first. Optional private iCloud via CloudKit — never a public cloud.</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="dot coral"></div>
+            <div>
+              <div class="t">You own the export</div>
+              <div class="s">Hand a calm PDF to your doctor when you want. Your call.</div>
+            </div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn primary">I understand ✨</div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Disclaimer without scare.</b> Three glowing dots — sage / lav / coral — trust, not legalese.</div>
+  </div>
+
+  <!-- 3 Permissions -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">3</span> Permissions · pick your helpers</div>
+    <div class="phone-mat">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:42</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="progress"><i class="done"></i><i class="done"></i><i class="on"></i><i></i></div>
+        <div class="title-fun" style="font-size:23px;">A few optional helpers</div>
+        <p style="color:var(--muted);font-size:13px;margin-top:8px;line-height:1.45;">Flip on what helps. Everything can wait — change later in Settings, no guilt.</p>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;">
+          <div class="card">
+            <div class="perm">
+              <div class="ic lav">◐</div>
+              <div class="body">
+                <div class="t">Cycle from Health</div>
+                <div class="s">Read period data from Apple Health</div>
+              </div>
+              <div class="toggle cool on"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="perm">
+              <div class="ic coral">◉</div>
+              <div class="body">
+                <div class="t">Microphone</div>
+                <div class="s">Talk to fill the symptom buttons</div>
+              </div>
+              <div class="toggle warm on"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="perm">
+              <div class="ic">🔔</div>
+              <div class="body">
+                <div class="t">Notifications</div>
+                <div class="s">Gentle luteal-window nudges</div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="perm">
+              <div class="ic sage">🔒</div>
+              <div class="body">
+                <div class="t">Face ID lock</div>
+                <div class="s">Require Face ID to open Ebb</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn primary">Continue</div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Sticker cards.</b> Soft shadows, clear toggles. Cool = Health cycle; warm = mic. Never a scary OS dump.</div>
+  </div>
+
+  <!-- 4 Cycle basics -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">4</span> Cycle basics · day one</div>
+    <div class="phone-mat mat-sage">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:42</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="progress"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
+        <div class="title-fun" style="font-size:23px;">Your typical cycle</div>
+        <p style="color:var(--muted);font-size:13px;margin-top:8px;line-height:1.45;">A starting guess. Ebb learns from what you log — this is just day one vibes.</p>
+        <div class="card" style="margin-top:20px;padding:20px 16px;">
+          <div class="mono-lbl" style="text-align:center;">Typical length</div>
+          <div class="stepper">
+            <div class="pm">−</div>
+            <div>
+              <div class="val">28</div>
+              <div class="unit">days</div>
+            </div>
+            <div class="pm">+</div>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <div class="mono-lbl" style="margin-bottom:10px;">Do you get aura?</div>
+          <div class="choice">
+            <div class="opt">
+              <div class="e">—</div>
+              <div class="t">No / unsure</div>
+              <div class="s">Skip for now</div>
+            </div>
+            <div class="opt on">
+              <div class="e">✦</div>
+              <div class="t">Yes, sometimes</div>
+              <div class="s">We’ll track it</div>
+            </div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn primary">Start tracking 🌊</div>
+        <div style="text-align:center;margin-top:10px;font-size:12.5px;color:var(--faint);">Change anytime — no biggie</div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Light setup.</b> Big italic cycle number in lav. Aura choice gets a cool glow — hormones, not pain.</div>
+  </div>
+
+</div>
+
+<!-- ===================== SETTINGS & EXPORT ===================== -->
+<div class="section">
+  <div class="sk">✦ 02 · Control & care · tilted mats</div>
+  <h2>Settings & doctor export</h2>
+  <p>Hub for appearance, reminders, meds, health, lock, about — with Export for doctor glowing coral. PDF stays calm.</p>
+</div>
+<div class="wavy"></div>
+
+<div class="grid">
+
+  <!-- 5 Settings hub -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">5</span> Settings hub</div>
+    <div class="phone-mat mat-peach">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:18</span><span class="dots">●●● ▮</span></div>
+      <div class="screen has-tabbar">
+        <div class="title-fun" style="font-size:28px;">Settings</div>
+        <div style="margin-top:14px;">
+          <div class="cloud-pill"><span class="dot"></span> iCloud private · synced</div>
+        </div>
+        <div class="card" style="margin-top:16px;padding:6px 12px;">
+          <div class="set-row">
+            <div class="ic">◐</div>
+            <div class="body"><div class="t">Appearance</div><div class="s">Dark · Plum ember joy</div></div>
+            <div class="chev">›</div>
+          </div>
+          <div class="set-row">
+            <div class="ic">🔔</div>
+            <div class="body"><div class="t">Reminders</div><div class="s">Luteal nudge · Sleep</div></div>
+            <div class="chev">›</div>
+          </div>
+          <div class="set-row">
+            <div class="ic">💊</div>
+            <div class="body"><div class="t">Medications</div><div class="s">Triptans, preventives…</div></div>
+            <div class="chev">›</div>
+          </div>
+          <div class="set-row">
+            <div class="ic">♥</div>
+            <div class="body"><div class="t">Health</div><div class="s">Cycle length · Aura · HealthKit</div></div>
+            <div class="chev">›</div>
+          </div>
+          <div class="set-row">
+            <div class="ic">🔒</div>
+            <div class="body"><div class="t">Privacy lock</div><div class="s">Face ID on</div></div>
+            <div class="chev">›</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;padding:6px 12px;">
+          <div class="set-row hi">
+            <div class="ic">📄</div>
+            <div class="body"><div class="t">Export for doctor</div><div class="s">Calm PDF · last 3 months</div></div>
+            <div class="chev" style="color:var(--coral-bright);">›</div>
+          </div>
+          <div class="set-row">
+            <div class="ic">ℹ</div>
+            <div class="body"><div class="t">About Ebb</div><div class="s">v1.0 · Disclaimer</div></div>
+            <div class="chev">›</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">∿</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab on"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Hub + highlight.</b> Sage sticker for iCloud; Export gets a coral glow row — the care action.</div>
+  </div>
+
+  <!-- 6 Doctor export -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">6</span> Doctor export</div>
+    <div class="phone-mat mat-lav">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:19</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="nav-back"><span class="arr">‹</span> Settings</div>
+        <div class="title-fun" style="font-size:22px;">Export for doctor</div>
+        <p style="color:var(--muted);font-size:12.5px;margin:6px 0 12px;">A quiet summary — cycle ↔ migraine, top triggers, date range. Yours to share.</p>
+        <div class="pdf">
+          <div class="ph">
+            <div class="brand">Ebb summary</div>
+            <div class="range">JUN 9 – SEP 9</div>
+          </div>
+          <div class="block">
+            <div class="k">Pattern</div>
+            <div class="v"><b class="c">12 migraines</b> across <b class="l">3 cycles</b>. Most cluster in the <b class="l">late luteal</b> window (days −5 to −1).</div>
+          </div>
+          <div class="block">
+            <div class="k">Top triggers logged</div>
+            <div class="mini-bars">
+              <div class="r"><span class="nm">Poor sleep</span><div class="tr"><div class="fl" style="width:82%"></div></div></div>
+              <div class="r"><span class="nm">Stress</span><div class="tr"><div class="fl" style="width:64%"></div></div></div>
+              <div class="r"><span class="nm">Skipped meal</span><div class="tr"><div class="fl" style="width:48%"></div></div></div>
+            </div>
+          </div>
+          <div class="block">
+            <div class="k">Severity mix</div>
+            <div class="v">Mild 3 · Moderate <b class="c">6</b> · Severe 3 · Avg <b>5.2 / 10</b></div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <div class="btn ghost sm">Save</div>
+          <div class="btn primary sm">Share…</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>PDF preview.</b> Coral for migraines, lav for cycle. Share / Save — no jargon soup.</div>
+  </div>
+
+  <!-- 7 Entry detail / Edit -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">7</span> Entry · edit</div>
+    <div class="phone-mat">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:20</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="nav-back"><span class="arr">‹</span> Today</div>
+        <div class="entry-meta">
+          <div class="title-fun" style="font-size:22px;">Migraine</div>
+          <div class="badge">edit ✦</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Yesterday · 16:40 · Late luteal</div>
+        <div class="field">
+          <div class="fl">Severity</div>
+          <div class="sev-meter">
+            <div class="s fill">1</div><div class="s fill">2</div><div class="s fill">3</div>
+            <div class="s fill">4</div><div class="s fill">5</div><div class="s cur">6</div>
+            <div class="s">7</div><div class="s">8</div><div class="s">9</div><div class="s">10</div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fl">Location</div>
+          <div class="pills">
+            <span class="pill on">Left temple</span>
+            <span class="pill">Right</span>
+            <span class="pill ghost-on">Behind eye</span>
+            <span class="pill">Neck</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fl">Symptoms</div>
+          <div class="pills">
+            <span class="pill on">Throbbing</span>
+            <span class="pill on">Nausea</span>
+            <span class="pill">Light sens.</span>
+            <span class="pill">Aura</span>
+            <span class="pill">Fatigue</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fl">Possible triggers</div>
+          <div class="pills">
+            <span class="pill on">Poor sleep</span>
+            <span class="pill">Stress</span>
+            <span class="pill">Hormonal</span>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn primary">Save changes</div>
+        <div class="danger" style="margin-top:10px;">Delete entry</div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Sticker pills.</b> Soft shadows + tiny tilts on selected chips. Quiet dashed Delete — no drama.</div>
+  </div>
+
+</div>
+
+<!-- ===================== EMPTY & REMINDERS ===================== -->
+<div class="section">
+  <div class="sk">✦ 03 · First weeks & soft nudges</div>
+  <h2>Empty states & reminders</h2>
+  <p>Honest empties for week one — inviting, never guilt. Reminders stay soft: luteal window + optional sleep.</p>
+</div>
+<div class="wavy"></div>
+
+<div class="grid">
+
+  <!-- 8 Empty Today -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">8</span> Empty · Today</div>
+    <div class="phone-mat mat-peach">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:12</span><span class="dots">●●● ▮</span></div>
+      <div class="screen has-tabbar">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div class="title-fun" style="font-size:26px;">Good morning</div>
+            <div style="color:var(--muted);font-size:13px;margin-top:2px;">Day 1 with Ebb 🌊</div>
+          </div>
+          <div class="phase-pill">
+            <span class="dot"></span> Getting started
+          </div>
+        </div>
+        <div class="empty-hero">
+          <div class="mark">+<span class="doodle d1">✨</span><span class="doodle d2">〰️</span></div>
+          <h2>Blank page — in a good way</h2>
+          <p>When something shows up — migraine, period day, or just how you slept — Talk or Tap. Same buttons either way.</p>
+        </div>
+        <div class="cta-row">
+          <div class="cta talk">
+            <div class="ml"><span>◉</span> Talk</div>
+            <div class="hint">Say what hurts</div>
+          </div>
+          <div class="cta tap">
+            <div class="ml"><span>▦</span> Tap</div>
+            <div class="hint">Fill the pills</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><span class="ic">◎</span>Today</div>
+          <div class="tab"><span class="ic">∿</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>First-week honest.</b> Glowing + mark with doodles. Lav sticker says “Getting started.” No fake entries.</div>
+  </div>
+
+  <!-- 9 Empty Patterns -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">9</span> Empty · Patterns</div>
+    <div class="phone-mat mat-lav">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:14</span><span class="dots">●●● ▮</span></div>
+      <div class="screen has-tabbar">
+        <div class="title-fun" style="font-size:26px;">Patterns</div>
+        <div class="empty-hero" style="padding-top:16px;">
+          <div class="pattern-ring">∿<span class="orb"></span><span class="orb2"></span></div>
+          <h2 style="font-size:22px;">Needs a few cycles</h2>
+          <p>Patterns get juicy after roughly two to three cycles of logs. Keep noting what shows up — we’ll draw the map.</p>
+        </div>
+        <div class="soft-edu">
+          <div class="k">What you’ll see later ✦</div>
+          <p>Migraines against your <b>luteal window</b>, top triggers, and a calm timeline — when there’s enough signal to trust.</p>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">◎</span>Today</div>
+          <div class="tab on"><span class="ic">∿</span>Patterns</div>
+          <div class="tab"><span class="ic">▦</span>Calendar</div>
+          <div class="tab"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Soft education, not guilt.</b> Dashed lav ring with glow orbs. Explains the wait — no empty charts pretending.</div>
+  </div>
+
+  <!-- 10 Reminders -->
+  <div class="frame-wrap">
+    <div class="scr-badge"><span class="num">10</span> Reminders</div>
+    <div class="phone-mat mat-sage">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>21:22</span><span class="dots">●●● ▮</span></div>
+      <div class="screen">
+        <div class="nav-back"><span class="arr">‹</span> Settings</div>
+        <div class="title-fun" style="font-size:24px;">Reminders</div>
+        <p style="color:var(--muted);font-size:13px;margin-top:6px;line-height:1.45;">Soft nudges — never nagging. Off by default unless you flip them on.</p>
+        <div class="card" style="margin-top:20px;">
+          <div class="rem-card">
+            <div class="ic lav">◐</div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="ttl">Luteal-window nudge</div>
+                <div class="toggle cool on"></div>
+              </div>
+              <div class="sub" style="margin-top:6px;">A gentle check-in around days −5 to −1, when migraines often cluster.</div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+                <span class="mono-lbl">Time</span>
+                <span class="pill lav-on" style="padding:5px 10px;">18:30</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="rem-card">
+            <div class="ic coral">☾</div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="ttl">Sleep log reminder</div>
+                <div class="toggle warm"></div>
+              </div>
+              <div class="sub" style="margin-top:6px;">Optional evening prompt to note how you slept — a common migraine trigger.</div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:8px;opacity:.45;">
+                <span class="mono-lbl">Time</span>
+                <span class="pill" style="padding:5px 10px;">21:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="soft-edu" style="margin-top:auto;">
+          <div class="k">Why these two ✦</div>
+          <p>Cycle timing and sleep are the highest-signal, lowest-friction nudges. Everything else stays on you.</p>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="annot"><b>Two soft reminders.</b> Luteal = cool sticker / on; sleep = warm / optional off. Explains why, never scolds.</div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div>Ebb · v1 gaps · warmer plum-ember · personality pass</div>
+  <div class="fm">warm = pain · cool = cycle · made to smile</div>
+</div>
+
+</body>
+</html>
