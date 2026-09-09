@@ -76,6 +76,10 @@ struct ConfirmView: View {
                     .foregroundStyle(theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
 
+                if !viewModel.values.isEmpty && !viewModel.classificationFailed {
+                    confirmReadyBanner
+                }
+
                 transcriptSection
 
                 if viewModel.classificationFailed && viewModel.values.isEmpty {
@@ -101,27 +105,32 @@ struct ConfirmView: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(12)
-                .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(theme.line, lineWidth: 1)
-                }
+                .themeCard(padding: 12, cornerRadius: theme.isLight ? 16 : 12)
                 .accessibilityLabel("You said: \(viewModel.transcript)")
         }
+    }
+
+    private var confirmReadyBanner: some View {
+        HStack(spacing: 14) {
+            EbbMascot(variant: .happy, size: 52)
+
+            Text("Draft from your words — tap anything to fix it before saving.")
+                .font(.footnote)
+                .foregroundStyle(theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .themeCard(padding: 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Ebb sorted your words into the chart. Tap fields to fix before saving.")
     }
 
     private var emptyClassificationHint: some View {
         Text("I couldn't map that to the chart yet — tap what applies below.")
             .font(.footnote)
             .foregroundStyle(theme.muted)
-            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(theme.line, lineWidth: 1)
-            }
+            .themeCard(padding: 12, cornerRadius: theme.isLight ? 16 : 12)
     }
 
     private func save() {

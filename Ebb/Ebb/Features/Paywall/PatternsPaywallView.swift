@@ -15,6 +15,9 @@ struct PatternsPaywallView: View {
                 .foregroundStyle(theme.muted)
                 .padding(.top, 4)
 
+            paywallIllustration
+                .padding(.top, 16)
+
             blurredPreview
                 .padding(.top, 18)
 
@@ -42,6 +45,47 @@ struct PatternsPaywallView: View {
         .padding(.horizontal, 20)
         .padding(.top, 8)
         .padding(.bottom, 24)
+    }
+
+    private var paywallIllustration: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.surface, theme.painDim.opacity(0.55)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 64, height: 64)
+                    .shadow(color: theme.cardShadowColor, radius: 8, y: 4)
+
+                EbbMascot(variant: .default, size: 52)
+            }
+
+            Text("Patterns, doctor PDF, full history — still private, still on your phone.")
+                .font(.system(.subheadline, design: .serif))
+                .italic()
+                .foregroundStyle(theme.text.opacity(0.88))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [theme.surface, theme.painDim.opacity(0.35)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .strokeBorder(theme.line, lineWidth: 1)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Ebb. Patterns, doctor PDF, and full history stay private on your phone.")
     }
 
     private var blurredPreview: some View {
@@ -100,11 +144,7 @@ struct PatternsPaywallView: View {
                 )
             )
         }
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(theme.line, lineWidth: 1)
-        }
+        .themeCard(padding: 18)
     }
 
     private var featureList: some View {

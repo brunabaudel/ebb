@@ -38,6 +38,9 @@ struct OnboardingView: View {
     private var welcomeStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                EbbIllustrationWell(variant: .happy, diameter: 120, mascotSize: 96)
+                    .frame(maxWidth: .infinity)
+
                 VStack(alignment: .leading, spacing: 10) {
                     Text("A calmer way to track ")
                         .font(.system(.title2, design: .serif))
@@ -245,13 +248,8 @@ struct OnboardingView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(theme.line, lineWidth: 1)
-        }
+        .themeCard(padding: 16, cornerRadius: theme.isLight ? 18 : 14)
     }
 
     private var disclaimerRow: some View {

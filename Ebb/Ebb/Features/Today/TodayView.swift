@@ -113,7 +113,7 @@ struct TodayView: View {
                 .foregroundStyle(theme.onPain)
                 .frame(width: 54, height: 54)
                 .background(theme.pain, in: RoundedRectangle(cornerRadius: 18))
-                .shadow(color: theme.pain.opacity(0.45), radius: 12, y: 4)
+                .shadow(color: theme.pain.opacity(theme.fabShadowOpacity), radius: 12, y: 4)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Talk")
@@ -260,12 +260,24 @@ struct TodayView: View {
     }
 
     private var emptyState: some View {
-        Text("Nothing logged yet today. Tap + or the mic to log how you're feeling.")
-            .font(.subheadline)
-            .foregroundStyle(theme.muted)
-            .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: 16) {
+            EbbIllustrationWell(variant: .default, diameter: 108, mascotSize: 84)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Blank page — in a good way")
+                    .font(.system(.headline, design: .serif))
+                    .foregroundStyle(theme.text)
+
+                Text("When something shows up — migraine, period day, or just how you slept — Talk or Tap.")
+                    .font(.subheadline)
+                    .foregroundStyle(theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityLabel("Nothing logged yet today. Tap plus or the microphone to log how you're feeling.")
+        }
+        .padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Nothing logged yet today. Ebb is here. Tap plus or the microphone to log how you're feeling.")
     }
 
     private var filteredEmptyState: some View {
