@@ -15,16 +15,14 @@ struct HealthKitSettingsView: View {
                 Text(healthKitExplanation)
                     .font(.footnote)
                     .foregroundStyle(theme.muted)
-                    .listRowBackground(theme.surface)
+                    .themeListRow()
 
                 healthKitActions
             } header: {
                 Text("HealthKit")
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(theme.base)
-        .foregroundStyle(theme.text)
+        .themeSettingsList()
         .navigationTitle("HealthKit")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -40,6 +38,7 @@ struct HealthKitSettingsView: View {
         switch cycleService.authorizationStatus {
         case .authorized, .unavailable:
             healthKitConnectionLabel
+                .themeListRow()
 
         case .notDetermined, .denied:
             Button {
@@ -48,6 +47,7 @@ struct HealthKitSettingsView: View {
                 healthKitConnectionLabel
             }
             .disabled(isRequestingHealthKit)
+            .themeListRow()
         }
     }
 
@@ -66,33 +66,40 @@ struct HealthKitSettingsView: View {
         case .notDetermined:
             if isRequestingHealthKit {
                 ProgressView()
+                    .themeListRow()
             }
 
         case .authorized:
             Button("Refresh cycle data") {
                 Task { await cycleService.refresh() }
             }
+            .themeListRow()
             if cycleService.healthKitPeriodDays.isEmpty {
                 Text("No menstrual flow data found yet. In the Health app, open Sharing → Apps → Ebb and turn on Menstrual Cycle.")
                     .font(.footnote)
                     .foregroundStyle(theme.muted)
+                    .themeListRow()
             }
             Button("Open Health app") {
                 openHealthApp()
             }
+            .themeListRow()
 
         case .denied:
             Text("Ebb cannot read menstrual data. Open the Health app → Sharing → Apps → Ebb and allow Menstrual Cycle.")
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
+                .themeListRow()
             Button("Open Health app") {
                 openHealthApp()
             }
+            .themeListRow()
 
         case .unavailable:
             Text("HealthKit is not available on this device.")
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
+                .themeListRow()
         }
     }
 
@@ -139,7 +146,7 @@ struct HealthKitSettingsView: View {
     NavigationStack {
         HealthKitSettingsView()
     }
-    .environment(\.theme, .plumEmber)
+    .environment(\.theme, .softPaper)
     .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
     .environment(AppLockController())
 }

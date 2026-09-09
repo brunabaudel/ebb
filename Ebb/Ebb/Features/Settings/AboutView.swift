@@ -27,8 +27,7 @@ struct AboutView: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(theme.base)
-        .foregroundStyle(theme.text)
+        .themeSettingsScreen()
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -38,5 +37,5 @@ struct AboutView: View {
     NavigationStack {
         AboutView()
     }
-    .environment(\.theme, .plumEmber)
+    .environment(\.theme, .softPaper)
 }
