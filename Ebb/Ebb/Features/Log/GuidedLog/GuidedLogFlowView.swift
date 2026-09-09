@@ -49,7 +49,7 @@ struct GuidedLogFlowView: View {
                 ScrollView {
                     Group {
                         if step == .review {
-                            reviewStep
+                            reviewStep(availableHeight: geometry.size.height)
                         } else {
                             questionBody
                         }
@@ -95,7 +95,11 @@ struct GuidedLogFlowView: View {
         }
     }
 
-    private func entryPhrase(font: Font, centered: Bool) -> some View {
+    private func entryPhrase(
+        font: Font,
+        centered: Bool,
+        allowsMultiline: Bool = false
+    ) -> some View {
         FlowLayout(spacing: 0, centerRows: centered) {
             ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
                 if segment.isFilled || segment.step != nil {
@@ -104,8 +108,7 @@ struct GuidedLogFlowView: View {
                             step = target
                         }
                     } label: {
-                        Text(segment.text)
-                            .font(font)
+                        entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
                             .fontWeight(segment.isFilled ? .semibold : .regular)
                             .foregroundStyle(segmentColor(for: segment))
                             .underline(segment.step != nil && segment.isFilled, pattern: .dot)
@@ -113,13 +116,24 @@ struct GuidedLogFlowView: View {
                     .buttonStyle(.plain)
                     .disabled(segment.step == nil)
                 } else {
-                    Text(segment.text)
-                        .font(font)
+                    entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
                         .foregroundStyle(theme.muted)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
+    }
+
+    private func entryPhraseText(
+        _ text: String,
+        font: Font,
+        centered: Bool,
+        allowsMultiline: Bool
+    ) -> some View {
+        Text(text)
+            .font(font)
+            .multilineTextAlignment(centered ? .center : .leading)
+            .fixedSize(horizontal: !allowsMultiline, vertical: true)
     }
 
     private func segmentColor(for segment: SentenceSegment) -> Color {
@@ -310,8 +324,16 @@ struct GuidedLogFlowView: View {
         }
     }
 
-    private var reviewStep: some View {
-        VStack(alignment: .center, spacing: 24) {
+    private static let reviewPhraseFontStyles: [Font.TextStyle] = [.largeTitle, .title, .title2, .title3]
+
+    private func reviewStep(availableHeight: CGFloat) -> some View {
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let phraseMaxHeight = Self.reviewPhraseMaxHeight(
+            availableHeight: availableHeight,
+            unsetFieldCount: unset.count
+        )
+
+        return VStack(alignment: .center, spacing: 24) {
             Spacer(minLength: 12)
 
             VStack(spacing: 10) {
@@ -320,10 +342,25 @@ struct GuidedLogFlowView: View {
                     .kerning(1.2)
                     .foregroundStyle(theme.muted)
 
-                entryPhrase(font: .system(.title2, design: .serif), centered: true)
+                GeometryReader { phraseGeometry in
+                    ViewThatFits(in: .vertical) {
+                        ForEach(Self.reviewPhraseFontStyles, id: \.self) { style in
+                            entryPhrase(
+                                font: .system(style, design: .serif),
+                                centered: true,
+                                allowsMultiline: true
+                            )
+                        }
+                    }
+                    .frame(
+                        width: phraseGeometry.size.width,
+                        height: phraseGeometry.size.height,
+                        alignment: .top
+                    )
+                }
+                .frame(maxWidth: .infinity, height: phraseMaxHeight)
             }
 
-            let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
             if !unset.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(unset, id: \.label) { item in
@@ -349,7 +386,21 @@ struct GuidedLogFlowView: View {
 
             Spacer(minLength: 12)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, minHeight: availableHeight)
+    }
+
+    private static func reviewPhraseMaxHeight(availableHeight: CGFloat, unsetFieldCount: Int) -> CGFloat {
+        let scrollPadding: CGFloat = 48
+        let spacers: CGFloat = 24
+        let labelBlock: CGFloat = 28
+        let stackSpacing: CGFloat = 24
+        var overhead = scrollPadding + spacers + labelBlock + stackSpacing
+
+        if unsetFieldCount > 0 {
+            overhead += stackSpacing + 32 + CGFloat(unsetFieldCount) * 30
+        }
+
+        return max(availableHeight - overhead, 80)
     }
 
     // MARK: - Focus shell

@@ -154,37 +154,54 @@ struct FlowLayout: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = arrange(proposal: proposal, subviews: subviews)
+        let maxWidth = proposal.width ?? bounds.width
+        let result = arrange(maxWidth: maxWidth, subviews: subviews)
         for (index, position) in result.positions.enumerated() {
+            let size = result.sizes[index]
+            let remainingWidth = max(maxWidth - position.x, 0)
+            let placeProposal: ProposedViewSize = maxWidth.isFinite && size.width >= remainingWidth - 0.5
+                ? ProposedViewSize(width: remainingWidth, height: nil)
+                : .unspecified
             subviews[index].place(
                 at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: .unspecified
+                proposal: placeProposal
             )
         }
     }
 
     private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> Arrangement {
-        let maxWidth = proposal.width ?? .infinity
+        arrange(maxWidth: proposal.width ?? .infinity, subviews: subviews)
+    }
+
+    private func arrange(maxWidth: CGFloat, subviews: Subviews) -> Arrangement {
         var positions: [CGPoint] = []
+        var sizes: [CGSize] = []
         var rowRanges: [Range<Int>] = []
         var rowStart = 0
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
         var totalHeight: CGFloat = 0
+        var contentWidth: CGFloat = 0
 
         for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > maxWidth, x > 0 {
+            let remainingWidth = maxWidth.isFinite ? max(maxWidth - x, 0) : .infinity
+            var size = measuredSize(for: subview, maxWidth: remainingWidth)
+
+            if maxWidth.isFinite, x + size.width > maxWidth, x > 0 {
                 rowRanges.append(rowStart..<positions.count)
                 rowStart = positions.count
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0
+                size = measuredSize(for: subview, maxWidth: maxWidth)
             }
+
             positions.append(CGPoint(x: x, y: y))
+            sizes.append(size)
             rowHeight = max(rowHeight, size.height)
             x += size.width + spacing
+            contentWidth = max(contentWidth, x - spacing)
             totalHeight = y + rowHeight
         }
         if rowStart < positions.count {
@@ -195,8 +212,7 @@ struct FlowLayout: Layout {
             for range in rowRanges {
                 var rowWidth: CGFloat = 0
                 for index in range {
-                    let size = subviews[index].sizeThatFits(.unspecified)
-                    rowWidth = max(rowWidth, positions[index].x + size.width)
+                    rowWidth = max(rowWidth, positions[index].x + sizes[index].width)
                 }
                 let offset = max((maxWidth - rowWidth) / 2, 0)
                 for index in range {
@@ -206,14 +222,23 @@ struct FlowLayout: Layout {
         }
 
         return Arrangement(
-            size: CGSize(width: maxWidth.isFinite ? maxWidth : x, height: totalHeight),
-            positions: positions
+            size: CGSize(width: maxWidth.isFinite ? maxWidth : contentWidth, height: totalHeight),
+            positions: positions,
+            sizes: sizes
         )
+    }
+
+    private func measuredSize(for subview: LayoutSubviews.Element, maxWidth: CGFloat) -> CGSize {
+        guard maxWidth.isFinite else {
+            return subview.sizeThatFits(.unspecified)
+        }
+        return subview.sizeThatFits(ProposedViewSize(width: maxWidth, height: nil))
     }
 
     private struct Arrangement {
         let size: CGSize
         let positions: [CGPoint]
+        let sizes: [CGSize]
     }
 }
 
