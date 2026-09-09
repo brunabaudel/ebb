@@ -181,12 +181,15 @@ struct TapLogView: View {
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let storedNote = trimmedNote.isEmpty ? nil : trimmedNote
 
+        let isFirstEntry: Bool
         if let entry {
+            isFirstEntry = false
             entry.fieldValues = validated
             entry.schemaVersion = schema.schemaVersion
             entry.note = storedNote
             entry.cyclePhase = cycleService.phase(for: entry.timestamp, entries: entries)
         } else {
+            isFirstEntry = entries.isEmpty
             let timestamp = Date.now
             let extraPeriodDays = bleedingDays(from: validated, on: timestamp)
             let phase = cycleService.phase(
@@ -209,6 +212,9 @@ struct TapLogView: View {
             return
         }
         LocalEntrySaveNotifier.notifySaved()
+        if isFirstEntry {
+            Task { await ReminderScheduler.requestAuthorizationIfNeeded() }
+        }
         dismiss()
     }
 

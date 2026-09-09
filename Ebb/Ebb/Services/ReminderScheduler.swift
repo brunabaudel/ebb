@@ -120,6 +120,12 @@ enum ReminderScheduler {
         }
     }
 
+    /// Prompts only when the user has never been asked; skips if already granted or denied.
+    static func requestAuthorizationIfNeeded() async {
+        guard await authorizationStatus() == .notDetermined else { return }
+        _ = await requestAuthorization()
+    }
+
     static func authorizationStatus() async -> UNAuthorizationStatus {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }

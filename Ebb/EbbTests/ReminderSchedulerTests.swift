@@ -99,6 +99,31 @@ struct OnboardingPreferencesTests {
     }
 }
 
+@Suite("Onboarding view model")
+struct OnboardingViewModelTests {
+    @Test func stepsExcludeMicAndNotifications() {
+        let steps = OnboardingViewModel.Step.allCases
+        #expect(steps == [.welcome, .cycleInfo, .healthKit])
+    }
+
+    @Test @MainActor func completesAfterFinalStep() {
+        let defaults = UserDefaults(suiteName: "OnboardingViewModelTests.\(UUID().uuidString)")!
+        let preferences = OnboardingPreferences(defaults: defaults)
+        let viewModel = OnboardingViewModel()
+
+        viewModel.advance(from: preferences)
+        #expect(viewModel.step == .cycleInfo)
+        #expect(!preferences.hasCompletedOnboarding)
+
+        viewModel.advance(from: preferences)
+        #expect(viewModel.step == .healthKit)
+        #expect(!preferences.hasCompletedOnboarding)
+
+        viewModel.advance(from: preferences)
+        #expect(preferences.hasCompletedOnboarding)
+    }
+}
+
 @Suite("Luteal test data seeder")
 struct LutealTestDataSeederTests {
     @Test @MainActor func seedMakesTodayLutealDay15() throws {

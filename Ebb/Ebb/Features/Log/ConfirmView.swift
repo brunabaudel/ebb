@@ -144,6 +144,7 @@ struct ConfirmView: View {
             entries: entries,
             extraPeriodDays: extraPeriodDays
         )
+        let isFirstEntry = entries.isEmpty
 
         let entry = SymptomEntry(
             timestamp: timestamp,
@@ -158,6 +159,9 @@ struct ConfirmView: View {
             return
         }
         LocalEntrySaveNotifier.notifySaved()
+        if isFirstEntry {
+            Task { await ReminderScheduler.requestAuthorizationIfNeeded() }
+        }
         dismiss()
     }
 

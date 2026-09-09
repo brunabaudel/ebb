@@ -7,7 +7,6 @@ struct OnboardingView: View {
 
     @Environment(\.theme) private var theme
     @Environment(CycleService.self) private var cycleService
-    @Environment(SpeechCapture.self) private var speechCapture
     @Environment(AppLockController.self) private var appLock
 
     var body: some View {
@@ -20,10 +19,6 @@ struct OnboardingView: View {
                     cycleInfoStep
                 case .healthKit:
                     healthKitStep
-                case .microphone:
-                    microphoneStep
-                case .notifications:
-                    notificationsStep
                 }
             }
             .background(theme.base)
@@ -55,23 +50,11 @@ struct OnboardingView: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
 
-                VStack(spacing: 12) {
-                    permissionCard(
-                        icon: "heart.text.square.fill",
-                        title: "Apple Health",
-                        detail: "Reads your cycle dates so migraines line up with your hormones — no double entry."
-                    )
-                    permissionCard(
-                        icon: "mic.fill",
-                        title: "Microphone",
-                        detail: "So you can say how you feel and let the app fill the chart. Recognition stays on this device."
-                    )
-                    permissionCard(
-                        icon: "bell.fill",
-                        title: "Notifications",
-                        detail: "A gentle nudge entering your higher-risk luteal days. Optional."
-                    )
-                }
+                permissionCard(
+                    icon: "heart.text.square.fill",
+                    title: "Apple Health",
+                    detail: "Reads your cycle dates so migraines line up with your hormones — no double entry."
+                )
 
                 disclaimerRow
 
@@ -154,42 +137,6 @@ struct OnboardingView: View {
                 }
             },
             skipAction: { viewModel.advance(from: onboardingPreferences) }
-        )
-    }
-
-    // MARK: - Microphone
-
-    private var microphoneStep: some View {
-        permissionStep(
-            icon: "mic.fill",
-            title: "Allow the microphone",
-            detail: "So you can say how you feel during an attack. Speech stays on this device — nothing is sent to a server.",
-            primaryTitle: viewModel.isRequestingPermission ? "Requesting…" : "Allow microphone",
-            primaryAction: {
-                Task {
-                    await viewModel.requestMicrophone(speechCapture: speechCapture)
-                    viewModel.advance(from: onboardingPreferences)
-                }
-            },
-            skipAction: { viewModel.advance(from: onboardingPreferences) }
-        )
-    }
-
-    // MARK: - Notifications
-
-    private var notificationsStep: some View {
-        permissionStep(
-            icon: "bell.fill",
-            title: "Allow notifications",
-            detail: "A gentle heads-up when your luteal phase starts, plus an optional daily log reminder. You can change these anytime in Settings.",
-            primaryTitle: viewModel.isRequestingPermission ? "Requesting…" : "Allow notifications",
-            primaryAction: {
-                Task {
-                    await viewModel.requestNotifications()
-                    onboardingPreferences.markCompleted()
-                }
-            },
-            skipAction: { onboardingPreferences.markCompleted() }
         )
     }
 
@@ -287,6 +234,5 @@ struct OnboardingView: View {
     )
     .environment(\.theme, .plumEmber)
     .environment(CycleService(provider: MockCycleDataProvider()))
-    .environment(SpeechCapture(provider: MockSpeechRecognizer(transcript: "")))
     .environment(AppLockController())
 }

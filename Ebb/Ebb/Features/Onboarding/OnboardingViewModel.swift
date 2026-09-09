@@ -1,7 +1,7 @@
 import Observation
 import SwiftUI
 
-/// Permission sequencing for first-run onboarding (build-plan Phase 9).
+/// First-run onboarding: disclaimer, cycle basics, and HealthKit. Mic and notifications are requested in context later.
 @Observable
 @MainActor
 final class OnboardingViewModel {
@@ -9,8 +9,6 @@ final class OnboardingViewModel {
         case welcome
         case cycleInfo
         case healthKit
-        case microphone
-        case notifications
     }
 
     private(set) var step: Step = .welcome
@@ -36,18 +34,5 @@ final class OnboardingViewModel {
             appLock.endPermissionFlow()
         }
         await cycleService.requestAuthorization()
-    }
-
-    func requestMicrophone(speechCapture: SpeechCapture) async {
-        isRequestingPermission = true
-        defer { isRequestingPermission = false }
-        await speechCapture.requestAuthorization()
-        speechCapture.refreshAuthorizationStatus()
-    }
-
-    func requestNotifications() async {
-        isRequestingPermission = true
-        defer { isRequestingPermission = false }
-        _ = await ReminderScheduler.requestAuthorization()
     }
 }
