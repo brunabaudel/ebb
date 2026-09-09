@@ -67,8 +67,7 @@ struct DoctorExportView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
         }
-        .background(theme.base)
-        .foregroundStyle(theme.text)
+        .themeSettingsScreen()
         .navigationTitle("Bring to your doctor")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $exportFile, onDismiss: cleanupExportFile) { file in

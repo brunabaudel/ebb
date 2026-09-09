@@ -42,14 +42,13 @@ struct SettingsView: View {
                     Button("Debug screen") {
                         showDebug = true
                     }
+                    .themeListRow()
                 } header: {
                     Text("Developer")
                 }
                 #endif
             }
-            .scrollContentBackground(.hidden)
-            .background(theme.base)
-            .foregroundStyle(theme.text)
+            .themeSettingsList()
             .navigationTitle("Settings")
             .sheet(isPresented: $showDebug) {
                 NavigationStack {
@@ -60,6 +59,7 @@ struct SettingsView: View {
                             }
                         }
                 }
+                .themeSettingsScreen()
             }
             .sheet(item: $exportFile, onDismiss: cleanupExportFile) { file in
                 ShareSheet(items: [file.url])
@@ -89,6 +89,7 @@ struct SettingsView: View {
                 await cloudSyncStatus.refresh()
             }
         }
+        .themeSettingsScreen()
     }
 
     // MARK: - Ebb+
@@ -101,16 +102,18 @@ struct SettingsView: View {
             } label: {
                 Label("Ebb+", systemImage: "sparkles")
             }
+            .themeListRow()
 
             if entitlements.isEbbPlus {
                 Text("Patterns, doctor PDF, full history, and all themes are unlocked. Logging stays free forever.")
                     .font(.footnote)
                     .foregroundStyle(theme.muted)
-                    .listRowBackground(theme.surface)
+                    .themeListRow()
             } else {
                 Button("Unlock Ebb+") {
                     showPaywall = true
                 }
+                .themeListRow()
             }
 
             Button("Restore purchases") {
@@ -121,12 +124,13 @@ struct SettingsView: View {
                     }
                 }
             }
+            .themeListRow()
 
             if let lastError = entitlements.lastErrorMessage {
                 Text(lastError)
                     .font(.footnote)
                     .foregroundStyle(theme.pain)
-                    .listRowBackground(theme.surface)
+                    .themeListRow()
             }
         } header: {
             Text("Ebb+")
@@ -142,6 +146,7 @@ struct SettingsView: View {
             } label: {
                 Label("Appearance", systemImage: "paintpalette")
             }
+            .themeListRow()
         }
     }
 
@@ -157,11 +162,12 @@ struct SettingsView: View {
             } label: {
                 Label("App lock", systemImage: "lock.fill")
             }
+            .themeListRow()
 
             Text(privacyExplanation)
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
-                .listRowBackground(theme.surface)
+                .themeListRow()
         } header: {
             Text("Privacy")
         }
@@ -176,6 +182,7 @@ struct SettingsView: View {
         } label: {
             Label("iCloud backup", systemImage: "icloud")
         }
+        .themeListRow()
 
         if showInlineBackupProgress {
             CloudBackupProgressView(
@@ -187,7 +194,7 @@ struct SettingsView: View {
                     && !cloudSyncStatus.isExportInProgress,
                 isExtendedConfirmation: cloudSyncStatus.isInExtendedBackupConfirmation
             )
-            .listRowBackground(theme.surface)
+            .themeListRow()
         }
 
         if let message = iCloudBackupMessage {
@@ -195,7 +202,7 @@ struct SettingsView: View {
                 .font(.footnote)
                 .foregroundStyle(iCloudMessageColor)
                 .fixedSize(horizontal: false, vertical: true)
-                .listRowBackground(theme.surface)
+                .themeListRow()
         }
 
         if showRetryBackup {
@@ -204,7 +211,7 @@ struct SettingsView: View {
             } label: {
                 Label("Retry backup", systemImage: "arrow.clockwise.icloud")
             }
-            .listRowBackground(theme.surface)
+            .themeListRow()
         }
     }
 
@@ -278,12 +285,13 @@ struct SettingsView: View {
                         .foregroundStyle(theme.muted)
                 }
             }
+            .themeListRow()
 
             if syncPreferenceMismatch {
                 Text("Quit and reopen Ebb to apply this change.")
                     .font(.footnote)
                     .foregroundStyle(theme.pain)
-                    .listRowBackground(theme.surface)
+                    .themeListRow()
             }
 
             Toggle(isOn: appLockToggleBinding) {
@@ -294,6 +302,7 @@ struct SettingsView: View {
                         .foregroundStyle(theme.muted)
                 }
             }
+            .themeListRow()
         } header: {
             Text("Backup & lock")
         }
@@ -308,11 +317,13 @@ struct SettingsView: View {
             } label: {
                 Label("Export JSON", systemImage: "square.and.arrow.up")
             }
+            .themeListRow()
 
             if let exportErrorMessage {
                 Text(exportErrorMessage)
                     .font(.footnote)
                     .foregroundStyle(theme.pain)
+                    .themeListRow()
             }
 
             Button(role: .destructive) {
@@ -320,17 +331,19 @@ struct SettingsView: View {
             } label: {
                 Label("Delete all data", systemImage: "trash")
             }
+            .themeListRow()
 
             if let deleteErrorMessage {
                 Text(deleteErrorMessage)
                     .font(.footnote)
                     .foregroundStyle(theme.pain)
+                    .themeListRow()
             }
 
             Text(exportDeleteFootnote)
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
-                .listRowBackground(theme.surface)
+                .themeListRow()
         } header: {
             Text("Your data")
         }
@@ -450,6 +463,7 @@ struct SettingsView: View {
             } label: {
                 Label("Reminders", systemImage: "bell")
             }
+            .themeListRow()
 
             NavigationLink {
                 MedicationsSettingsView(
@@ -463,18 +477,21 @@ struct SettingsView: View {
                     Image(systemName: "pills")
                 }
             }
+            .themeListRow()
 
             NavigationLink {
                 DoctorExportView(schema: schema)
             } label: {
                 Label("Bring to your doctor", systemImage: "doc.text")
             }
+            .themeListRow()
 
             NavigationLink {
                 AboutView()
             } label: {
                 Label("About", systemImage: "info.circle")
             }
+            .themeListRow()
         } header: {
             Text("Tracking")
         }
@@ -494,6 +511,7 @@ struct SettingsView: View {
                     Label("HealthKit", systemImage: "heart.text.square")
                 }
             }
+            .themeListRow()
         }
     }
 
@@ -530,6 +548,7 @@ struct SettingsView: View {
                     Text("\(preferences.typicalCycleLength) days")
                 }
             }
+            .themeListRow()
 
             Stepper(
                 value: $preferences.periodLength,
@@ -540,11 +559,12 @@ struct SettingsView: View {
                     Text("\(preferences.periodLength) days")
                 }
             }
+            .themeListRow()
 
             Text("Used when HealthKit has no recent flow data, and to predict your next period.")
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
-                .listRowBackground(theme.surface)
+                .themeListRow()
 
             Toggle(isOn: $preferences.hasAura) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -554,6 +574,7 @@ struct SettingsView: View {
                         .foregroundStyle(theme.muted)
                 }
             }
+            .themeListRow()
         } header: {
             Text("Cycle info")
         }
@@ -565,7 +586,7 @@ struct SettingsView: View {
         schema: try! SchemaConfig.load(),
         schemaLoadResult: Result { try SchemaConfig.load() }
     )
-        .environment(\.theme, .plumEmber)
+        .environment(\.theme, .softPaper)
         .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
         .environment(AppLockController())
         .environment(CloudSyncStatusService(storageMode: .localByChoice))

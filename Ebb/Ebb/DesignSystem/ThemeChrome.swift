@@ -44,6 +44,45 @@ extension View {
     ) -> some View {
         modifier(ThemeCardModifier(padding: padding, cornerRadius: cornerRadius))
     }
+
+    /// Settings hub and pushed subpages — base fill, nav bar, and color scheme aligned to the active theme.
+    func themeSettingsScreen() -> some View {
+        modifier(ThemeSettingsScreenModifier())
+    }
+
+    /// Settings `List` — hides the system scroll background; pair with `themeListRow()` on rows.
+    func themeSettingsList() -> some View {
+        scrollContentBackground(.hidden)
+            .themeSettingsScreen()
+    }
+
+    /// Surface fill for one Settings list row (`theme.surface`, separator tint).
+    func themeListRow() -> some View {
+        modifier(ThemeListRowModifier())
+    }
+}
+
+private struct ThemeSettingsScreenModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
+    func body(content: Content) -> some View {
+        content
+            .background(theme.base)
+            .foregroundStyle(theme.text)
+            .toolbarBackground(theme.base, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .preferredColorScheme(theme.isLight ? .light : .dark)
+    }
+}
+
+private struct ThemeListRowModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
+    func body(content: Content) -> some View {
+        content
+            .listRowBackground(theme.surface)
+            .listRowSeparatorTint(theme.line)
+    }
 }
 
 private struct ThemeCardModifier: ViewModifier {

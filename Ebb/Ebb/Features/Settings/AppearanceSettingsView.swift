@@ -34,8 +34,7 @@ struct AppearanceSettingsView: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
         }
-        .background(theme.base)
-        .foregroundStyle(theme.text)
+        .themeSettingsScreen()
         .navigationTitle("Appearance")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {

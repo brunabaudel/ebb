@@ -16,7 +16,7 @@ struct MedicationsSettingsView: View {
                 Text("These appear pre-selected on the relief screen, so logging what you took is one tap.")
                     .font(.footnote)
                     .foregroundStyle(theme.muted)
-                    .listRowBackground(theme.surface)
+                    .themeListRow()
             }
 
             if let reliefField {
@@ -25,15 +25,14 @@ struct MedicationsSettingsView: View {
                         Toggle(isOn: savedBinding(for: option.key)) {
                             Text(option.label)
                         }
+                        .themeListRow()
                     }
                 } header: {
                     Text(reliefField.label)
                 }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(theme.base)
-        .foregroundStyle(theme.text)
+        .themeSettingsList()
         .navigationTitle("My medications")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -53,5 +52,5 @@ struct MedicationsSettingsView: View {
             medicationPreferences: MedicationPreferences()
         )
     }
-    .environment(\.theme, .plumEmber)
+    .environment(\.theme, .softPaper)
 }

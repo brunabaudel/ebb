@@ -26,6 +26,7 @@ struct RemindersSettingsView: View {
                             .foregroundStyle(theme.muted)
                     }
                 }
+                .themeListRow()
                 .onChange(of: reminderPreferences.lutealNudgeEnabled) { _, _ in
                     rescheduleReminders()
                 }
@@ -38,6 +39,7 @@ struct RemindersSettingsView: View {
                             .foregroundStyle(theme.muted)
                     }
                 }
+                .themeListRow()
                 .onChange(of: reminderPreferences.dailyLogReminderEnabled) { _, _ in
                     rescheduleReminders()
                 }
@@ -51,6 +53,7 @@ struct RemindersSettingsView: View {
                                 .foregroundStyle(theme.muted)
                         }
                     }
+                    .themeListRow()
                 }
             } header: {
                 Text("Nudges")
@@ -65,6 +68,7 @@ struct RemindersSettingsView: View {
                             .foregroundStyle(theme.muted)
                     }
                 }
+                .themeListRow()
                 .onChange(of: reminderPreferences.pauseDuringMigraine) { _, _ in
                     rescheduleReminders()
                 }
@@ -76,9 +80,7 @@ struct RemindersSettingsView: View {
             lutealTestSection
             #endif
         }
-        .scrollContentBackground(.hidden)
-        .background(theme.base)
-        .foregroundStyle(theme.text)
+        .themeSettingsList()
         .navigationTitle("Reminders")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showTimePicker) {
@@ -111,18 +113,19 @@ struct RemindersSettingsView: View {
             Text("Inserts a 5-day period starting 14 days ago so today is luteal day 15. Then set reminder time 1–2 minutes ahead, turn off daily log, and background the app.")
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
-                .listRowBackground(theme.surface)
+                .themeListRow()
 
             Button("Seed mock period for luteal test") {
                 seedLutealTestData()
             }
+            .themeListRow()
 
             if let lutealTestMessage {
                 Text(lutealTestMessage)
                     .font(.footnote)
                     .foregroundStyle(theme.ok)
                     .fixedSize(horizontal: false, vertical: true)
-                    .listRowBackground(theme.surface)
+                    .themeListRow()
             }
         } header: {
             Text("Testing")
@@ -175,8 +178,6 @@ private struct ReminderTimePickerSheet: View {
             .datePickerStyle(.wheel)
             .labelsHidden()
             .padding()
-            .background(theme.base)
-            .foregroundStyle(theme.text)
             .navigationTitle("Reminder time")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -194,6 +195,7 @@ private struct ReminderTimePickerSheet: View {
                 }
             }
         }
+        .themeSettingsScreen()
         .presentationDetents([.medium])
     }
 }
@@ -205,7 +207,7 @@ private struct ReminderTimePickerSheet: View {
             reminderPreferences: ReminderPreferences()
         )
     }
-    .environment(\.theme, .plumEmber)
+    .environment(\.theme, .softPaper)
     .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
     .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
