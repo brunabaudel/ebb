@@ -39,28 +39,36 @@ struct GuidedLogFlowView: View {
         VStack(spacing: 0) {
             if step != .review {
                 progressHeader
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 24)
                     .padding(.top, 16)
+                    .padding(.bottom, 18)
             }
 
-            GeometryReader { geometry in
-                ScrollView {
-                    Group {
-                        if step == .review {
+            Group {
+                if step == .review {
+                    GeometryReader { geometry in
+                        ScrollView {
                             reviewStep
-                        } else {
-                            questionBody
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 24)
+                                .frame(
+                                    maxWidth: .infinity,
+                                    minHeight: geometry.size.height,
+                                    alignment: .center
+                                )
                         }
+                        .scrollIndicators(.hidden)
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 24)
-                    .frame(
-                        maxWidth: .infinity,
-                        minHeight: geometry.size.height,
-                        alignment: step == .review ? .center : .top
-                    )
+                } else {
+                    ScrollView {
+                        questionBody
+                            .padding(.horizontal, 24)
+                            .padding(.top, 4)
+                            .padding(.bottom, 24)
+                            .frame(maxWidth: .infinity, alignment: .top)
+                    }
+                    .scrollIndicators(.hidden)
                 }
-                .scrollIndicators(.hidden)
             }
 
             if step == .review {
@@ -226,34 +234,36 @@ struct GuidedLogFlowView: View {
             title: "Any medication or relief?",
             subtitle: "Select all that apply. Skip if none."
         ) {
-            if let field = schema.field(forKey: "relief_taken") {
-                multiChoiceList(field: field, fieldKey: "relief_taken", accent: .pain)
-            }
-        } footer: {
-            if !selectedChoices("relief_taken").isEmpty,
-               let effectField = schema.field(forKey: "relief_effect") {
-                VStack(alignment: .center, spacing: 8) {
-                    Text(effectField.label.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .kerning(1.2)
-                        .foregroundStyle(theme.muted)
+            VStack(spacing: 28) {
+                if let field = schema.field(forKey: "relief_taken") {
+                    multiChoiceList(field: field, fieldKey: "relief_taken", accent: .pain)
+                }
 
-                    FlowLayout(spacing: 7) {
-                        ForEach(effectField.values) { option in
-                            SelectablePill(
-                                label: option.label,
-                                isSelected: values["relief_effect"] == .choice(option.key),
-                                accent: .pain
-                            ) {
-                                if values["relief_effect"] == .choice(option.key) {
-                                    values.removeValue(forKey: "relief_effect")
-                                } else {
-                                    values["relief_effect"] = .choice(option.key)
+                if !selectedChoices("relief_taken").isEmpty,
+                   let effectField = schema.field(forKey: "relief_effect") {
+                    VStack(alignment: .center, spacing: 8) {
+                        Text(effectField.label.uppercased())
+                            .font(.caption2.weight(.semibold))
+                            .kerning(1.2)
+                            .foregroundStyle(theme.muted)
+
+                        FlowLayout(spacing: 7) {
+                            ForEach(effectField.values) { option in
+                                SelectablePill(
+                                    label: option.label,
+                                    isSelected: values["relief_effect"] == .choice(option.key),
+                                    accent: .pain
+                                ) {
+                                    if values["relief_effect"] == .choice(option.key) {
+                                        values.removeValue(forKey: "relief_effect")
+                                    } else {
+                                        values["relief_effect"] = .choice(option.key)
+                                    }
                                 }
                             }
                         }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
                 }
             }
         }
@@ -291,8 +301,6 @@ struct GuidedLogFlowView: View {
 
     private var reviewStep: some View {
         VStack(alignment: .center, spacing: 24) {
-            Spacer(minLength: 12)
-
             VStack(spacing: 10) {
                 Text("TAP A WORD TO EDIT")
                     .font(.caption2.weight(.semibold))
@@ -325,10 +333,8 @@ struct GuidedLogFlowView: View {
                         .strokeBorder(theme.line, lineWidth: 1)
                 }
             }
-
-            Spacer(minLength: 12)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Focus shell
@@ -338,9 +344,14 @@ struct GuidedLogFlowView: View {
         subtitle: String?,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        focusShell(title: title, subtitle: subtitle, content: content) {
-            EmptyView()
+        VStack(alignment: .center, spacing: 0) {
+            questionTitleBlock(title: title, subtitle: subtitle)
+
+            content()
+                .frame(maxWidth: .infinity)
+                .padding(.top, 24)
         }
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private func focusShell<Content: View, Footer: View>(
@@ -349,34 +360,36 @@ struct GuidedLogFlowView: View {
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
     ) -> some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 10) {
-                Text(title)
-                    .font(.system(.title2, design: .serif))
-                    .fontWeight(.medium)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(theme.muted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-            }
-
-            Spacer(minLength: 36)
+        VStack(alignment: .center, spacing: 0) {
+            questionTitleBlock(title: title, subtitle: subtitle)
 
             content()
                 .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 36)
+                .padding(.top, 24)
 
             footer()
                 .frame(maxWidth: .infinity)
+                .padding(.top, 28)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    private func questionTitleBlock(title: String, subtitle: String?) -> some View {
+        VStack(spacing: 6) {
+            Text(title)
+                .font(.system(.title2, design: .serif))
+                .fontWeight(.medium)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            if let subtitle {
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(theme.muted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
     }
 
     private var progressHeader: some View {

@@ -22,6 +22,7 @@ struct SeveritySquareControl: View {
             HStack(spacing: squareSpacing) {
                 ForEach(Array(range), id: \.self) { step in
                     squareButton(for: step)
+                        .frame(maxWidth: .infinity)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -45,7 +46,8 @@ struct SeveritySquareControl: View {
         } label: {
             Text("\(step)")
                 .font(.body.weight(isSelected ? .semibold : .regular))
-                .frame(minWidth: 44, minHeight: 44)
+                .frame(maxWidth: .infinity)
+                .aspectRatio(1, contentMode: .fit)
                 .foregroundStyle(isSelected ? accent.onAccentColor(in: theme) : theme.muted)
                 .background {
                     RoundedRectangle(cornerRadius: cornerRadius)
