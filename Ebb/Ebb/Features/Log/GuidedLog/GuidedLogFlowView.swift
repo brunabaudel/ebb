@@ -345,7 +345,8 @@ struct GuidedLogFlowView: View {
                         alignment: .top
                     )
                 }
-                .frame(maxWidth: .infinity, height: phraseMaxHeight)
+                .frame(maxWidth: .infinity)
+                .frame(height: phraseMaxHeight)
             }
 
             if !unset.isEmpty {
