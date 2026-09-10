@@ -54,8 +54,9 @@ struct GuidedLogFlowView: View {
                     ScrollView {
                         reviewStep
                             .padding(.horizontal, 20)
-                            .padding(.vertical, 24)
-                            .frame(maxWidth: .infinity)
+                            .padding(.top, 24)
+                            .padding(.bottom, 16)
+                            .frame(maxWidth: .infinity, alignment: .top)
                     }
                     .scrollIndicators(.hidden)
                 } else {
@@ -82,20 +83,13 @@ struct GuidedLogFlowView: View {
     // MARK: - Sentence strip (g-strip)
 
     private var sentenceStrip: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Building entry · tap a word to edit")
-                .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                .kerning(1.26)
-                .textCase(.uppercase)
-                .foregroundStyle(theme.faint)
-
-            entryPhrase(
-                font: .system(size: 15, design: .serif),
-                centered: false,
-                allowsMultiline: true,
-                bodyColor: theme.inkSoft
-            )
-        }
+        entryPhrase(
+            font: .system(size: 15, design: .serif),
+            centered: false,
+            allowsMultiline: true,
+            bodyColor: theme.inkSoft
+        )
+        .lineSpacing(15 * 0.35)
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -353,13 +347,12 @@ struct GuidedLogFlowView: View {
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
 
         return VStack(spacing: 0) {
-            Spacer(minLength: 0)
-
             Text("Tap a word to edit")
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .kerning(1.4)
                 .textCase(.uppercase)
                 .foregroundStyle(theme.faint)
+                .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 10)
 
@@ -370,12 +363,13 @@ struct GuidedLogFlowView: View {
                     allowsMultiline: true
                 )
                 .lineSpacing(18 * 0.45)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.bottom, 14)
 
                 Rectangle()
                     .strokeBorder(theme.lineStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     .frame(height: 1)
-                    .padding(.bottom, 14)
+                    .padding(.bottom, unset.isEmpty ? 0 : 14)
 
                 if !unset.isEmpty {
                     ForEach(Array(unset.enumerated()), id: \.offset) { index, item in
@@ -403,17 +397,17 @@ struct GuidedLogFlowView: View {
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .guidedReviewCard()
 
             Text("Sentence + quiet blanks · jump back to any step")
                 .font(.system(size: 12))
                 .foregroundStyle(theme.faint)
                 .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
                 .padding(.top, 12)
-
-            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     // MARK: - Focus shell
