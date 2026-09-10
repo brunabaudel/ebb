@@ -10,6 +10,7 @@ struct GuidedLogFlowView: View {
     @Environment(MedicationPreferences.self) private var medicationPreferences
 
     @State private var step: LogSymptomsFlowStep = .headachePresent
+    @State private var headacheSubstep: HeadachePresentSubstep = .presence
     @State private var didApplyMedicationPrefill = false
 
     private var activeSteps: [LogSymptomsFlowStep] {
@@ -86,8 +87,6 @@ struct GuidedLogFlowView: View {
             EmptyView()
         case .location:
             locationStep
-        case .qualityAndMovement:
-            qualityStep
         case .relief:
             reliefStep
         case .cycleAndContext:
@@ -99,69 +98,77 @@ struct GuidedLogFlowView: View {
 
     // MARK: I · Focus steps
 
+    @ViewBuilder
     private var headacheStep: some View {
+        switch headacheSubstep {
+        case .presence:
+            headachePresenceSubstep
+        case .severity:
+            headacheSeveritySubstep
+        case .quality:
+            headacheQualitySubstep
+        case .movement:
+            headacheMovementSubstep
+        }
+    }
+
+    private var headachePresenceSubstep: some View {
         focusShell(
             title: "Any headache right now?",
             subtitle: "Choose Yes or No to continue."
         ) {
-            VStack(spacing: 0) {
-                HStack(spacing: 10) {
-                    bigChoiceButton(title: "Yes", isSelected: values["migraine_present"] == .boolean(true)) {
-                        values["migraine_present"] = .boolean(true)
-                    }
-                    bigChoiceButton(title: "No", isSelected: values["migraine_present"] == .boolean(false)) {
-                        values["migraine_present"] = .boolean(false)
-                        clearHeadacheDetailFields()
-                    }
+            HStack(spacing: 10) {
+                bigChoiceButton(title: "Yes", isSelected: values["migraine_present"] == .boolean(true)) {
+                    values["migraine_present"] = .boolean(true)
+                    headacheSubstep = .severity
                 }
+                bigChoiceButton(title: "No", isSelected: values["migraine_present"] == .boolean(false)) {
+                    values["migraine_present"] = .boolean(false)
+                    clearHeadacheDetailFields()
+                }
+            }
+        }
+    }
 
-                if values["migraine_present"] == .boolean(true) {
-                    VStack(spacing: 0) {
-                        Text("How bad is it?")
-                            .font(.system(size: 24, weight: .medium, design: .serif))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(24 * 0.2)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.bottom, 6)
+    private var headacheSeveritySubstep: some View {
+        focusShell(
+            title: "How bad is it?",
+            subtitle: "1 is barely there. 5 is disabling."
+        ) {
+            if let field = severityField, let range = field.range {
+                SeveritySquareControl(
+                    range: range,
+                    labels: field.scaleLabels,
+                    selection: severitySelectionBinding,
+                    accent: .pain
+                )
+            }
+        }
+    }
 
-                        Text("1 is barely there. 5 is disabling.")
-                            .font(.system(size: 12.5))
-                            .foregroundStyle(theme.muted)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(12.5 * 0.4)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.bottom, 22)
-
-                        if let field = severityField, let range = field.range {
-                            SeveritySquareControl(
-                                range: range,
-                                labels: field.scaleLabels,
-                                selection: scaleBinding(for: "severity"),
-                                accent: .pain
-                            )
+    private var headacheQualitySubstep: some View {
+        focusShell(
+            title: "What does it feel like?",
+            subtitle: "Pick one or more. Skip if you're not sure."
+        ) {
+            if let field = schema.field(forKey: "quality") {
+                FlowLayout(spacing: 6) {
+                    ForEach(field.values) { option in
+                        SelectablePill(
+                            label: option.label,
+                            isSelected: selectedChoices("quality").contains(option.key),
+                            accent: .pain
+                        ) {
+                            toggleChoice(option.key, fieldKey: "quality")
                         }
                     }
-                    .padding(.top, 22)
-
-                    qualitySection
-                        .padding(.top, 22)
                 }
+                .frame(maxWidth: .infinity)
             }
         }
     }
 
-    private var locationStep: some View {
-        focusShell(
-            title: "Where does it hurt?",
-            subtitle: "Select all that apply."
-        ) {
-            if let field = schema.field(forKey: "location") {
-                multiChoiceList(field: field, fieldKey: "location", accent: .pain)
-            }
-        }
-    }
-
-    private var qualityStep: some View {
+    private var headacheMovementSubstep: some View {
         focusShell(
             title: "Worse with movement?",
             subtitle: "Skip if you're not sure."
@@ -183,40 +190,13 @@ struct GuidedLogFlowView: View {
         }
     }
 
-    private var qualitySection: some View {
-        VStack(spacing: 0) {
-            Text("What does it feel like?")
-                .font(.system(size: 24, weight: .medium, design: .serif))
-                .multilineTextAlignment(.center)
-                .lineSpacing(24 * 0.2)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 6)
-
-            Text("Pick one or more. Skip if you're not sure.")
-                .font(.system(size: 12.5))
-                .foregroundStyle(theme.muted)
-                .multilineTextAlignment(.center)
-                .lineSpacing(12.5 * 0.4)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 22)
-
-            qualityPills
-        }
-    }
-
-    @ViewBuilder
-    private var qualityPills: some View {
-        if let field = schema.field(forKey: "quality") {
-            FlowLayout(spacing: 6) {
-                ForEach(field.values) { option in
-                    SelectablePill(
-                        label: option.label,
-                        isSelected: selectedChoices("quality").contains(option.key),
-                        accent: .pain
-                    ) {
-                        toggleChoice(option.key, fieldKey: "quality")
-                    }
-                }
+    private var locationStep: some View {
+        focusShell(
+            title: "Where does it hurt?",
+            subtitle: "Select all that apply."
+        ) {
+            if let field = schema.field(forKey: "location") {
+                multiChoiceList(field: field, fieldKey: "location", accent: .pain)
             }
             .frame(maxWidth: .infinity)
         }
@@ -286,6 +266,9 @@ struct GuidedLogFlowView: View {
                 }
                 Button {
                     step = row.step
+                    if let substep = row.headacheSubstep {
+                        headacheSubstep = substep
+                    }
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(row.label)
@@ -466,18 +449,36 @@ struct GuidedLogFlowView: View {
     }
 
     private var canGoBack: Bool {
+        if step == .headachePresent {
+            return headacheSubstep != .presence
+        }
         guard let index = step.index(in: activeSteps) else { return false }
         return index > 0
     }
 
     private var canSkipCurrentStep: Bool {
-        step != .headachePresent
+        switch step {
+        case .headachePresent:
+            switch headacheSubstep {
+            case .presence:
+                false
+            case .severity, .quality, .movement:
+                true
+            }
+        default:
+            true
+        }
     }
 
     private var canAdvance: Bool {
         switch step {
         case .headachePresent:
-            values["migraine_present"] != nil
+            switch headacheSubstep {
+            case .presence:
+                values["migraine_present"] != nil
+            case .severity, .quality, .movement:
+                true
+            }
         default:
             true
         }
@@ -632,6 +633,29 @@ struct GuidedLogFlowView: View {
 
     private func advance() {
         guard canAdvance else { return }
+
+        if step == .headachePresent {
+            switch headacheSubstep {
+            case .presence:
+                if values["migraine_present"] == .boolean(true) {
+                    headacheSubstep = .severity
+                } else {
+                    advanceOuterStep()
+                }
+            case .severity:
+                headacheSubstep = .quality
+            case .quality:
+                headacheSubstep = .movement
+            case .movement:
+                advanceOuterStep()
+            }
+            return
+        }
+
+        advanceOuterStep()
+    }
+
+    private func advanceOuterStep() {
         guard let index = step.index(in: activeSteps) else { return }
         let nextIndex = index + 1
         if nextIndex < activeSteps.count {
@@ -640,6 +664,20 @@ struct GuidedLogFlowView: View {
     }
 
     private func goBack() {
+        if step == .headachePresent {
+            switch headacheSubstep {
+            case .presence:
+                return
+            case .severity:
+                headacheSubstep = .presence
+            case .quality:
+                headacheSubstep = .severity
+            case .movement:
+                headacheSubstep = .quality
+            }
+            return
+        }
+
         guard let index = step.index(in: activeSteps), index > 0 else { return }
         step = activeSteps[index - 1]
     }
@@ -651,6 +689,7 @@ struct GuidedLogFlowView: View {
         ] {
             values.removeValue(forKey: key)
         }
+        headacheSubstep = .presence
         realignStepIfNeeded()
     }
 
@@ -659,9 +698,30 @@ struct GuidedLogFlowView: View {
         guard step.index(in: activeSteps) == nil else { return }
         if let headacheIndex = LogSymptomsFlowStep.headachePresent.index(in: activeSteps) {
             step = activeSteps[headacheIndex]
+            headacheSubstep = .presence
         } else {
             step = activeSteps.first ?? .headachePresent
+            headacheSubstep = .presence
         }
+    }
+
+    private var severitySelectionBinding: Binding<Int?> {
+        Binding(
+            get: {
+                if case .scale(let step)? = values["severity"] { return step }
+                return nil
+            },
+            set: { newValue in
+                if let newValue {
+                    values["severity"] = .scale(newValue)
+                    if headacheSubstep == .severity {
+                        headacheSubstep = .quality
+                    }
+                } else {
+                    values.removeValue(forKey: "severity")
+                }
+            }
+        )
     }
 
     private func scaleBinding(for key: String) -> Binding<Int?> {

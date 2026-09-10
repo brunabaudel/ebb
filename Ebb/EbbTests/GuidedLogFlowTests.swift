@@ -5,7 +5,7 @@ final class LogSymptomsFlowStepTests: XCTestCase {
     func testQuestionStepsWithHeadacheIncludesRelief() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: true)
         XCTAssertEqual(steps, [
-            .headachePresent, .location, .qualityAndMovement,
+            .headachePresent, .location,
             .relief, .cycleAndContext, .review,
         ])
         XCTAssertFalse(steps.contains(.severity))
@@ -17,7 +17,6 @@ final class LogSymptomsFlowStepTests: XCTestCase {
         XCTAssertFalse(steps.contains(.relief))
         XCTAssertFalse(steps.contains(.severity))
         XCTAssertFalse(steps.contains(.location))
-        XCTAssertFalse(steps.contains(.qualityAndMovement))
     }
 }
 
@@ -115,6 +114,11 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Ibuprofen") == true)
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Some relief") == true)
         XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.step, .headachePresent)
+        XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.headacheSubstep, .severity)
+        XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.step, .headachePresent)
+        XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.headacheSubstep, .quality)
+        XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.step, .headachePresent)
+        XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.headacheSubstep, .movement)
     }
 
     func testPerReliefEffectsSummary() {
@@ -175,33 +179,44 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertEqual(severity?.step, .headachePresent)
     }
 
-    func testQualitySegmentJumpsToHeadachePresent() {
+    func testQualitySegmentJumpsToHeadachePresentQualitySubstep() {
         let values: [String: FieldValue] = [
             "migraine_present": .boolean(true),
-            "severity": .scale(2),
             "quality": .choices(["throbbing"]),
         ]
         let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
         let qualitySegment = segments.first { $0.id == "quality" }
         XCTAssertEqual(qualitySegment?.step, .headachePresent)
+        XCTAssertEqual(qualitySegment?.headacheSubstep, .quality)
     }
 
-    func testUnsetQualityJumpsToHeadachePresent() {
+    func testMovementSegmentJumpsToHeadachePresentMovementSubstep() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "worse_with_movement": .boolean(true),
+        ]
+        let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
+        let movementSegment = segments.first { $0.id == "worse_with_movement" }
+        XCTAssertEqual(movementSegment?.step, .headachePresent)
+        XCTAssertEqual(movementSegment?.headacheSubstep, .movement)
+    }
+
+    func testUnsetQualityAndMovementJumpToHeadachePresent() {
         let values: [String: FieldValue] = [
             "migraine_present": .boolean(true),
             "severity": .scale(2),
         ]
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
         let quality = unset.first { $0.label == "Quality" }
+        let movement = unset.first { $0.label == "Worse with movement" }
         XCTAssertEqual(quality?.step, .headachePresent)
+        XCTAssertEqual(movement?.step, .headachePresent)
     }
 
-    func testFilledDetailRowsQualityJumpsToHeadachePresent() {
-        let values: [String: FieldValue] = [
-            "migraine_present": .boolean(true),
-            "quality": .choices(["dull"]),
-        ]
-        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
-        XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.step, .headachePresent)
+    func testHeadachePresentSubstepFromReviewFieldId() {
+        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "migraine_present"), .presence)
+        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "severity"), .severity)
+        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "quality"), .quality)
+        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "worse_with_movement"), .movement)
     }
 }
