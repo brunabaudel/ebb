@@ -157,14 +157,9 @@ struct FlowLayout: Layout {
         let maxWidth = proposal.width ?? bounds.width
         let result = arrange(maxWidth: maxWidth, subviews: subviews)
         for (index, position) in result.positions.enumerated() {
-            let size = result.sizes[index]
-            let remainingWidth = max(maxWidth - position.x, 0)
-            let placeProposal: ProposedViewSize = maxWidth.isFinite && size.width >= remainingWidth - 0.5
-                ? ProposedViewSize(width: remainingWidth, height: nil)
-                : .unspecified
             subviews[index].place(
                 at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: placeProposal
+                proposal: .unspecified
             )
         }
     }
@@ -229,8 +224,9 @@ struct FlowLayout: Layout {
     }
 
     private func measuredSize(for subview: LayoutSubviews.Element, maxWidth: CGFloat) -> CGSize {
-        guard maxWidth.isFinite else {
-            return subview.sizeThatFits(.unspecified)
+        let ideal = subview.sizeThatFits(.unspecified)
+        guard maxWidth.isFinite, ideal.width > maxWidth else {
+            return ideal
         }
         return subview.sizeThatFits(ProposedViewSize(width: maxWidth, height: nil))
     }
