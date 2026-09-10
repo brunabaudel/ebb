@@ -48,7 +48,7 @@ struct GuidedLogFlowView: View {
                 if step == .review {
                     GeometryReader { geometry in
                         ScrollView {
-                            reviewStep(availableHeight: geometry.size.height)
+                            reviewStep
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 24)
                                 .frame(
@@ -313,14 +313,8 @@ struct GuidedLogFlowView: View {
         }
     }
 
-    private static let reviewPhraseFontStyles: [Font.TextStyle] = [.largeTitle, .title, .title2, .title3]
-
-    private func reviewStep(availableHeight: CGFloat) -> some View {
+    private var reviewStep: some View {
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
-        let phraseMaxHeight = Self.reviewPhraseMaxHeight(
-            availableHeight: availableHeight,
-            unsetFieldCount: unset.count
-        )
 
         return VStack(alignment: .center, spacing: 24) {
             VStack(spacing: 10) {
@@ -329,24 +323,24 @@ struct GuidedLogFlowView: View {
                     .kerning(1.2)
                     .foregroundStyle(theme.muted)
 
-                GeometryReader { phraseGeometry in
-                    ViewThatFits(in: .vertical) {
-                        ForEach(Self.reviewPhraseFontStyles, id: \.self) { style in
-                            entryPhrase(
-                                font: .system(style, design: .serif),
-                                centered: true,
-                                allowsMultiline: true
-                            )
-                        }
-                    }
-                    .frame(
-                        width: phraseGeometry.size.width,
-                        height: phraseGeometry.size.height,
-                        alignment: .top
+                ViewThatFits(in: .vertical) {
+                    entryPhrase(
+                        font: .system(.largeTitle, design: .serif),
+                        centered: true,
+                        allowsMultiline: true
+                    )
+                    entryPhrase(
+                        font: .system(.title, design: .serif),
+                        centered: true,
+                        allowsMultiline: true
+                    )
+                    entryPhrase(
+                        font: .system(.title2, design: .serif),
+                        centered: true,
+                        allowsMultiline: true
                     )
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: phraseMaxHeight)
             }
 
             if !unset.isEmpty {
@@ -372,19 +366,7 @@ struct GuidedLogFlowView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, minHeight: availableHeight)
-    }
-
-    private static func reviewPhraseMaxHeight(availableHeight: CGFloat, unsetFieldCount: Int) -> CGFloat {
-        let scrollPadding: CGFloat = 48
-        let labelBlock: CGFloat = 24
-        var overhead = scrollPadding + labelBlock
-
-        if unsetFieldCount > 0 {
-            overhead += 24 + 32 + CGFloat(unsetFieldCount) * 30
-        }
-
-        return max(availableHeight - overhead, 80)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Focus shell
