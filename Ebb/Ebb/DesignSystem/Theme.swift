@@ -36,6 +36,34 @@ struct Theme: Equatable, Sendable, Identifiable {
 }
 
 extension Theme {
+    /// `--faint` on Soft paper; secondary labels in guided strips and review hints.
+    var faint: Color {
+        isLight ? Color(hex: 0xB0A69B) : muted.opacity(0.72)
+    }
+
+    /// `--line-strong` — dashed review divider.
+    var lineStrong: Color {
+        isLight ? Color(hex: 0xE2D8CD) : line
+    }
+
+    /// `--ink-soft` — live sentence body copy.
+    var inkSoft: Color {
+        isLight ? Color(hex: 0x3D3832) : text.opacity(0.92)
+    }
+
+    /// `--warm-ink` — filled pain segments in the sentence strip.
+    var warmInk: Color {
+        isLight ? Color(hex: 0x9A5648) : pain
+    }
+
+    /// `--cool-ink` — filled cycle segments in the sentence strip.
+    var coolInk: Color {
+        isLight ? Color(hex: 0x3D756C) : cycle
+    }
+
+    /// Paper fill behind unselected severity squares (`--paper`).
+    var paper: Color { base }
+
     /// Themes available without Ebb+ (default + legacy free option).
     var isFreeDefault: Bool { id == Theme.softPaper.id || id == Theme.plumEmber.id }
 

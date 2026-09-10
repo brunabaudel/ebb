@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Numbered square severity picker for the guided flow (replaces slider mockup K).
+/// Numbered square severity picker — Soft paper `.sev` grid (not slider).
 struct SeveritySquareControl: View {
     let range: ClosedRange<Int>
     let labels: [Int: String]
@@ -9,17 +9,9 @@ struct SeveritySquareControl: View {
 
     @Environment(\.theme) private var theme
 
-    private var cornerRadius: CGFloat {
-        theme.isLight ? 12 : 10
-    }
-
-    private var squareSpacing: CGFloat {
-        theme.isLight ? 11 : 8
-    }
-
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: squareSpacing) {
+        VStack(spacing: 8) {
+            HStack(spacing: 5) {
                 ForEach(Array(range), id: \.self) { step in
                     squareButton(for: step)
                         .frame(maxWidth: .infinity)
@@ -29,9 +21,8 @@ struct SeveritySquareControl: View {
 
             if let selection, let caption = labels[selection] {
                 Text(caption)
-                    .font(.subheadline)
+                    .font(.system(size: 13))
                     .foregroundStyle(theme.muted)
-                    .italic()
                     .accessibilityHidden(true)
             }
         }
@@ -39,31 +30,83 @@ struct SeveritySquareControl: View {
     }
 
     private func squareButton(for step: Int) -> some View {
-        let isSelected = selection == step
+        let style = squareStyle(for: step)
 
         return Button {
-            selection = isSelected ? nil : step
+            selection = selection == step ? nil : step
         } label: {
             Text("\(step)")
-                .font(.body.weight(isSelected ? .semibold : .regular))
+                .font(.system(size: 12, weight: style.fontWeight))
                 .frame(maxWidth: .infinity)
                 .aspectRatio(1, contentMode: .fit)
-                .foregroundStyle(isSelected ? accent.onAccentColor(in: theme) : theme.muted)
+                .foregroundStyle(style.foreground)
                 .background {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .fill(isSelected ? accent.accentColor(in: theme) : theme.surface)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(style.background)
                 }
                 .overlay {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder(
-                            isSelected ? accent.accentColor(in: theme) : theme.line,
-                            lineWidth: 1
-                        )
+                    if style.showsBorder {
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(theme.line, lineWidth: 1)
+                    }
                 }
+                .shadow(
+                    color: style.shadow ? accent.accentColor(in: theme).opacity(0.45) : .clear,
+                    radius: 5,
+                    y: 3
+                )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(accessibilityLabel(for: step, isSelected: isSelected))
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityLabel(accessibilityLabel(for: step, isSelected: selection == step))
+        .accessibilityAddTraits(selection == step ? .isSelected : [])
+    }
+
+    private struct SquareStyle {
+        let background: Color
+        let foreground: Color
+        let fontWeight: Font.Weight
+        let showsBorder: Bool
+        let shadow: Bool
+    }
+
+    private func squareStyle(for step: Int) -> SquareStyle {
+        guard let selection else {
+            return SquareStyle(
+                background: theme.paper,
+                foreground: theme.muted,
+                fontWeight: .medium,
+                showsBorder: true,
+                shadow: false
+            )
+        }
+
+        if step == selection {
+            return SquareStyle(
+                background: accent.accentColor(in: theme),
+                foreground: accent.onAccentColor(in: theme),
+                fontWeight: .bold,
+                showsBorder: false,
+                shadow: true
+            )
+        }
+
+        if step < selection {
+            return SquareStyle(
+                background: accent.dimColor(in: theme),
+                foreground: accent.accentColor(in: theme),
+                fontWeight: .medium,
+                showsBorder: false,
+                shadow: false
+            )
+        }
+
+        return SquareStyle(
+            background: theme.paper,
+            foreground: theme.muted,
+            fontWeight: .medium,
+            showsBorder: true,
+            shadow: false
+        )
     }
 
     private func accessibilityLabel(for step: Int, isSelected: Bool) -> String {
@@ -82,6 +125,6 @@ struct SeveritySquareControl: View {
         accent: .pain
     )
     .padding()
-    .background(Theme.plumEmber.base)
-    .environment(\.theme, .plumEmber)
+    .background(Theme.softPaper.base)
+    .environment(\.theme, .softPaper)
 }
