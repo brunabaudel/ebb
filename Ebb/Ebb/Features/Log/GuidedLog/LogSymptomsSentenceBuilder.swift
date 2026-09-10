@@ -270,9 +270,9 @@ enum LogSymptomsSentenceBuilder {
             if values["worse_with_movement"] == nil {
                 unset.append(("Worse with movement", .qualityAndMovement))
             }
-            if values["relief_taken"] == nil {
+            if values[ReliefEffects.takenFieldKey] == nil {
                 unset.append(("Relief taken", .relief))
-            } else if values["relief_effect"] == nil {
+            } else if !allTakenReliefItemsHaveEffects(values: values) {
                 unset.append(("Did it help?", .relief))
             }
         }
@@ -298,13 +298,36 @@ enum LogSymptomsSentenceBuilder {
         values: [String: FieldValue],
         schema: SchemaConfig
     ) -> String? {
-        guard let taken = choiceLabels(values["relief_taken"], fieldKey: "relief_taken", schema: schema) else {
-            return nil
+        let parts = perReliefSummaryParts(values: values, schema: schema)
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: ", ")
+    }
+
+    private static func perReliefSummaryParts(
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> [String] {
+        guard let takenField = schema.field(forKey: ReliefEffects.takenFieldKey),
+              case .choices(let takenKeys)? = values[ReliefEffects.takenFieldKey],
+              !takenKeys.isEmpty else {
+            return []
         }
-        if let effect = choiceLabel(values["relief_effect"], fieldKey: "relief_effect", schema: schema) {
-            return "\(taken) · \(effect)"
+
+        return takenKeys.compactMap { key in
+            guard let label = takenField.values.first(where: { $0.key == key })?.label else { return nil }
+            guard let effectKey = ReliefEffects.effect(for: key, in: values),
+                  let effectLabel = choiceLabel(.choice(effectKey), fieldKey: ReliefEffects.legacyEffectFieldKey, schema: schema)
+            else {
+                return label
+            }
+            return "\(label) · \(effectLabel)"
         }
-        return taken
+    }
+
+    private static func allTakenReliefItemsHaveEffects(values: [String: FieldValue]) -> Bool {
+        let taken = ReliefEffects.takenKeys(from: values)
+        guard !taken.isEmpty else { return true }
+        return taken.allSatisfy { ReliefEffects.effect(for: $0, in: values) != nil }
     }
 
     private static func noHeadacheSegments(
@@ -341,24 +364,17 @@ enum LogSymptomsSentenceBuilder {
         var result: [SentenceSegment] = []
 
         // Relief (headache path only)
-        if includeRelief, let relief = choiceLabels(values["relief_taken"], fieldKey: "relief_taken", schema: schema) {
+        if includeRelief, !ReliefEffects.takenKeys(from: values).isEmpty {
+            let summaryParts = perReliefSummaryParts(values: values, schema: schema)
+            let hasAllEffects = allTakenReliefItemsHaveEffects(values: values)
             result.append(SentenceSegment(
                 id: "relief_taken",
-                text: "Took \(relief)",
-                isFilled: true,
+                text: "Took \(summaryParts.joined(separator: ", "))",
+                isFilled: hasAllEffects,
                 step: .relief,
                 accent: .pain
             ))
-            if let effect = choiceLabel(values["relief_effect"], fieldKey: "relief_effect", schema: schema) {
-                result.append(SentenceSegment(id: "sep_effect", text: " · ", isFilled: true, step: nil, accent: .pain))
-                result.append(SentenceSegment(
-                    id: "relief_effect",
-                    text: effect,
-                    isFilled: true,
-                    step: .relief,
-                    accent: .pain
-                ))
-            } else if includePlaceholders {
+            if !hasAllEffects, includePlaceholders {
                 result.append(SentenceSegment(id: "sep_effect_ph", text: " · ", isFilled: true, step: nil, accent: .pain))
                 result.append(SentenceSegment(
                     id: "relief_effect",

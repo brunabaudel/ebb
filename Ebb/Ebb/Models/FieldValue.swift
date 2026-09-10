@@ -11,6 +11,8 @@ enum FieldValue: Equatable, Sendable {
     case scale(Int)
     case choice(String)
     case choices([String])
+    /// Key → key map, e.g. per-relief effect keys under `relief_effects`.
+    case stringMap([String: String])
 }
 
 extension FieldValue: Codable {
@@ -25,10 +27,12 @@ extension FieldValue: Codable {
             self = .choice(key)
         } else if let keys = try? container.decode([String].self) {
             self = .choices(keys)
+        } else if let map = try? container.decode([String: String].self) {
+            self = .stringMap(map)
         } else {
             throw DecodingError.dataCorruptedError(
                 in: container,
-                debugDescription: "Expected a bool, integer, string, or array of strings"
+                debugDescription: "Expected a bool, integer, string, array of strings, or string map"
             )
         }
     }
@@ -40,6 +44,7 @@ extension FieldValue: Codable {
         case .scale(let step): try container.encode(step)
         case .choice(let key): try container.encode(key)
         case .choices(let keys): try container.encode(keys)
+        case .stringMap(let map): try container.encode(map)
         }
     }
 }

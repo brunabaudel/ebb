@@ -46,6 +46,8 @@ enum FieldType: String, Decodable, Sendable {
     case scale
     case singleEnum = "enum"
     case multiEnum = "multi_enum"
+    /// Key → key map (guided-log storage; not rendered in TapLog schema form).
+    case stringMap = "string_map"
 }
 
 /// An allowed value of an enum-like field. `synonyms` are model-only vocabulary:
@@ -164,6 +166,10 @@ extension SchemaField {
             var seen = Set<String>()
             let kept = choices.filter { allowedValueKeys.contains($0) && seen.insert($0).inserted }
             return kept.isEmpty ? nil : .choices(kept)
+
+        case (.stringMap, .stringMap(let map)):
+            let filtered = map.filter { !$0.key.isEmpty && !$0.value.isEmpty }
+            return filtered.isEmpty ? nil : .stringMap(filtered)
 
         default:
             return nil

@@ -37,7 +37,7 @@ enum ReminderScheduler {
 
         guard let latest = recent.first else { return false }
 
-        if case .choice("full") = latest.fieldValues["relief_effect"] {
+        if ReliefEffects.hasFullRelief(in: latest.fieldValues) {
             return false
         }
         return true

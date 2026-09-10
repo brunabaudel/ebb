@@ -37,6 +37,7 @@ struct FieldValueTests {
         .choice("heavy"),
         .choices(["right", "temple"]),
         .choices([]),
+        .stringMap(["ibuprofen": "partial", "rest_dark_room": "full"]),
     ])
     func roundTripsThroughJSON(value: FieldValue) throws {
         let data = try JSONEncoder().encode(["key": value])

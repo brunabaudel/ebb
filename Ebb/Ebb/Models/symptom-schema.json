@@ -138,6 +138,13 @@
         { "key": "partial", "label": "Some relief",  "synonyms": ["some relief", "a little", "a bit", "helped a little", "ajudou um pouco"] },
         { "key": "full",    "label": "Full relief",  "synonyms": ["full relief", "helped completely", "went away", "all gone"] }
       ]
+    },
+    {
+      "key": "relief_effects",
+      "label": "Relief effects",
+      "type": "string_map",
+      "appliesWhen": "relief_taken not empty",
+      "meaning": "Per-relief effect keys (relief_taken key → relief_effect key). Guided log writes here; TapLog keeps legacy relief_effect."
     }
   ],
   "freeNote": {

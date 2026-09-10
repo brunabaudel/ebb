@@ -31,6 +31,8 @@ struct FieldControl: View {
                 singleEnumControl
             case .multiEnum:
                 multiEnumControl
+            case .stringMap:
+                EmptyView()
             }
         }
         .accessibilityElement(children: .contain)

@@ -252,7 +252,9 @@ enum PatternStatsEngine {
         let withRelief = migraineEntries.filter { !reliefKeys(from: $0).isEmpty }
         guard withRelief.count >= 2 else { return nil }
 
-        let helpful = withRelief.filter { isHelpfulRelief($0) }
+        let helpful = withRelief.filter { entry in
+            reliefKeys(from: entry).contains { ReliefEffects.isHelpful(reliefKey: $0, in: entry.fieldValues) }
+        }
         guard helpful.isEmpty else { return nil }
 
         return "Relief logged \(withRelief.count) times this cycle without much help — worth noting for your doctor."
@@ -299,10 +301,11 @@ enum PatternStatsEngine {
         for entry in migraineEntries {
             let keys = reliefKeys(from: entry)
             guard !keys.isEmpty else { continue }
-            let helped = isHelpfulRelief(entry)
             for key in keys {
                 taken[key, default: 0] += 1
-                if helped { helpful[key, default: 0] += 1 }
+                if ReliefEffects.isHelpful(reliefKey: key, in: entry.fieldValues) {
+                    helpful[key, default: 0] += 1
+                }
             }
         }
 
@@ -338,11 +341,6 @@ enum PatternStatsEngine {
     static func reliefKeys(from entry: SymptomEntry) -> [String] {
         guard case .choices(let keys) = entry.fieldValues["relief_taken"] else { return [] }
         return keys
-    }
-
-    static func isHelpfulRelief(_ entry: SymptomEntry) -> Bool {
-        guard case .choice(let effect) = entry.fieldValues["relief_effect"] else { return false }
-        return effect == "partial" || effect == "full"
     }
 
     static func primaryLocation(from entry: SymptomEntry, schema: SchemaConfig) -> String? {
