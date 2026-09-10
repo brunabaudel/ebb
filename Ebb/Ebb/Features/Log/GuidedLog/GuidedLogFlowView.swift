@@ -208,39 +208,53 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply. Skip if none."
         ) {
             VStack(spacing: 28) {
-                if let field = schema.field(forKey: "relief_taken") {
-                    multiChoiceList(field: field, fieldKey: "relief_taken", accent: .pain)
+                if let field = schema.field(forKey: ReliefEffects.takenFieldKey) {
+                    multiChoiceList(field: field, fieldKey: ReliefEffects.takenFieldKey, accent: .pain)
                 }
 
-                if !selectedChoices("relief_taken").isEmpty,
-                   let effectField = schema.field(forKey: "relief_effect") {
-                    VStack(alignment: .center, spacing: 8) {
-                        Text(effectField.label.uppercased())
-                            .font(.caption2.weight(.semibold))
-                            .kerning(1.2)
-                            .foregroundStyle(theme.muted)
+                if let takenField = schema.field(forKey: ReliefEffects.takenFieldKey),
+                   let effectField = schema.field(forKey: ReliefEffects.legacyEffectFieldKey) {
+                    let selectedKeys = selectedChoices(ReliefEffects.takenFieldKey)
+                    let selectedOptions = takenField.values.filter { selectedKeys.contains($0.key) }
 
-                        FlowLayout(spacing: 6) {
-                            ForEach(effectField.values) { option in
-                                SelectablePill(
-                                    label: option.label,
-                                    isSelected: values["relief_effect"] == .choice(option.key),
-                                    accent: .pain
-                                ) {
-                                    if values["relief_effect"] == .choice(option.key) {
-                                        values.removeValue(forKey: "relief_effect")
-                                    } else {
-                                        values["relief_effect"] = .choice(option.key)
-                                    }
-                                }
+                    if !selectedOptions.isEmpty {
+                        VStack(spacing: 20) {
+                            ForEach(selectedOptions) { option in
+                                reliefEffectBlock(for: option, effectField: effectField)
                             }
                         }
-                        .frame(maxWidth: .infinity)
                     }
                 }
             }
         }
         .onAppear { applyMedicationPrefillIfNeeded() }
+    }
+
+    private func reliefEffectBlock(for takenOption: FieldValueOption, effectField: SchemaField) -> some View {
+        VStack(alignment: .center, spacing: 8) {
+            Text(takenOption.label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(theme.text)
+
+            Text(effectField.label.uppercased())
+                .font(.caption2.weight(.semibold))
+                .kerning(1.2)
+                .foregroundStyle(theme.muted)
+
+            FlowLayout(spacing: 6) {
+                ForEach(effectField.values) { option in
+                    SelectablePill(
+                        label: option.label,
+                        isSelected: reliefEffect(for: takenOption.key) == option.key,
+                        accent: .pain
+                    ) {
+                        toggleReliefEffect(reliefKey: takenOption.key, effectKey: option.key)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var cycleContextStep: some View {
@@ -586,7 +600,10 @@ struct GuidedLogFlowView: View {
     }
 
     private func clearHeadacheDetailFields() {
-        for key in ["severity", "location", "quality", "worse_with_movement", "aura", "relief_taken", "relief_effect"] {
+        for key in [
+            "severity", "location", "quality", "worse_with_movement", "aura",
+            ReliefEffects.takenFieldKey, ReliefEffects.legacyEffectFieldKey, ReliefEffects.effectsFieldKey,
+        ] {
             values.removeValue(forKey: key)
         }
         realignStepIfNeeded()
@@ -631,9 +648,27 @@ struct GuidedLogFlowView: View {
             keys.append(optionKey)
         }
         values[fieldKey] = keys.isEmpty ? nil : .choices(keys)
-        if fieldKey == "relief_taken", keys.isEmpty {
-            values.removeValue(forKey: "relief_effect")
+        if fieldKey == ReliefEffects.takenFieldKey {
+            if keys.isEmpty {
+                ReliefEffects.clear(from: &values)
+            } else {
+                ReliefEffects.prune(toTakenKeys: Set(keys), in: &values)
+            }
         }
+    }
+
+    private func reliefEffect(for reliefKey: String) -> String? {
+        ReliefEffects.effect(for: reliefKey, in: values)
+    }
+
+    private func toggleReliefEffect(reliefKey: String, effectKey: String) {
+        var map = ReliefEffects.effectsMap(in: values)
+        if map[reliefKey] == effectKey {
+            map.removeValue(forKey: reliefKey)
+        } else {
+            map[reliefKey] = effectKey
+        }
+        ReliefEffects.write(map, to: &values, schema: schema)
     }
 
     private func applyMedicationPrefillIfNeeded() {

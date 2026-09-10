@@ -63,7 +63,8 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(ids.contains("quality"))
         XCTAssertTrue(ids.contains("worse_with_movement"))
         XCTAssertTrue(ids.contains("relief_taken"))
-        XCTAssertTrue(ids.contains("relief_effect"))
+        let reliefSegment = segments.first { $0.id == "relief_taken" }
+        XCTAssertTrue(reliefSegment?.text.localizedCaseInsensitiveContains("Some relief") == true)
         XCTAssertTrue(ids.contains("bleeding"))
         XCTAssertTrue(ids.contains("cramps_severity"))
         XCTAssertTrue(ids.contains("triggers"))
@@ -114,6 +115,32 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Ibuprofen") == true)
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Some relief") == true)
         XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.step, .headachePresent)
+    }
+
+    func testPerReliefEffectsSummary() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "relief_taken": .choices(["ibuprofen", "rest_dark_room"]),
+            "relief_effects": .stringMap(["ibuprofen": "partial", "rest_dark_room": "full"]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let relief = rows.first(where: { $0.id == "relief_taken" })?.value ?? ""
+        XCTAssertTrue(relief.contains("Ibuprofen"))
+        XCTAssertTrue(relief.contains("Some relief"))
+        XCTAssertTrue(relief.contains("Rest"))
+        XCTAssertTrue(relief.contains("Full relief"))
+    }
+
+    func testLegacySingleReliefEffectAppliesToAllTaken() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "relief_taken": .choices(["ibuprofen", "naproxen"]),
+            "relief_effect": .choice("partial"),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let relief = rows.first(where: { $0.id == "relief_taken" })?.value ?? ""
+        XCTAssertTrue(relief.contains("Ibuprofen · Some relief"))
+        XCTAssertTrue(relief.contains("Naproxen · Some relief"))
     }
 
     func testFilledDetailRowsWithoutHeadacheOmitsPainFields() {

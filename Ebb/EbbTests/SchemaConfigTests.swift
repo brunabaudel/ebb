@@ -14,7 +14,7 @@ struct SchemaLoadingTests {
         #expect(schema.fields.map(\.key) == [
             "migraine_present", "severity", "location", "quality",
             "worse_with_movement", "aura", "associated_symptoms", "triggers",
-            "bleeding", "cramps_severity", "relief_taken", "relief_effect",
+            "bleeding", "cramps_severity", "relief_taken", "relief_effect", "relief_effects",
         ])
     }
 
@@ -112,5 +112,12 @@ struct ValidationGateTests {
     @Test func emptyInputStaysEmpty() {
         // Spec rule 7: {} is a valid, correct classifier answer.
         #expect(schema.validated([:]).isEmpty)
+    }
+
+    @Test func keepsStringMapValues() {
+        let input: [String: FieldValue] = [
+            "relief_effects": .stringMap(["ibuprofen": "partial"]),
+        ]
+        #expect(schema.validated(input) == input)
     }
 }

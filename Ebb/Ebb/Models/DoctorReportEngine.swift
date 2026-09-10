@@ -243,13 +243,9 @@ enum DoctorReportEngine {
             let keys = PatternStatsEngine.reliefKeys(from: entry)
             guard !keys.isEmpty else { continue }
 
-            var effectKey = "none"
-            if case .choice(let key) = entry.fieldValues["relief_effect"] {
-                effectKey = key
-            }
-
             for key in keys {
                 taken[key, default: 0] += 1
+                let effectKey = ReliefEffects.effect(for: key, in: entry.fieldValues) ?? "none"
                 effects[key, default: [:]][effectKey, default: 0] += 1
             }
         }
