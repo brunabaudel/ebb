@@ -212,17 +212,24 @@ struct FlowLayout: Layout {
         var contentWidth: CGFloat = 0
 
         for subview in subviews {
-            let remainingWidth = maxWidth.isFinite ? max(maxWidth - x, 0) : .infinity
-            var size = measuredSize(for: subview, maxWidth: remainingWidth)
+            let ideal = subview.sizeThatFits(.unspecified)
 
-            if maxWidth.isFinite, x + size.width > maxWidth, x > 0 {
-                rowRanges.append(rowStart..<positions.count)
-                rowStart = positions.count
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-                size = measuredSize(for: subview, maxWidth: maxWidth)
+            // Phrase segments and pills share the same rule: never shrink into the
+            // leftover stub at the end of a row — wrap to the next line instead.
+            if maxWidth.isFinite {
+                let remainingWidth = max(maxWidth - x, 0)
+                if x > 0, ideal.width > remainingWidth {
+                    rowRanges.append(rowStart..<positions.count)
+                    rowStart = positions.count
+                    x = 0
+                    y += rowHeight + spacing
+                    rowHeight = 0
+                }
             }
+
+            // Only constrain width when a single segment exceeds the full container
+            // (multi-line text); never measure against leftover stub width.
+            let size = measuredSize(for: subview, ideal: ideal, maxWidth: maxWidth)
 
             positions.append(CGPoint(x: x, y: y))
             sizes.append(size)
@@ -255,8 +262,11 @@ struct FlowLayout: Layout {
         )
     }
 
-    private func measuredSize(for subview: LayoutSubviews.Element, maxWidth: CGFloat) -> CGSize {
-        let ideal = subview.sizeThatFits(.unspecified)
+    private func measuredSize(
+        for subview: LayoutSubviews.Element,
+        ideal: CGSize,
+        maxWidth: CGFloat
+    ) -> CGSize {
         guard maxWidth.isFinite, ideal.width > maxWidth else {
             return ideal
         }
