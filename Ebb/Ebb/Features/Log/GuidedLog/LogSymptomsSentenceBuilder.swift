@@ -92,7 +92,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "quality",
                 text: quality,
                 isFilled: true,
-                step: .qualityAndMovement,
+                step: .headachePresent,
                 accent: .pain
             ))
         } else {
@@ -101,7 +101,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "quality",
                 text: "quality?",
                 isFilled: false,
-                step: .qualityAndMovement,
+                step: .headachePresent,
                 accent: .pain
             ))
         }
@@ -175,7 +175,7 @@ enum LogSymptomsSentenceBuilder {
                     id: "quality",
                     label: fieldLabel("quality", schema: schema, fallback: "Quality"),
                     value: quality,
-                    step: .qualityAndMovement,
+                    step: .headachePresent,
                     accent: .pain
                 ))
             }
@@ -265,7 +265,7 @@ enum LogSymptomsSentenceBuilder {
                 unset.append(("Location", .location))
             }
             if values["quality"] == nil {
-                unset.append(("Quality", .qualityAndMovement))
+                unset.append(("Quality", .headachePresent))
             }
             if values["worse_with_movement"] == nil {
                 unset.append(("Worse with movement", .qualityAndMovement))

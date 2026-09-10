@@ -174,4 +174,34 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let severity = unset.first { $0.label == "Severity" }
         XCTAssertEqual(severity?.step, .headachePresent)
     }
+
+    func testQualitySegmentJumpsToHeadachePresent() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "severity": .scale(2),
+            "quality": .choices(["throbbing"]),
+        ]
+        let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
+        let qualitySegment = segments.first { $0.id == "quality" }
+        XCTAssertEqual(qualitySegment?.step, .headachePresent)
+    }
+
+    func testUnsetQualityJumpsToHeadachePresent() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "severity": .scale(2),
+        ]
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let quality = unset.first { $0.label == "Quality" }
+        XCTAssertEqual(quality?.step, .headachePresent)
+    }
+
+    func testFilledDetailRowsQualityJumpsToHeadachePresent() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "quality": .choices(["dull"]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.step, .headachePresent)
+    }
 }

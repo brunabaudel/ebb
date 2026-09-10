@@ -142,6 +142,9 @@ struct GuidedLogFlowView: View {
                         }
                     }
                     .padding(.top, 22)
+
+                    qualitySection
+                        .padding(.top, 22)
                 }
             }
         }
@@ -160,45 +163,62 @@ struct GuidedLogFlowView: View {
 
     private var qualityStep: some View {
         focusShell(
-            title: "What does it feel like?",
-            subtitle: "Pick one or more. Skip if you're not sure."
+            title: "Worse with movement?",
+            subtitle: "Skip if you're not sure."
         ) {
-            if let field = schema.field(forKey: "quality") {
-                FlowLayout(spacing: 6) {
-                    ForEach(field.values) { option in
-                        SelectablePill(
-                            label: option.label,
-                            isSelected: selectedChoices("quality").contains(option.key),
-                            accent: .pain
-                        ) {
-                            toggleChoice(option.key, fieldKey: "quality")
-                        }
-                    }
+            HStack(spacing: 10) {
+                bigChoiceButton(
+                    title: "Yes",
+                    isSelected: values["worse_with_movement"] == .boolean(true)
+                ) {
+                    values["worse_with_movement"] = .boolean(true)
                 }
-                .frame(maxWidth: .infinity)
+                bigChoiceButton(
+                    title: "No",
+                    isSelected: values["worse_with_movement"] == .boolean(false)
+                ) {
+                    values["worse_with_movement"] = .boolean(false)
+                }
             }
-        } footer: {
-            VStack(alignment: .center, spacing: 8) {
-                Text("WORSE WITH MOVEMENT?")
-                    .font(.caption2.weight(.semibold))
-                    .kerning(1.2)
-                    .foregroundStyle(theme.muted)
+        }
+    }
 
-                HStack(spacing: 10) {
-                    bigChoiceButton(
-                        title: "Yes",
-                        isSelected: values["worse_with_movement"] == .boolean(true)
+    private var qualitySection: some View {
+        VStack(spacing: 0) {
+            Text("What does it feel like?")
+                .font(.system(size: 24, weight: .medium, design: .serif))
+                .multilineTextAlignment(.center)
+                .lineSpacing(24 * 0.2)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 6)
+
+            Text("Pick one or more. Skip if you're not sure.")
+                .font(.system(size: 12.5))
+                .foregroundStyle(theme.muted)
+                .multilineTextAlignment(.center)
+                .lineSpacing(12.5 * 0.4)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 22)
+
+            qualityPills
+        }
+    }
+
+    @ViewBuilder
+    private var qualityPills: some View {
+        if let field = schema.field(forKey: "quality") {
+            FlowLayout(spacing: 6) {
+                ForEach(field.values) { option in
+                    SelectablePill(
+                        label: option.label,
+                        isSelected: selectedChoices("quality").contains(option.key),
+                        accent: .pain
                     ) {
-                        values["worse_with_movement"] = .boolean(true)
-                    }
-                    bigChoiceButton(
-                        title: "No",
-                        isSelected: values["worse_with_movement"] == .boolean(false)
-                    ) {
-                        values["worse_with_movement"] = .boolean(false)
+                        toggleChoice(option.key, fieldKey: "quality")
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -207,54 +227,12 @@ struct GuidedLogFlowView: View {
             title: "Any medication or relief?",
             subtitle: "Select all that apply. Skip if none."
         ) {
-            VStack(spacing: 28) {
-                if let field = schema.field(forKey: ReliefEffects.takenFieldKey) {
-                    multiChoiceList(field: field, fieldKey: ReliefEffects.takenFieldKey, accent: .pain)
-                }
-
-                if let takenField = schema.field(forKey: ReliefEffects.takenFieldKey),
-                   let effectField = schema.field(forKey: ReliefEffects.legacyEffectFieldKey) {
-                    let selectedKeys = selectedChoices(ReliefEffects.takenFieldKey)
-                    let selectedOptions = takenField.values.filter { selectedKeys.contains($0.key) }
-
-                    if !selectedOptions.isEmpty {
-                        VStack(spacing: 20) {
-                            ForEach(selectedOptions) { option in
-                                reliefEffectBlock(for: option, effectField: effectField)
-                            }
-                        }
-                    }
-                }
+            if let field = schema.field(forKey: ReliefEffects.takenFieldKey),
+               let effectField = schema.field(forKey: ReliefEffects.legacyEffectFieldKey) {
+                reliefTakenList(field: field, effectField: effectField)
             }
         }
         .onAppear { applyMedicationPrefillIfNeeded() }
-    }
-
-    private func reliefEffectBlock(for takenOption: FieldValueOption, effectField: SchemaField) -> some View {
-        VStack(alignment: .center, spacing: 8) {
-            Text(takenOption.label)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(theme.text)
-
-            Text(effectField.label.uppercased())
-                .font(.caption2.weight(.semibold))
-                .kerning(1.2)
-                .foregroundStyle(theme.muted)
-
-            FlowLayout(spacing: 6) {
-                ForEach(effectField.values) { option in
-                    SelectablePill(
-                        label: option.label,
-                        isSelected: reliefEffect(for: takenOption.key) == option.key,
-                        accent: .pain
-                    ) {
-                        toggleReliefEffect(reliefKey: takenOption.key, effectKey: option.key)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private var cycleContextStep: some View {
@@ -542,6 +520,73 @@ struct GuidedLogFlowView: View {
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func reliefTakenList(field: SchemaField, effectField: SchemaField) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(field.values.enumerated()), id: \.element.id) { index, option in
+                let isSelected = selectedChoices(ReliefEffects.takenFieldKey).contains(option.key)
+                VStack(spacing: 0) {
+                    Button {
+                        toggleChoice(option.key, fieldKey: ReliefEffects.takenFieldKey)
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .font(.title3)
+                                .foregroundStyle(isSelected ? FieldAccent.pain.accentColor(in: theme) : theme.line)
+
+                            Text(option.label)
+                                .font(.body.weight(isSelected ? .semibold : .regular))
+                                .foregroundStyle(isSelected ? theme.text : theme.muted)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                    .accessibilityLabel(option.label)
+
+                    if isSelected {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(effectField.label.uppercased())
+                                .font(.caption2.weight(.semibold))
+                                .kerning(1.2)
+                                .foregroundStyle(theme.muted)
+
+                            FlowLayout(spacing: 6) {
+                                ForEach(effectField.values) { effectOption in
+                                    SelectablePill(
+                                        label: effectOption.label,
+                                        isSelected: reliefEffect(for: option.key) == effectOption.key,
+                                        accent: .pain
+                                    ) {
+                                        toggleReliefEffect(reliefKey: option.key, effectKey: effectOption.key)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 14)
+                        .padding(.leading, 34)
+                    }
+                }
+
+                if index < field.values.count - 1 {
+                    Divider()
+                        .overlay(theme.line)
+                        .padding(.leading, 48)
+                }
+            }
+        }
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(theme.line, lineWidth: 1)
+        }
     }
 
     private func multiChoiceList(field: SchemaField, fieldKey: String, accent: FieldAccent) -> some View {
