@@ -37,6 +37,7 @@ private extension FieldValue {
     var isEmpty: Bool {
         switch self {
         case .choices(let keys): keys.isEmpty
+        case .stringMap(let map): map.isEmpty
         case .choice, .boolean, .scale: false
         }
     }

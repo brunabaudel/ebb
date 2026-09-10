@@ -49,7 +49,7 @@ private struct TranscriptMatcher {
                 if !matches.isEmpty {
                     result[field.key] = .choices(matches)
                 }
-            case .boolean, .scale:
+            case .boolean, .scale, .stringMap:
                 continue
             }
         }
