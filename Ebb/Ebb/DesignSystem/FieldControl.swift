@@ -270,6 +270,14 @@ struct FlowLayout: Layout {
     }
 }
 
+private struct FlowLayoutContainerWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 /// Reads the container width and passes it into ``FlowLayout`` so multiline phrase
 /// segments wrap during both measurement and placement.
 struct FlowLayoutContainer<Content: View>: View {
@@ -288,9 +296,13 @@ struct FlowLayoutContainer<Content: View>: View {
             content()
         }
         .frame(maxWidth: .infinity, alignment: centerRows ? .center : .leading)
-        .onGeometryChange(for: CGFloat.self) { proxy in
-            proxy.size.width
-        } action: { newWidth in
+        .background {
+            GeometryReader { geometry in
+                Color.clear
+                    .preference(key: FlowLayoutContainerWidthKey.self, value: geometry.size.width)
+            }
+        }
+        .onPreferenceChange(FlowLayoutContainerWidthKey.self) { newWidth in
             guard newWidth > 0, abs(newWidth - containerWidth) > 0.5 else { return }
             containerWidth = newWidth
         }
