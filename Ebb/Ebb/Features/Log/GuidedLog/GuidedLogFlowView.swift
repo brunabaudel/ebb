@@ -83,7 +83,7 @@ struct GuidedLogFlowView: View {
         case .headachePresent:
             headacheStep
         case .severity:
-            severityStep
+            EmptyView()
         case .location:
             locationStep
         case .qualityAndMovement:
@@ -104,30 +104,45 @@ struct GuidedLogFlowView: View {
             title: "Any headache right now?",
             subtitle: "Choose Yes or No to continue."
         ) {
-            HStack(spacing: 10) {
-                bigChoiceButton(title: "Yes", isSelected: values["migraine_present"] == .boolean(true)) {
-                    values["migraine_present"] = .boolean(true)
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    bigChoiceButton(title: "Yes", isSelected: values["migraine_present"] == .boolean(true)) {
+                        values["migraine_present"] = .boolean(true)
+                    }
+                    bigChoiceButton(title: "No", isSelected: values["migraine_present"] == .boolean(false)) {
+                        values["migraine_present"] = .boolean(false)
+                        clearHeadacheDetailFields()
+                    }
                 }
-                bigChoiceButton(title: "No", isSelected: values["migraine_present"] == .boolean(false)) {
-                    values["migraine_present"] = .boolean(false)
-                    clearHeadacheDetailFields()
-                }
-            }
-        }
-    }
 
-    private var severityStep: some View {
-        focusShell(
-            title: "How bad is it?",
-            subtitle: "1 is barely there. 5 is disabling."
-        ) {
-            if let field = severityField, let range = field.range {
-                SeveritySquareControl(
-                    range: range,
-                    labels: field.scaleLabels,
-                    selection: scaleBinding(for: "severity"),
-                    accent: .pain
-                )
+                if values["migraine_present"] == .boolean(true) {
+                    VStack(spacing: 0) {
+                        Text("How bad is it?")
+                            .font(.system(size: 24, weight: .medium, design: .serif))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(24 * 0.2)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.bottom, 6)
+
+                        Text("1 is barely there. 5 is disabling.")
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(theme.muted)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(12.5 * 0.4)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.bottom, 22)
+
+                        if let field = severityField, let range = field.range {
+                            SeveritySquareControl(
+                                range: range,
+                                labels: field.scaleLabels,
+                                selection: scaleBinding(for: "severity"),
+                                accent: .pain
+                            )
+                        }
+                    }
+                    .padding(.top, 22)
+                }
             }
         }
     }

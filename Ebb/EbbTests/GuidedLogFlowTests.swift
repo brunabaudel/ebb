@@ -5,9 +5,10 @@ final class LogSymptomsFlowStepTests: XCTestCase {
     func testQuestionStepsWithHeadacheIncludesRelief() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: true)
         XCTAssertEqual(steps, [
-            .headachePresent, .severity, .location, .qualityAndMovement,
+            .headachePresent, .location, .qualityAndMovement,
             .relief, .cycleAndContext, .review,
         ])
+        XCTAssertFalse(steps.contains(.severity))
     }
 
     func testQuestionStepsWithoutHeadacheSkipsMigraineDetailsAndRelief() {
@@ -112,6 +113,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         ])
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Ibuprofen") == true)
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Some relief") == true)
+        XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.step, .headachePresent)
     }
 
     func testFilledDetailRowsWithoutHeadacheOmitsPainFields() {
@@ -125,5 +127,24 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(ids.contains("bleeding"))
         XCTAssertFalse(ids.contains("severity"))
         XCTAssertFalse(ids.contains("relief_taken"))
+    }
+
+    func testSeveritySegmentJumpsToHeadachePresent() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "severity": .scale(3),
+        ]
+        let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
+        let severitySegment = segments.first { $0.id == "severity" }
+        XCTAssertEqual(severitySegment?.step, .headachePresent)
+    }
+
+    func testUnsetSeverityJumpsToHeadachePresent() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+        ]
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let severity = unset.first { $0.label == "Severity" }
+        XCTAssertEqual(severity?.step, .headachePresent)
     }
 }

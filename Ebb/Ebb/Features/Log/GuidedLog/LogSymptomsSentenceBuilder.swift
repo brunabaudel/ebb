@@ -50,7 +50,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "severity",
                 text: "\(severity)/5",
                 isFilled: true,
-                step: .severity,
+                step: .headachePresent,
                 accent: .pain
             ))
             result.append(SentenceSegment(id: "sep_headache", text: " headache", isFilled: true, step: nil, accent: .pain))
@@ -59,7 +59,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "severity",
                 text: "—/5 headache",
                 isFilled: false,
-                step: .severity,
+                step: .headachePresent,
                 accent: .pain
             ))
         }
@@ -157,7 +157,7 @@ enum LogSymptomsSentenceBuilder {
                     id: "severity",
                     label: fieldLabel("severity", schema: schema, fallback: "Severity"),
                     value: "\(severity)/5",
-                    step: .severity,
+                    step: .headachePresent,
                     accent: .pain
                 ))
             }
@@ -259,7 +259,7 @@ enum LogSymptomsSentenceBuilder {
 
         if hasHeadache {
             if values["severity"] == nil {
-                unset.append(("Severity", .severity))
+                unset.append(("Severity", .headachePresent))
             }
             if values["location"] == nil {
                 unset.append(("Location", .location))
