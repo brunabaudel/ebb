@@ -6,7 +6,24 @@ struct ReviewDetailRow: Identifiable, Equatable, Sendable {
     let label: String
     let value: String
     let step: LogSymptomsFlowStep
+    let headacheSubstep: HeadachePresentSubstep?
     let accent: FieldAccent
+
+    init(
+        id: String,
+        label: String,
+        value: String,
+        step: LogSymptomsFlowStep,
+        headacheSubstep: HeadachePresentSubstep? = nil,
+        accent: FieldAccent
+    ) {
+        self.id = id
+        self.label = label
+        self.value = value
+        self.step = step
+        self.headacheSubstep = headacheSubstep ?? HeadachePresentSubstep.from(reviewFieldId: id)
+        self.accent = accent
+    }
 }
 
 /// One tappable fragment in the live sentence strip (mockup J).
@@ -15,7 +32,24 @@ struct SentenceSegment: Identifiable, Equatable, Sendable {
     let text: String
     let isFilled: Bool
     let step: LogSymptomsFlowStep?
+    let headacheSubstep: HeadachePresentSubstep?
     let accent: FieldAccent
+
+    init(
+        id: String,
+        text: String,
+        isFilled: Bool,
+        step: LogSymptomsFlowStep?,
+        headacheSubstep: HeadachePresentSubstep? = nil,
+        accent: FieldAccent
+    ) {
+        self.id = id
+        self.text = text
+        self.isFilled = isFilled
+        self.step = step
+        self.headacheSubstep = headacheSubstep ?? (step == .headachePresent ? HeadachePresentSubstep.from(reviewFieldId: id) : nil)
+        self.accent = accent
+    }
 }
 
 enum LogSymptomsSentenceBuilder {
@@ -113,7 +147,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "worse_with_movement",
                 text: worse ? "worse with movement" : "not worse with movement",
                 isFilled: true,
-                step: .qualityAndMovement,
+                step: .headachePresent,
                 accent: .pain
             ))
         } else {
@@ -121,7 +155,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "worse_with_movement",
                 text: "movement?",
                 isFilled: false,
-                step: .qualityAndMovement,
+                step: .headachePresent,
                 accent: .pain
             ))
         }
@@ -184,7 +218,7 @@ enum LogSymptomsSentenceBuilder {
                     id: "worse_with_movement",
                     label: fieldLabel("worse_with_movement", schema: schema, fallback: "Movement"),
                     value: worse ? "Worse with movement" : "Not worse with movement",
-                    step: .qualityAndMovement,
+                    step: .headachePresent,
                     accent: .pain
                 ))
             }
@@ -193,7 +227,7 @@ enum LogSymptomsSentenceBuilder {
                     id: "aura",
                     label: fieldLabel("aura", schema: schema, fallback: "Aura"),
                     value: aura,
-                    step: .qualityAndMovement,
+                    step: .headachePresent,
                     accent: .pain
                 ))
             }
@@ -202,7 +236,7 @@ enum LogSymptomsSentenceBuilder {
                     id: "associated_symptoms",
                     label: fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
                     value: other,
-                    step: .qualityAndMovement,
+                    step: .headachePresent,
                     accent: .pain
                 ))
             }
@@ -268,7 +302,7 @@ enum LogSymptomsSentenceBuilder {
                 unset.append(("Quality", .headachePresent))
             }
             if values["worse_with_movement"] == nil {
-                unset.append(("Worse with movement", .qualityAndMovement))
+                unset.append(("Worse with movement", .headachePresent))
             }
             if values[ReliefEffects.takenFieldKey] == nil {
                 unset.append(("Relief taken", .relief))
