@@ -358,69 +358,82 @@ struct GuidedLogFlowView: View {
 
     private var reviewStep: some View {
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let filledRows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
 
         return VStack(spacing: 0) {
-            Text("Tap a word to edit")
+            Text("Review")
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .kerning(1.4)
                 .textCase(.uppercase)
                 .foregroundStyle(theme.faint)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 10)
-
-            VStack(alignment: .leading, spacing: 0) {
-                entryPhrase(
-                    font: .system(size: 18, design: .serif),
-                    centered: false,
-                    allowsMultiline: true
-                )
-                .lineSpacing(18 * 0.45)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.bottom, 14)
 
-                Rectangle()
-                    .strokeBorder(theme.lineStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .frame(height: 1)
-                    .padding(.bottom, unset.isEmpty ? 0 : 14)
+            entryPhrase(
+                font: .system(size: 19, design: .serif),
+                centered: true,
+                allowsMultiline: true
+            )
+            .lineSpacing(19 * 0.45)
+            .padding(.bottom, filledRows.isEmpty && unset.isEmpty ? 12 : 20)
 
-                if !unset.isEmpty {
-                    ForEach(Array(unset.enumerated()), id: \.offset) { index, item in
-                        if index > 0 {
-                            Divider().overlay(theme.line)
-                        }
-                        Button {
-                            step = item.step
-                        } label: {
-                            HStack {
-                                Text(item.label)
-                                    .foregroundStyle(theme.muted)
-                                Spacer()
-                                Text("Not set")
-                                    .foregroundStyle(theme.faint)
-                                    .italic()
-                            }
-                            .font(.system(size: 13))
-                            .padding(.vertical, 8)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+            if !filledRows.isEmpty {
+                reviewDetailCard(rows: filledRows)
+                    .padding(.bottom, unset.isEmpty ? 12 : 10)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .guidedReviewCard()
 
-            Text("Sentence + quiet blanks · jump back to any step")
+            if !unset.isEmpty {
+                Text(unsetFieldsLine(count: unset.count))
+                    .font(.system(size: 12))
+                    .foregroundStyle(theme.faint)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 8)
+            }
+
+            Text("Tap a word to edit")
                 .font(.system(size: 12))
                 .foregroundStyle(theme.faint)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-                .padding(.top, 12)
         }
         .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    private func unsetFieldsLine(count: Int) -> String {
+        let noun = count == 1 ? "field" : "fields"
+        return "\(count) \(noun) still open · tap a word to fill"
+    }
+
+    private func reviewDetailCard(rows: [ReviewDetailRow]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                if index > 0 {
+                    Divider().overlay(theme.line)
+                }
+                Button {
+                    step = row.step
+                } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(row.label)
+                            .foregroundStyle(theme.muted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(row.value)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(row.accent == .cycle ? theme.coolInk : theme.warmInk)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    .font(.system(size: 13))
+                    .padding(.vertical, 9)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+        .guidedReviewDetailCard()
     }
 
     // MARK: - Focus shell
