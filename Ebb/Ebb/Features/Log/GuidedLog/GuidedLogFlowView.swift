@@ -38,38 +38,37 @@ struct GuidedLogFlowView: View {
     var body: some View {
         VStack(spacing: 0) {
             if step != .review {
-                progressHeader
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 18)
+                VStack(spacing: 0) {
+                    sentenceStrip
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
+
+                    progressHeader
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 18)
+                }
             }
 
             Group {
                 if step == .review {
-                    GeometryReader { geometry in
-                        ScrollView {
-                            reviewStep
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 24)
-                                .frame(
-                                    maxWidth: .infinity,
-                                    minHeight: geometry.size.height,
-                                    alignment: .center
-                                )
-                        }
-                        .scrollIndicators(.hidden)
+                    ScrollView {
+                        reviewStep
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 24)
+                            .frame(maxWidth: .infinity)
                     }
+                    .scrollIndicators(.hidden)
                 } else {
                     ScrollView {
                         questionBody
-                            .padding(.horizontal, 24)
-                            .padding(.top, 4)
-                            .padding(.bottom, 24)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 16)
                             .frame(maxWidth: .infinity, alignment: .top)
                     }
                     .scrollIndicators(.hidden)
                 }
             }
+            .frame(maxHeight: .infinity)
 
             if step == .review {
                 saveBar
@@ -80,12 +79,37 @@ struct GuidedLogFlowView: View {
         .background(theme.base)
     }
 
+    // MARK: - Sentence strip (g-strip)
+
+    private var sentenceStrip: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Building entry · tap a word to edit")
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .kerning(1.26)
+                .textCase(.uppercase)
+                .foregroundStyle(theme.faint)
+
+            entryPhrase(
+                font: .system(size: 15, design: .serif),
+                centered: false,
+                allowsMultiline: true,
+                bodyColor: theme.inkSoft
+            )
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .guidedSentenceStrip()
+        .padding(.bottom, 14)
+    }
+
     // MARK: - Entry phrase (review tap-to-edit)
 
     private func entryPhrase(
         font: Font,
         centered: Bool,
-        allowsMultiline: Bool = false
+        allowsMultiline: Bool = false,
+        bodyColor: Color? = nil
     ) -> some View {
         FlowLayout(spacing: 0, centerRows: centered) {
             ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
@@ -98,16 +122,21 @@ struct GuidedLogFlowView: View {
                         entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
                             .fontWeight(segment.isFilled ? .semibold : .regular)
                             .foregroundStyle(segmentColor(for: segment))
-                            .underline(segment.step != nil && segment.isFilled, pattern: .dot)
+                            .underline(
+                                segment.step != nil && segment.isFilled,
+                                pattern: .dot,
+                                color: underlineColor(for: segment)
+                            )
                     }
                     .buttonStyle(.plain)
                     .disabled(segment.step == nil)
                 } else {
                     entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
-                        .foregroundStyle(theme.muted)
+                        .foregroundStyle(theme.faint)
                 }
             }
         }
+        .foregroundStyle(bodyColor ?? theme.inkSoft)
         .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
     }
 
@@ -124,7 +153,14 @@ struct GuidedLogFlowView: View {
     }
 
     private func segmentColor(for segment: SentenceSegment) -> Color {
-        if !segment.isFilled { return theme.muted }
+        if !segment.isFilled { return theme.faint }
+        switch segment.accent {
+        case .pain: return theme.warmInk
+        case .cycle: return theme.coolInk
+        }
+    }
+
+    private func underlineColor(for segment: SentenceSegment) -> Color {
         switch segment.accent {
         case .pain: return theme.pain
         case .cycle: return theme.cycle
@@ -160,7 +196,7 @@ struct GuidedLogFlowView: View {
             title: "Any headache right now?",
             subtitle: "Choose Yes or No to continue."
         ) {
-            HStack(spacing: 11) {
+            HStack(spacing: 10) {
                 bigChoiceButton(title: "Yes", isSelected: values["migraine_present"] == .boolean(true)) {
                     values["migraine_present"] = .boolean(true)
                 }
@@ -205,7 +241,7 @@ struct GuidedLogFlowView: View {
             subtitle: "Pick one or more. Skip if you're not sure."
         ) {
             if let field = schema.field(forKey: "quality") {
-                FlowLayout(spacing: 7) {
+                FlowLayout(spacing: 6) {
                     ForEach(field.values) { option in
                         SelectablePill(
                             label: option.label,
@@ -225,7 +261,7 @@ struct GuidedLogFlowView: View {
                     .kerning(1.2)
                     .foregroundStyle(theme.muted)
 
-                HStack(spacing: 11) {
+                HStack(spacing: 10) {
                     bigChoiceButton(
                         title: "Yes",
                         isSelected: values["worse_with_movement"] == .boolean(true)
@@ -261,7 +297,7 @@ struct GuidedLogFlowView: View {
                             .kerning(1.2)
                             .foregroundStyle(theme.muted)
 
-                        FlowLayout(spacing: 7) {
+                        FlowLayout(spacing: 6) {
                             ForEach(effectField.values) { option in
                                 SelectablePill(
                                     label: option.label,
@@ -287,7 +323,7 @@ struct GuidedLogFlowView: View {
     private var cycleContextStep: some View {
         focusShell(
             title: "Anything else today?",
-            subtitle: nil
+            subtitle: "Cycle & triggers — skip what doesn't apply."
         ) {
             VStack(alignment: .center, spacing: 18) {
                 if let field = schema.field(forKey: "bleeding") {
@@ -316,55 +352,66 @@ struct GuidedLogFlowView: View {
     private var reviewStep: some View {
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
 
-        return VStack(alignment: .center, spacing: 24) {
-            VStack(spacing: 10) {
-                Text("TAP A WORD TO EDIT")
-                    .font(.caption2.weight(.semibold))
-                    .kerning(1.2)
-                    .foregroundStyle(theme.muted)
+        return VStack(spacing: 0) {
+            Spacer(minLength: 0)
 
-                ViewThatFits(in: .vertical) {
-                    entryPhrase(
-                        font: .system(.largeTitle, design: .serif),
-                        centered: true,
-                        allowsMultiline: true
-                    )
-                    entryPhrase(
-                        font: .system(.title, design: .serif),
-                        centered: true,
-                        allowsMultiline: true
-                    )
-                    entryPhrase(
-                        font: .system(.title2, design: .serif),
-                        centered: true,
-                        allowsMultiline: true
-                    )
-                }
+            Text("Tap a word to edit")
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .kerning(1.4)
+                .textCase(.uppercase)
+                .foregroundStyle(theme.faint)
                 .frame(maxWidth: .infinity)
-            }
+                .padding(.bottom, 10)
 
-            if !unset.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(unset, id: \.label) { item in
-                        HStack {
-                            Text(item.label)
-                                .foregroundStyle(theme.muted)
-                            Spacer()
-                            Text("Not set")
-                                .foregroundStyle(theme.muted)
-                                .italic()
+            VStack(alignment: .leading, spacing: 0) {
+                entryPhrase(
+                    font: .system(size: 18, design: .serif),
+                    centered: false,
+                    allowsMultiline: true
+                )
+                .lineSpacing(18 * 0.45)
+                .padding(.bottom, 14)
+
+                Rectangle()
+                    .strokeBorder(theme.lineStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .frame(height: 1)
+                    .padding(.bottom, 14)
+
+                if !unset.isEmpty {
+                    ForEach(Array(unset.enumerated()), id: \.offset) { index, item in
+                        if index > 0 {
+                            Divider().overlay(theme.line)
                         }
-                        .font(.subheadline)
+                        Button {
+                            step = item.step
+                        } label: {
+                            HStack {
+                                Text(item.label)
+                                    .foregroundStyle(theme.muted)
+                                Spacer()
+                                Text("Not set")
+                                    .foregroundStyle(theme.faint)
+                                    .italic()
+                            }
+                            .font(.system(size: 13))
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(theme.line, lineWidth: 1)
-                }
             }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 20)
+            .guidedReviewCard()
+
+            Text("Sentence + quiet blanks · jump back to any step")
+                .font(.system(size: 12))
+                .foregroundStyle(theme.faint)
+                .multilineTextAlignment(.center)
+                .padding(.top, 12)
+
+            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity)
     }
@@ -378,10 +425,8 @@ struct GuidedLogFlowView: View {
     ) -> some View {
         VStack(alignment: .center, spacing: 0) {
             questionTitleBlock(title: title, subtitle: subtitle)
-
             content()
                 .frame(maxWidth: .infinity)
-                .padding(.top, 40)
         }
         .frame(maxWidth: .infinity, alignment: .top)
     }
@@ -394,11 +439,8 @@ struct GuidedLogFlowView: View {
     ) -> some View {
         VStack(alignment: .center, spacing: 0) {
             questionTitleBlock(title: title, subtitle: subtitle)
-
             content()
                 .frame(maxWidth: .infinity)
-                .padding(.top, 40)
-
             footer()
                 .frame(maxWidth: .infinity)
                 .padding(.top, 28)
@@ -407,19 +449,22 @@ struct GuidedLogFlowView: View {
     }
 
     private func questionTitleBlock(title: String, subtitle: String?) -> some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 0) {
             Text(title)
-                .font(.system(.title2, design: .serif))
-                .fontWeight(.medium)
+                .font(.system(size: 24, weight: .medium, design: .serif))
                 .multilineTextAlignment(.center)
+                .lineSpacing(24 * 0.2)
                 .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 6)
 
             if let subtitle {
                 Text(subtitle)
-                    .font(.footnote)
+                    .font(.system(size: 12.5))
                     .foregroundStyle(theme.muted)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(12.5 * 0.4)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.bottom, 22)
             }
         }
     }
@@ -439,85 +484,81 @@ struct GuidedLogFlowView: View {
             .frame(height: 3)
 
             Text(progressLabel)
-                .font(.caption2.monospaced())
-                .foregroundStyle(theme.muted)
+                .font(.system(size: 10, design: .monospaced))
+                .kerning(0.4)
+                .foregroundStyle(theme.faint)
         }
     }
 
     private var stepNavigationBar: some View {
         VStack(spacing: 0) {
             Divider().overlay(theme.line)
-            HStack(spacing: 12) {
+            HStack {
                 Button {
                     goBack()
                 } label: {
                     Text("← Back")
-                        .font(.subheadline)
+                        .font(.system(size: 13.5, weight: .medium))
                         .foregroundStyle(theme.muted)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .frame(minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!canGoBack)
                 .opacity(canGoBack ? 1 : 0)
                 .accessibilityHidden(!canGoBack)
-                .frame(maxWidth: .infinity)
+
+                Spacer()
 
                 if canSkipCurrentStep {
                     Button {
                         advance()
                     } label: {
                         Text("Skip")
-                            .font(.subheadline)
-                            .foregroundStyle(theme.muted)
-                            .frame(width: 64, height: 44)
+                            .font(.system(size: 13.5, weight: .medium))
+                            .foregroundStyle(theme.muted.opacity(0.85))
+                            .frame(minHeight: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                } else {
-                    Color.clear
-                        .frame(width: 64, height: 44)
                 }
+
+                Spacer()
 
                 Button {
                     advance()
                 } label: {
                     Text(nextButtonTitle)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(canAdvance ? theme.onPain : theme.muted)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(canAdvance ? theme.pain : theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay {
-                            if !canAdvance {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(theme.line, lineWidth: 1)
-                            }
-                        }
+                        .font(.system(size: 13.5, weight: .semibold))
+                        .foregroundStyle(canAdvance ? theme.pain : theme.muted)
+                        .frame(minHeight: 44, alignment: .trailing)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!canAdvance)
-                .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.top, 12)
         }
         .background(theme.base)
     }
 
     private var saveBar: some View {
         VStack(spacing: 0) {
-            Divider().overlay(theme.line)
             Button(action: onSave) {
                 Text("Save entry")
-                    .font(.headline)
+                    .font(.system(size: 14.5, weight: .semibold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(theme.pain, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.vertical, 15)
+                    .background(theme.text, in: RoundedRectangle(cornerRadius: 16))
                     .foregroundStyle(theme.onPain)
             }
             .buttonStyle(.plain)
-            .padding(20)
+            .shadow(color: Color.black.opacity(theme.isLight ? 0.25 : 0), radius: 7, y: 4)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
         }
+        .background(theme.base)
     }
 
     // MARK: - Helpers
@@ -553,27 +594,27 @@ struct GuidedLogFlowView: View {
     private func bigChoiceButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.body.weight(.semibold))
+                .font(.system(size: 15, weight: .semibold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 18)
-                .background(isSelected ? theme.pain : Color.clear, in: RoundedRectangle(cornerRadius: 16))
+                .padding(.vertical, 16)
+                .background(isSelected ? theme.painDim : theme.paper, in: RoundedRectangle(cornerRadius: 16))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(isSelected ? theme.pain : theme.line, lineWidth: 1)
+                        .strokeBorder(isSelected ? Color.clear : theme.line, lineWidth: 1)
                 }
-                .foregroundStyle(isSelected ? theme.onPain : theme.muted)
+                .foregroundStyle(isSelected ? theme.warmInk : theme.inkSoft)
         }
         .buttonStyle(.plain)
     }
 
     private func fieldPills(field: SchemaField, accent: FieldAccent, limit: Int? = nil) -> some View {
-        VStack(alignment: .center, spacing: 8) {
+        VStack(alignment: .center, spacing: 6) {
             Text(field.label.uppercased())
                 .font(.caption2.weight(.semibold))
                 .kerning(1.2)
-                .foregroundStyle(theme.muted)
+                .foregroundStyle(accent == .cycle ? theme.cycle : theme.muted)
 
-            FlowLayout(spacing: 7) {
+            FlowLayout(spacing: 6) {
                 ForEach(Array(field.values.prefix(limit ?? field.values.count))) { option in
                     SelectablePill(
                         label: option.label,
@@ -743,6 +784,6 @@ struct GuidedLogFlowView: View {
         values: $values,
         onSave: {}
     )
-    .environment(\.theme, .plumEmber)
+    .environment(\.theme, .softPaper)
     .environment(MedicationPreferences())
 }
