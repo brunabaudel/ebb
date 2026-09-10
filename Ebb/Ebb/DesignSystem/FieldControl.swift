@@ -147,14 +147,29 @@ struct FieldControl: View {
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
     var centerRows: Bool = false
+    /// When set, both sizing and placement use this width so text can wrap even if
+    /// the layout proposal width is unspecified.
+    var arrangementWidth: CGFloat? = nil
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrange(proposal: proposal, subviews: subviews)
+    struct Cache {
+        var lastBoundsWidth: CGFloat = 0
+    }
+
+    func makeCache(subviews: Subviews) -> Cache {
+        Cache()
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
+        let maxWidth = effectiveMaxWidth(proposal: proposal, boundsWidth: nil, cache: cache)
+        let result = arrange(maxWidth: maxWidth, subviews: subviews)
         return result.size
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let maxWidth = proposal.width ?? bounds.width
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
+        if bounds.width > 0 {
+            cache.lastBoundsWidth = bounds.width
+        }
+        let maxWidth = effectiveMaxWidth(proposal: proposal, boundsWidth: bounds.width, cache: cache)
         let result = arrange(maxWidth: maxWidth, subviews: subviews)
         for (index, position) in result.positions.enumerated() {
             let size = result.sizes[index]
@@ -165,8 +180,24 @@ struct FlowLayout: Layout {
         }
     }
 
-    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> Arrangement {
-        arrange(maxWidth: proposal.width ?? .infinity, subviews: subviews)
+    private func effectiveMaxWidth(
+        proposal: ProposedViewSize,
+        boundsWidth: CGFloat?,
+        cache: Cache
+    ) -> CGFloat {
+        if let arrangementWidth, arrangementWidth > 0 {
+            return arrangementWidth
+        }
+        if let width = proposal.width {
+            return width
+        }
+        if let width = boundsWidth, width > 0 {
+            return width
+        }
+        if cache.lastBoundsWidth > 0 {
+            return cache.lastBoundsWidth
+        }
+        return .infinity
     }
 
     private func arrange(maxWidth: CGFloat, subviews: Subviews) -> Arrangement {
@@ -236,6 +267,33 @@ struct FlowLayout: Layout {
         let size: CGSize
         let positions: [CGPoint]
         let sizes: [CGSize]
+    }
+}
+
+/// Reads the container width and passes it into ``FlowLayout`` so multiline phrase
+/// segments wrap during both measurement and placement.
+struct FlowLayoutContainer<Content: View>: View {
+    var spacing: CGFloat = 8
+    var centerRows: Bool = false
+    @ViewBuilder var content: () -> Content
+
+    @State private var containerWidth: CGFloat = 0
+
+    var body: some View {
+        FlowLayout(
+            spacing: spacing,
+            centerRows: centerRows,
+            arrangementWidth: containerWidth > 0 ? containerWidth : nil
+        ) {
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: centerRows ? .center : .leading)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { newWidth in
+            guard newWidth > 0, abs(newWidth - containerWidth) > 0.5 else { return }
+            containerWidth = newWidth
+        }
     }
 }
 

@@ -105,33 +105,46 @@ struct GuidedLogFlowView: View {
         allowsMultiline: Bool = false,
         bodyColor: Color? = nil
     ) -> some View {
-        FlowLayout(spacing: 0, centerRows: centered) {
-            ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
-                if segment.isFilled || segment.step != nil {
-                    Button {
-                        if let target = segment.step {
-                            step = target
-                        }
-                    } label: {
-                        entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
-                            .fontWeight(segment.isFilled ? .semibold : .regular)
-                            .foregroundStyle(segmentColor(for: segment))
-                            .underline(
-                                segment.step != nil && segment.isFilled,
-                                pattern: .dot,
-                                color: underlineColor(for: segment)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(segment.step == nil)
-                } else {
-                    entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
-                        .foregroundStyle(theme.faint)
+        Group {
+            if allowsMultiline {
+                FlowLayoutContainer(spacing: 0, centerRows: centered) {
+                    phraseSegments(font: font, centered: centered, allowsMultiline: allowsMultiline)
                 }
+            } else {
+                FlowLayout(spacing: 0, centerRows: centered) {
+                    phraseSegments(font: font, centered: centered, allowsMultiline: allowsMultiline)
+                }
+                .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
             }
         }
         .foregroundStyle(bodyColor ?? theme.inkSoft)
-        .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
+    }
+
+    @ViewBuilder
+    private func phraseSegments(font: Font, centered: Bool, allowsMultiline: Bool) -> some View {
+        ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
+            if segment.isFilled || segment.step != nil {
+                Button {
+                    if let target = segment.step {
+                        step = target
+                    }
+                } label: {
+                    entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
+                        .fontWeight(segment.isFilled ? .semibold : .regular)
+                        .foregroundStyle(segmentColor(for: segment))
+                        .underline(
+                            segment.step != nil && segment.isFilled,
+                            pattern: .dot,
+                            color: underlineColor(for: segment)
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(segment.step == nil)
+            } else {
+                entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
+                    .foregroundStyle(theme.faint)
+            }
+        }
     }
 
     private func entryPhraseText(
