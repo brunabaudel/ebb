@@ -197,8 +197,8 @@ struct GuidedLogFlowView: View {
         ) {
             if let field = schema.field(forKey: "location") {
                 multiChoiceList(field: field, fieldKey: "location", accent: .pain)
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
         }
     }
 
