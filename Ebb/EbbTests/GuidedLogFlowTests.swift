@@ -90,4 +90,40 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertFalse(labels.contains("Did it help?"))
         XCTAssertTrue(labels.contains("Bleeding"))
     }
+
+    func testFilledDetailRowsWithHeadache() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "severity": .scale(2),
+            "location": .choices(["left", "right"]),
+            "quality": .choices(["throbbing"]),
+            "worse_with_movement": .boolean(true),
+            "relief_taken": .choices(["ibuprofen"]),
+            "relief_effect": .choice("partial"),
+            "bleeding": .choice("spotting"),
+            "cramps_severity": .scale(1),
+            "triggers": .choices(["poor_sleep"]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let ids = rows.map(\.id)
+        XCTAssertEqual(ids, [
+            "migraine_present", "severity", "location", "quality",
+            "worse_with_movement", "relief_taken", "bleeding", "cramps_severity", "triggers",
+        ])
+        XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Ibuprofen") == true)
+        XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Some relief") == true)
+    }
+
+    func testFilledDetailRowsWithoutHeadacheOmitsPainFields() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+            "bleeding": .choice("none"),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let ids = Set(rows.map(\.id))
+        XCTAssertTrue(ids.contains("migraine_present"))
+        XCTAssertTrue(ids.contains("bleeding"))
+        XCTAssertFalse(ids.contains("severity"))
+        XCTAssertFalse(ids.contains("relief_taken"))
+    }
 }

@@ -1,5 +1,14 @@
 import Foundation
 
+/// One filled field row in the compact review detail card (sketch C).
+struct ReviewDetailRow: Identifiable, Equatable, Sendable {
+    let id: String
+    let label: String
+    let value: String
+    let step: LogSymptomsFlowStep
+    let accent: FieldAccent
+}
+
 /// One tappable fragment in the live sentence strip (mockup J).
 struct SentenceSegment: Identifiable, Equatable, Sendable {
     let id: String
@@ -124,6 +133,123 @@ enum LogSymptomsSentenceBuilder {
         return result
     }
 
+    /// Filled schema fields for the compact review detail card (sketch C).
+    static func filledDetailRows(
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> [ReviewDetailRow] {
+        var rows: [ReviewDetailRow] = []
+        let hasHeadache = booleanValue(values["migraine_present"])
+
+        if let hasHeadache {
+            rows.append(ReviewDetailRow(
+                id: "migraine_present",
+                label: fieldLabel("migraine_present", schema: schema, fallback: "Headache"),
+                value: hasHeadache ? "Yes" : "No",
+                step: .headachePresent,
+                accent: .pain
+            ))
+        }
+
+        if hasHeadache == true {
+            if let severity = scaleValue(values["severity"]) {
+                rows.append(ReviewDetailRow(
+                    id: "severity",
+                    label: fieldLabel("severity", schema: schema, fallback: "Severity"),
+                    value: "\(severity)/5",
+                    step: .severity,
+                    accent: .pain
+                ))
+            }
+            if let location = choiceLabels(values["location"], fieldKey: "location", schema: schema) {
+                rows.append(ReviewDetailRow(
+                    id: "location",
+                    label: fieldLabel("location", schema: schema, fallback: "Location"),
+                    value: location,
+                    step: .location,
+                    accent: .pain
+                ))
+            }
+            if let quality = choiceLabels(values["quality"], fieldKey: "quality", schema: schema) {
+                rows.append(ReviewDetailRow(
+                    id: "quality",
+                    label: fieldLabel("quality", schema: schema, fallback: "Quality"),
+                    value: quality,
+                    step: .qualityAndMovement,
+                    accent: .pain
+                ))
+            }
+            if let worse = booleanValue(values["worse_with_movement"]) {
+                rows.append(ReviewDetailRow(
+                    id: "worse_with_movement",
+                    label: fieldLabel("worse_with_movement", schema: schema, fallback: "Movement"),
+                    value: worse ? "Worse with movement" : "Not worse with movement",
+                    step: .qualityAndMovement,
+                    accent: .pain
+                ))
+            }
+            if let aura = choiceLabels(values["aura"], fieldKey: "aura", schema: schema) {
+                rows.append(ReviewDetailRow(
+                    id: "aura",
+                    label: fieldLabel("aura", schema: schema, fallback: "Aura"),
+                    value: aura,
+                    step: .qualityAndMovement,
+                    accent: .pain
+                ))
+            }
+            if let other = choiceLabels(values["associated_symptoms"], fieldKey: "associated_symptoms", schema: schema) {
+                rows.append(ReviewDetailRow(
+                    id: "associated_symptoms",
+                    label: fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
+                    value: other,
+                    step: .qualityAndMovement,
+                    accent: .pain
+                ))
+            }
+            if let relief = reliefSummary(values: values, schema: schema) {
+                rows.append(ReviewDetailRow(
+                    id: "relief_taken",
+                    label: fieldLabel("relief_taken", schema: schema, fallback: "Relief"),
+                    value: relief,
+                    step: .relief,
+                    accent: .pain
+                ))
+            }
+        }
+
+        if let bleeding = choiceLabel(values["bleeding"], fieldKey: "bleeding", schema: schema) {
+            rows.append(ReviewDetailRow(
+                id: "bleeding",
+                label: fieldLabel("bleeding", schema: schema, fallback: "Bleeding"),
+                value: bleeding,
+                step: .cycleAndContext,
+                accent: .cycle
+            ))
+        }
+        if let cramps = scaleValue(values["cramps_severity"]) {
+            let scaleLabel = schema.field(forKey: "cramps_severity")?.scaleLabels[cramps]
+            let value = scaleLabel.map { "\($0) (\(cramps)/5)" } ?? "\(cramps)/5"
+            rows.append(ReviewDetailRow(
+                id: "cramps_severity",
+                label: fieldLabel("cramps_severity", schema: schema, fallback: "Cramps"),
+                value: value,
+                step: .cycleAndContext,
+                accent: .cycle
+            ))
+        }
+        if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
+            rows.append(ReviewDetailRow(
+                id: "triggers",
+                label: fieldLabel("triggers", schema: schema, fallback: "Triggers"),
+                value: triggers,
+                step: .cycleAndContext,
+                accent: .pain
+            ))
+        }
+
+        return rows
+    }
+
     static func unsetFieldLabels(
         values: [String: FieldValue],
         schema: SchemaConfig
@@ -163,6 +289,23 @@ enum LogSymptomsSentenceBuilder {
     }
 
     // MARK: - Private
+
+    private static func fieldLabel(_ key: String, schema: SchemaConfig, fallback: String) -> String {
+        schema.field(forKey: key)?.label ?? fallback
+    }
+
+    private static func reliefSummary(
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> String? {
+        guard let taken = choiceLabels(values["relief_taken"], fieldKey: "relief_taken", schema: schema) else {
+            return nil
+        }
+        if let effect = choiceLabel(values["relief_effect"], fieldKey: "relief_effect", schema: schema) {
+            return "\(taken) · \(effect)"
+        }
+        return taken
+    }
 
     private static func noHeadacheSegments(
         values: [String: FieldValue],
