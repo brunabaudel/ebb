@@ -157,9 +157,10 @@ struct FlowLayout: Layout {
         let maxWidth = proposal.width ?? bounds.width
         let result = arrange(maxWidth: maxWidth, subviews: subviews)
         for (index, position) in result.positions.enumerated() {
+            let size = result.sizes[index]
             subviews[index].place(
                 at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: .unspecified
+                proposal: ProposedViewSize(width: size.width, height: nil)
             )
         }
     }
