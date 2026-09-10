@@ -43,6 +43,8 @@ extension FieldValue {
             return [key]
         case .choices(let keys):
             return Set(keys)
+        case .stringMap:
+            return []
         }
     }
 }
