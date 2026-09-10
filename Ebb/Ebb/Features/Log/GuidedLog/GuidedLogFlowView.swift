@@ -38,15 +38,10 @@ struct GuidedLogFlowView: View {
     var body: some View {
         VStack(spacing: 0) {
             if step != .review {
-                VStack(spacing: 0) {
-                    sentenceStrip
-                        .padding(.horizontal, 20)
-                        .padding(.top, 10)
-
-                    progressHeader
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 18)
-                }
+                progressHeader
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+                    .padding(.bottom, 18)
             }
 
             Group {
@@ -78,100 +73,6 @@ struct GuidedLogFlowView: View {
             }
         }
         .background(theme.base)
-    }
-
-    // MARK: - Sentence strip (g-strip)
-
-    private var sentenceStrip: some View {
-        entryPhrase(
-            font: .system(size: 15, design: .serif),
-            centered: false,
-            allowsMultiline: true,
-            bodyColor: theme.inkSoft
-        )
-        .lineSpacing(15 * 0.35)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .guidedSentenceStrip()
-        .padding(.bottom, 14)
-    }
-
-    // MARK: - Entry phrase (review tap-to-edit)
-
-    private func entryPhrase(
-        font: Font,
-        centered: Bool,
-        allowsMultiline: Bool = false,
-        bodyColor: Color? = nil
-    ) -> some View {
-        Group {
-            if allowsMultiline {
-                FlowLayoutContainer(spacing: 0, centerRows: centered) {
-                    phraseSegments(font: font, centered: centered, allowsMultiline: allowsMultiline)
-                }
-            } else {
-                FlowLayout(spacing: 0, centerRows: centered) {
-                    phraseSegments(font: font, centered: centered, allowsMultiline: allowsMultiline)
-                }
-                .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
-            }
-        }
-        .foregroundStyle(bodyColor ?? theme.inkSoft)
-    }
-
-    @ViewBuilder
-    private func phraseSegments(font: Font, centered: Bool, allowsMultiline: Bool) -> some View {
-        ForEach(LogSymptomsSentenceBuilder.segments(values: values, schema: schema)) { segment in
-            if segment.isFilled || segment.step != nil {
-                Button {
-                    if let target = segment.step {
-                        step = target
-                    }
-                } label: {
-                    entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
-                        .fontWeight(segment.isFilled ? .semibold : .regular)
-                        .foregroundStyle(segmentColor(for: segment))
-                        .underline(
-                            segment.step != nil && segment.isFilled,
-                            pattern: .dot,
-                            color: underlineColor(for: segment)
-                        )
-                }
-                .buttonStyle(.plain)
-                .disabled(segment.step == nil)
-            } else {
-                entryPhraseText(segment.text, font: font, centered: centered, allowsMultiline: allowsMultiline)
-                    .foregroundStyle(theme.faint)
-            }
-        }
-    }
-
-    private func entryPhraseText(
-        _ text: String,
-        font: Font,
-        centered: Bool,
-        allowsMultiline: Bool
-    ) -> some View {
-        Text(text)
-            .font(font)
-            .multilineTextAlignment(centered ? .center : .leading)
-            .fixedSize(horizontal: !allowsMultiline, vertical: true)
-    }
-
-    private func segmentColor(for segment: SentenceSegment) -> Color {
-        if !segment.isFilled { return theme.faint }
-        switch segment.accent {
-        case .pain: return theme.warmInk
-        case .cycle: return theme.coolInk
-        }
-    }
-
-    private func underlineColor(for segment: SentenceSegment) -> Color {
-        switch segment.accent {
-        case .pain: return theme.pain
-        case .cycle: return theme.cycle
-        }
     }
 
     // MARK: - Step content
@@ -357,53 +258,17 @@ struct GuidedLogFlowView: View {
     }
 
     private var reviewStep: some View {
-        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
         let filledRows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
 
-        return VStack(spacing: 0) {
-            Text("Review")
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .kerning(1.4)
-                .textCase(.uppercase)
-                .foregroundStyle(theme.faint)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, 14)
-
-            entryPhrase(
-                font: .system(size: 19, design: .serif),
-                centered: true,
-                allowsMultiline: true
-            )
-            .lineSpacing(19 * 0.45)
-            .padding(.bottom, filledRows.isEmpty && unset.isEmpty ? 12 : 20)
-
-            if !filledRows.isEmpty {
+        return Group {
+            if filledRows.isEmpty {
+                Color.clear
+                    .frame(maxWidth: .infinity, minHeight: 1)
+            } else {
                 reviewDetailCard(rows: filledRows)
-                    .padding(.bottom, unset.isEmpty ? 12 : 10)
             }
-
-            if !unset.isEmpty {
-                Text(unsetFieldsLine(count: unset.count))
-                    .font(.system(size: 12))
-                    .foregroundStyle(theme.faint)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 8)
-            }
-
-            Text("Tap a word to edit")
-                .font(.system(size: 12))
-                .foregroundStyle(theme.faint)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .top)
-    }
-
-    private func unsetFieldsLine(count: Int) -> String {
-        let noun = count == 1 ? "field" : "fields"
-        return "\(count) \(noun) still open · tap a word to fill"
     }
 
     private func reviewDetailCard(rows: [ReviewDetailRow]) -> some View {
