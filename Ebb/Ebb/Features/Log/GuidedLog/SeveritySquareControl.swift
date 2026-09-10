@@ -36,8 +36,9 @@ struct SeveritySquareControl: View {
             selection = selection == step ? nil : step
         } label: {
             Text("\(step)")
-                .font(.system(size: 12, weight: style.fontWeight))
+                .font(.system(size: style.fontSize, weight: style.fontWeight))
                 .frame(maxWidth: .infinity)
+                .frame(minHeight: 44)
                 .aspectRatio(1, contentMode: .fit)
                 .foregroundStyle(style.foreground)
                 .background {
@@ -64,6 +65,7 @@ struct SeveritySquareControl: View {
     private struct SquareStyle {
         let background: Color
         let foreground: Color
+        let fontSize: CGFloat
         let fontWeight: Font.Weight
         let showsBorder: Bool
         let shadow: Bool
@@ -74,6 +76,7 @@ struct SeveritySquareControl: View {
             return SquareStyle(
                 background: theme.paper,
                 foreground: theme.muted,
+                fontSize: 17,
                 fontWeight: .medium,
                 showsBorder: true,
                 shadow: false
@@ -84,7 +87,8 @@ struct SeveritySquareControl: View {
             return SquareStyle(
                 background: accent.accentColor(in: theme),
                 foreground: accent.onAccentColor(in: theme),
-                fontWeight: .bold,
+                fontSize: 20,
+                fontWeight: .semibold,
                 showsBorder: false,
                 shadow: true
             )
@@ -94,7 +98,8 @@ struct SeveritySquareControl: View {
             return SquareStyle(
                 background: accent.dimColor(in: theme),
                 foreground: accent.accentColor(in: theme),
-                fontWeight: .medium,
+                fontSize: 18,
+                fontWeight: .semibold,
                 showsBorder: false,
                 shadow: false
             )
@@ -103,6 +108,7 @@ struct SeveritySquareControl: View {
         return SquareStyle(
             background: theme.paper,
             foreground: theme.muted,
+            fontSize: 17,
             fontWeight: .medium,
             showsBorder: true,
             shadow: false
