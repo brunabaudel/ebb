@@ -27,7 +27,7 @@ struct MainTabView: View {
             CareView(schema: schema)
                 .tag(AppTab.care)
                 .tabItem {
-                    Label("Care", systemImage: "cross.case")
+                    Label("My care", systemImage: "cross.case")
                 }
 
             PatternsView(schema: schema)

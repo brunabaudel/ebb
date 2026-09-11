@@ -61,7 +61,7 @@ struct CareView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Care")
+            Text("My care")
                 .font(.system(.title, design: .serif))
             Text("Reminders, medications, and a note for your doctor.")
                 .font(.footnote)
