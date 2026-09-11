@@ -153,7 +153,7 @@ extension SchemaConfig {
         customReliefs: [CustomReliefOption]
     ) -> [String: FieldValue] {
         let extraReliefKeys = Set(customReliefs.map(\.key))
-        values.reduce(into: [:]) { result, pair in
+        return values.reduce(into: [:]) { result, pair in
             guard let field = field(forKey: pair.key) else { return }
             let extraKeys = field.key == ReliefEffects.takenFieldKey ? extraReliefKeys : []
             guard let value = field.validated(pair.value, extraAllowedKeys: extraKeys) else { return }
