@@ -132,8 +132,8 @@ struct DaySummaryBuilderTests {
         #expect(DaySummaryBuilder.todayRowTitle(unsetMigraine, schema: schema) == "Symptom log")
     }
 
-    @Test func entryAccentUsesPainWhenMigrainePresentIsSet() {
-        let migraine = SymptomEntry(
+    @Test func entryAccentUsesPainForMigraineAndCycleForNoMigraine() {
+        let migraineWithSpotting = SymptomEntry(
             timestamp: today,
             schemaVersion: schema.schemaVersion,
             fieldValues: [
@@ -142,7 +142,7 @@ struct DaySummaryBuilderTests {
                 "bleeding": .choice("spotting"),
             ]
         )
-        #expect(DaySummaryBuilder.entryAccent(migraine) == .pain)
+        #expect(DaySummaryBuilder.entryAccent(migraineWithSpotting) == .pain)
 
         let noMigraineWithSpotting = SymptomEntry(
             timestamp: today,
@@ -153,7 +153,7 @@ struct DaySummaryBuilderTests {
                 "cramps_severity": .scale(2),
             ]
         )
-        #expect(DaySummaryBuilder.entryAccent(noMigraineWithSpotting) == .pain)
+        #expect(DaySummaryBuilder.entryAccent(noMigraineWithSpotting) == .cycle)
     }
 
     @Test func entryAccentUsesCycleWhenMigraineUnsetAndBleedingOrCramps() {
