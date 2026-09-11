@@ -82,6 +82,8 @@ struct RemindersSettingsView: View {
                         }
                     }
                     .themeListRow()
+                } header: {
+                    Text("Time")
                 } footer: {
                     Text("Shared by the reminders that are on.")
                 }
