@@ -106,7 +106,7 @@ struct RemindersSettingsView: View {
         } label: {
             Text(title)
                 .font(.footnote.weight(isOn.wrappedValue ? .semibold : .regular))
-                .foregroundStyle(isOn.wrappedValue ? theme.text : theme.muted)
+                .foregroundStyle(isOn.wrappedValue ? theme.onPain : theme.muted)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
@@ -116,7 +116,7 @@ struct RemindersSettingsView: View {
                 .aspectRatio(1, contentMode: .fit)
                 .background {
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(isOn.wrappedValue ? theme.painDim : theme.surface)
+                        .fill(isOn.wrappedValue ? theme.pain : theme.surface)
                 }
                 .overlay {
                     if !isOn.wrappedValue {
