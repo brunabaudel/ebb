@@ -2,9 +2,31 @@ import SwiftData
 import SwiftUI
 
 private enum ReminderTileLayout {
-    static let size: CGFloat = 104
+    static let referenceSize: CGFloat = 104
     static let gutter: CGFloat = 10
     static let cornerRadius: CGFloat = 24
+
+    struct Metrics {
+        let tile: CGFloat
+        let gutter: CGFloat
+        let timeSide: CGFloat
+
+        var gridHeight: CGFloat { 2 * tile + gutter }
+    }
+
+    /// `2×tile + 3×gutter + timeSide = available`, with `timeSide = 2×tile + gutter`.
+    static func metrics(forAvailableWidth width: CGFloat) -> Metrics {
+        let gutter = Self.gutter
+        let tile = max(0, (width - 3 * gutter) / 4)
+        let timeSide = 2 * tile + gutter
+        return Metrics(tile: tile, gutter: gutter, timeSide: timeSide)
+    }
+
+    static func scaledCornerRadius(tile: CGFloat, theme: Theme) -> CGFloat {
+        let scale = tile / referenceSize
+        let scaled = cornerRadius * scale
+        return max(scaled, theme.cardCornerRadius)
+    }
 }
 
 struct RemindersSettingsView: View {
@@ -17,6 +39,7 @@ struct RemindersSettingsView: View {
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
     @State private var showTimePicker = false
+    @State private var availableGridWidth: CGFloat = 358
     #if DEBUG
     @State private var lutealTestMessage: String?
     #endif
@@ -24,53 +47,24 @@ struct RemindersSettingsView: View {
     var body: some View {
         List {
             Section {
-                Grid(horizontalSpacing: ReminderTileLayout.gutter, verticalSpacing: ReminderTileLayout.gutter) {
-                    GridRow {
-                        reminderTile(
-                            title: "Period starting",
-                            isOn: $reminderPreferences.periodStartNudgeEnabled
-                        )
-                        reminderTile(
-                            title: "Estimated ovulation",
-                            isOn: $reminderPreferences.ovulationNudgeEnabled
-                        )
+                reminderTilesAndTimeRow
+                    .padding(.vertical, 4)
+                    .background {
+                        GeometryReader { geometry in
+                            Color.clear
+                                .onAppear {
+                                    availableGridWidth = geometry.size.width
+                                }
+                                .onChange(of: geometry.size.width) { _, newWidth in
+                                    availableGridWidth = newWidth
+                                }
+                        }
                     }
-                    GridRow {
-                        reminderTile(
-                            title: "Luteal-window heads-up",
-                            isOn: $reminderPreferences.lutealNudgeEnabled
-                        )
-                        reminderTile(
-                            title: "Daily log reminder",
-                            isOn: $reminderPreferences.dailyLogReminderEnabled
-                        )
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 4)
             }
             .listRowBackground(theme.base)
             .listRowSeparator(.hidden)
             .listSectionSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-
-            if reminderPreferences.hasAnyNudgeEnabled {
-                Section {
-                    Button {
-                        showTimePicker = true
-                    } label: {
-                        LabeledContent("Reminder time") {
-                            Text(reminderPreferences.reminderTimeFormatted)
-                                .foregroundStyle(theme.muted)
-                        }
-                    }
-                    .themeListRow()
-                } header: {
-                    Text("Time")
-                } footer: {
-                    Text("Shared by the reminders that are on.")
-                }
-            }
 
             Section {
                 Toggle(isOn: $reminderPreferences.pauseDuringMigraine) {
@@ -106,9 +100,55 @@ struct RemindersSettingsView: View {
         }
     }
 
-    private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
+    private var reminderTilesAndTimeRow: some View {
+        let metrics = ReminderTileLayout.metrics(forAvailableWidth: availableGridWidth)
+        let cornerRadius = ReminderTileLayout.scaledCornerRadius(tile: metrics.tile, theme: theme)
+
+        return HStack(spacing: metrics.gutter) {
+            Grid(horizontalSpacing: metrics.gutter, verticalSpacing: metrics.gutter) {
+                GridRow {
+                    reminderTile(
+                        title: "Period starting",
+                        isOn: $reminderPreferences.periodStartNudgeEnabled,
+                        tileSize: metrics.tile,
+                        cornerRadius: cornerRadius
+                    )
+                    reminderTile(
+                        title: "Estimated ovulation",
+                        isOn: $reminderPreferences.ovulationNudgeEnabled,
+                        tileSize: metrics.tile,
+                        cornerRadius: cornerRadius
+                    )
+                }
+                GridRow {
+                    reminderTile(
+                        title: "Luteal-window heads-up",
+                        isOn: $reminderPreferences.lutealNudgeEnabled,
+                        tileSize: metrics.tile,
+                        cornerRadius: cornerRadius
+                    )
+                    reminderTile(
+                        title: "Daily log reminder",
+                        isOn: $reminderPreferences.dailyLogReminderEnabled,
+                        tileSize: metrics.tile,
+                        cornerRadius: cornerRadius
+                    )
+                }
+            }
+
+            timeSquare(size: metrics.timeSide, cornerRadius: cornerRadius)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .frame(height: metrics.gridHeight)
+    }
+
+    private func reminderTile(
+        title: String,
+        isOn: Binding<Bool>,
+        tileSize: CGFloat,
+        cornerRadius: CGFloat
+    ) -> some View {
         let tileOn = isOn.wrappedValue
-        let cornerRadius = max(ReminderTileLayout.cornerRadius, theme.cardCornerRadius)
         return Button {
             isOn.wrappedValue.toggle()
             rescheduleReminders()
@@ -120,7 +160,7 @@ struct RemindersSettingsView: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
                 .padding(.horizontal, 8)
-                .frame(width: ReminderTileLayout.size, height: ReminderTileLayout.size)
+                .frame(width: tileSize, height: tileSize)
                 .background {
                     if tileOn {
                         RoundedRectangle(cornerRadius: cornerRadius)
@@ -160,6 +200,50 @@ struct RemindersSettingsView: View {
         .accessibilityLabel(title)
         .accessibilityValue(tileOn ? "On" : "Off")
         .accessibilityAddTraits(tileOn ? [.isSelected] : [])
+    }
+
+    private func timeSquare(size: CGFloat, cornerRadius: CGFloat) -> some View {
+        Button {
+            showTimePicker = true
+        } label: {
+            VStack(spacing: 6) {
+                Text("Time")
+                    .font(.caption)
+                    .foregroundStyle(theme.muted)
+                Text(reminderPreferences.reminderTimeFormatted)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(theme.text)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+            }
+            .frame(width: size, height: size)
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.ok.opacity(0.22), theme.ok.opacity(0.40)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .inset(by: 0.5)
+                    .stroke(
+                        LinearGradient(
+                            colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
+                            startPoint: .top,
+                            endPoint: .center
+                        ),
+                        lineWidth: 1
+                    )
+            }
+            .shadow(color: theme.ok.opacity(0.32), radius: 10, y: 3)
+            .shadow(color: theme.ok.opacity(0.12), radius: 2, y: 1)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Time, \(reminderPreferences.reminderTimeFormatted)")
     }
 
     private func rescheduleReminders() {
