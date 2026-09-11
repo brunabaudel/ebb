@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Flat heat-row list item for today's logs — B timeline: node, title+time, severity bar.
+/// Flat heat-row list item for today's logs — B timeline: node, title+time, severity chip.
 struct TodayEntryRow: View {
     let entry: SymptomEntry
     let schema: SchemaConfig
@@ -11,8 +11,8 @@ struct TodayEntryRow: View {
         DaySummaryBuilder.entryAccent(entry)
     }
 
-    private var painSeverity: Int? {
-        DaySummaryBuilder.painSeverity(for: entry)
+    private var severityLabel: String? {
+        DaySummaryBuilder.todayRowSeverityLabel(entry, schema: schema)
     }
 
     var body: some View {
@@ -38,8 +38,8 @@ struct TodayEntryRow: View {
                         .foregroundStyle(theme.muted)
                 }
 
-                if let painSeverity {
-                    severityBar(level: painSeverity)
+                if let severityLabel {
+                    severityChip(label: severityLabel)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -49,36 +49,25 @@ struct TodayEntryRow: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    private func severityBar(level: Int) -> some View {
-        let clamped = min(max(level, 1), 5)
-        let fill = CGFloat(clamped) / 5
-
-        return GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(theme.line)
-
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [theme.pain.opacity(0.55), theme.pain],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: max(geo.size.width * fill, 4))
+    private func severityChip(label: String) -> some View {
+        Text(label)
+            .font(.caption2.monospaced())
+            .foregroundStyle(theme.pain)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(theme.painDim, in: RoundedRectangle(cornerRadius: 6))
+            .overlay {
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(theme.pain.opacity(0.45), lineWidth: 1)
             }
-        }
-        .frame(height: 4)
-        .accessibilityLabel("Severity \(clamped) of 5")
     }
 
     private var accessibilityLabel: String {
         let title = DaySummaryBuilder.todayRowTitle(entry, schema: schema)
         let time = entry.timestamp.formatted(date: .omitted, time: .shortened)
         var parts = ["\(title), \(time)"]
-        if let detail = DaySummaryBuilder.todayRowDetail(entry, schema: schema) {
-            parts.append(detail)
+        if let severityLabel {
+            parts.append(severityLabel)
         }
         return parts.joined(separator: ". ")
     }
