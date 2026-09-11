@@ -114,11 +114,8 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Ibuprofen") == true)
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Some relief") == true)
         XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.step, .headachePresent)
-        XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.headacheSubstep, .severity)
         XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.step, .headachePresent)
-        XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.headacheSubstep, .quality)
         XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.step, .headachePresent)
-        XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.headacheSubstep, .movement)
     }
 
     func testPerReliefEffectsSummary() {
@@ -179,7 +176,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertEqual(severity?.step, .headachePresent)
     }
 
-    func testQualitySegmentJumpsToHeadachePresentQualitySubstep() {
+    func testQualitySegmentJumpsToHeadachePresent() {
         let values: [String: FieldValue] = [
             "migraine_present": .boolean(true),
             "quality": .choices(["throbbing"]),
@@ -187,10 +184,9 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
         let qualitySegment = segments.first { $0.id == "quality" }
         XCTAssertEqual(qualitySegment?.step, .headachePresent)
-        XCTAssertEqual(qualitySegment?.headacheSubstep, .quality)
     }
 
-    func testMovementSegmentJumpsToHeadachePresentMovementSubstep() {
+    func testMovementSegmentJumpsToHeadachePresent() {
         let values: [String: FieldValue] = [
             "migraine_present": .boolean(true),
             "worse_with_movement": .boolean(true),
@@ -198,7 +194,6 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
         let movementSegment = segments.first { $0.id == "worse_with_movement" }
         XCTAssertEqual(movementSegment?.step, .headachePresent)
-        XCTAssertEqual(movementSegment?.headacheSubstep, .movement)
     }
 
     func testUnsetQualityAndMovementJumpToHeadachePresent() {
@@ -213,10 +208,4 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertEqual(movement?.step, .headachePresent)
     }
 
-    func testHeadachePresentSubstepFromReviewFieldId() {
-        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "migraine_present"), .presence)
-        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "severity"), .severity)
-        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "quality"), .quality)
-        XCTAssertEqual(HeadachePresentSubstep.from(reviewFieldId: "worse_with_movement"), .movement)
-    }
 }

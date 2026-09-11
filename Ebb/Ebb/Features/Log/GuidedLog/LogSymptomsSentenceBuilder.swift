@@ -6,24 +6,7 @@ struct ReviewDetailRow: Identifiable, Equatable, Sendable {
     let label: String
     let value: String
     let step: LogSymptomsFlowStep
-    let headacheSubstep: HeadachePresentSubstep?
     let accent: FieldAccent
-
-    init(
-        id: String,
-        label: String,
-        value: String,
-        step: LogSymptomsFlowStep,
-        headacheSubstep: HeadachePresentSubstep? = nil,
-        accent: FieldAccent
-    ) {
-        self.id = id
-        self.label = label
-        self.value = value
-        self.step = step
-        self.headacheSubstep = headacheSubstep ?? HeadachePresentSubstep.from(reviewFieldId: id)
-        self.accent = accent
-    }
 }
 
 /// One tappable fragment in the live sentence strip (mockup J).
@@ -32,24 +15,7 @@ struct SentenceSegment: Identifiable, Equatable, Sendable {
     let text: String
     let isFilled: Bool
     let step: LogSymptomsFlowStep?
-    let headacheSubstep: HeadachePresentSubstep?
     let accent: FieldAccent
-
-    init(
-        id: String,
-        text: String,
-        isFilled: Bool,
-        step: LogSymptomsFlowStep?,
-        headacheSubstep: HeadachePresentSubstep? = nil,
-        accent: FieldAccent
-    ) {
-        self.id = id
-        self.text = text
-        self.isFilled = isFilled
-        self.step = step
-        self.headacheSubstep = headacheSubstep ?? (step == .headachePresent ? HeadachePresentSubstep.from(reviewFieldId: id) : nil)
-        self.accent = accent
-    }
 }
 
 enum LogSymptomsSentenceBuilder {
