@@ -15,7 +15,7 @@ struct TodayView: View {
     @State private var showConfirm = false
     @State private var confirmViewModel: ConfirmViewModel?
     @State private var showCalendar = false
-    @State private var editingEntry: SymptomEntry?
+    @State private var selectedEntry: SymptomEntry?
     @State private var selectedIntensityBlock: Int? = TodayIntensityStrip.blockIndex(containing: .now)
 
     private var cycleSnapshot: CycleSnapshot {
@@ -85,8 +85,8 @@ struct TodayView: View {
                     ConfirmView(schema: schema, viewModel: confirmViewModel)
                 }
             }
-            .sheet(item: $editingEntry) { entry in
-                TapLogView(schema: schema, entry: entry)
+            .sheet(item: $selectedEntry) { entry in
+                EntryOverviewView(schema: schema, entry: entry)
             }
             .onAppear {
                 selectedIntensityBlock = TodayIntensityStrip.blockIndex(containing: .now)
@@ -208,7 +208,7 @@ struct TodayView: View {
             } else {
                 VStack(spacing: 0) {
                     ForEach(displayedEntries) { entry in
-                        Button { editingEntry = entry } label: {
+                        Button { selectedEntry = entry } label: {
                             TodayEntryRow(entry: entry, schema: schema)
                         }
                         .buttonStyle(.plain)

@@ -14,7 +14,7 @@ struct CalendarView: View {
     @State private var visibleMonth = Date.now
     @State private var visibleWeekStart = Date.now
     @State private var selectedDay = Date.now
-    @State private var editingEntry: SymptomEntry?
+    @State private var selectedEntry: SymptomEntry?
     @State private var showPaywall = false
 
     private var calendar: Calendar { .ebbCalendar }
@@ -48,8 +48,8 @@ struct CalendarView: View {
         .background(theme.base)
         .foregroundStyle(theme.text)
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(item: $editingEntry) { entry in
-            TapLogView(schema: schema, entry: entry)
+        .sheet(item: $selectedEntry) { entry in
+            EntryOverviewView(schema: schema, entry: entry)
         }
         .sheet(isPresented: $showPaywall) {
             EbbPlusPaywallSheet()
@@ -496,7 +496,7 @@ struct CalendarView: View {
             } else {
                 VStack(spacing: 0) {
                     ForEach(dayEntries) { entry in
-                        Button { editingEntry = entry } label: {
+                        Button { selectedEntry = entry } label: {
                             TodayEntryRow(entry: entry, schema: schema)
                         }
                         .buttonStyle(.plain)
