@@ -22,9 +22,11 @@ enum DaySummaryBuilder {
 
     static func entryAccent(_ entry: SymptomEntry) -> FieldAccent {
         let values = entry.fieldValues
-        if values["migraine_present"] == .boolean(true)
-            || values["migraine_present"] == .boolean(false) {
+        if values["migraine_present"] == .boolean(true) {
             return .pain
+        }
+        if values["migraine_present"] == .boolean(false) {
+            return .cycle
         }
         if let bleeding = values["bleeding"],
            case .choice(let key) = bleeding,
