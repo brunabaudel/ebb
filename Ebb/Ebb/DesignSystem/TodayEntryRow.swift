@@ -62,8 +62,8 @@ struct TodayEntryRow: View {
 
                 if let cycleSummary {
                     Text(cycleSummary)
-                        .font(.caption)
-                        .foregroundStyle(theme.cycle.opacity(0.88))
+                        .font(.footnote)
+                        .foregroundStyle(theme.muted)
                         .lineLimit(1)
                 }
             }
