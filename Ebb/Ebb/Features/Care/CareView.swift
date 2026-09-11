@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct CareView: View {
@@ -6,8 +7,15 @@ struct CareView: View {
     @Environment(\.theme) private var theme
     @Environment(MedicationPreferences.self) private var medicationPreferences
     @Environment(ReminderPreferences.self) private var reminderPreferences
+    @Environment(CycleService.self) private var cycleService
+    @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
+
+    @State private var showTimePicker = false
 
     var body: some View {
+        @Bindable var reminderPreferences = reminderPreferences
+        @Bindable var medicationPreferences = medicationPreferences
+
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -15,18 +23,13 @@ struct CareView: View {
                         .padding(.bottom, 24)
 
                     VStack(spacing: 14) {
-                        myRemindersCard
+                        myRemindersSection(
+                            reminderPreferences: reminderPreferences
+                        )
 
-                        careCard(
-                            title: "My medications",
-                            caption: "What you take with each log.",
-                            systemImage: "pills"
-                        ) {
-                            MedicationsSettingsView(
-                                schema: schema,
-                                medicationPreferences: medicationPreferences
-                            )
-                        }
+                        myMedicationsSection(
+                            medicationPreferences: medicationPreferences
+                        )
 
                         careCard(
                             title: "Bring to your doctor",
@@ -45,6 +48,14 @@ struct CareView: View {
             .background(theme.base)
             .foregroundStyle(theme.text)
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showTimePicker) {
+                ReminderTimePickerSheet(preferences: reminderPreferences) {
+                    rescheduleReminders()
+                }
+            }
+            .task {
+                rescheduleReminders()
+            }
         }
     }
 
@@ -59,101 +70,46 @@ struct CareView: View {
         }
     }
 
-    private var myRemindersCard: some View {
-        NavigationLink {
-            remindersSettings
-        } label: {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "bell")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(theme.pain)
-                    .frame(width: 40, height: 40)
-                    .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
-                    .accessibilityHidden(true)
+    private func myRemindersSection(
+        reminderPreferences: ReminderPreferences
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("My reminders")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(theme.text)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("My reminders")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(theme.text)
-
-                    if activeReminderItems.isEmpty {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("None on")
-                            Text("Turn one on to get a reminder.")
-                        }
-                        .font(.footnote)
-                        .foregroundStyle(theme.muted)
-                    } else {
-                        VStack(alignment: .leading, spacing: 0) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(activeReminderItems) { item in
-                                    Text(item.title)
-                                        .font(.footnote)
-                                        .foregroundStyle(theme.muted)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                            }
-
-                            Text(sharedReminderTimeCaption)
-                                .font(.caption)
-                                .foregroundStyle(theme.muted)
-                                .padding(.top, 10)
-                        }
-                    }
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(theme.muted)
-                    .padding(.top, 4)
-                    .accessibilityHidden(true)
+            ReminderTileGrid(preferences: reminderPreferences) {
+                rescheduleReminders()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(myRemindersAccessibilityLabel)
+
+            ReminderTimeAndPauseCard(
+                preferences: reminderPreferences,
+                onTimeTap: { showTimePicker = true },
+                onPauseChange: rescheduleReminders
+            )
         }
-        .buttonStyle(.plain)
     }
 
-    private var activeReminderItems: [ActiveReminderItem] {
-        var items: [ActiveReminderItem] = []
-        if reminderPreferences.periodStartNudgeEnabled {
-            items.append(ActiveReminderItem(id: "period", title: "Period starting"))
+    private func myMedicationsSection(
+        medicationPreferences: MedicationPreferences
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("My medications")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(theme.text)
+
+            MedicationTileGrid(
+                schema: schema,
+                medicationPreferences: medicationPreferences
+            )
         }
-        if reminderPreferences.ovulationNudgeEnabled {
-            items.append(ActiveReminderItem(id: "ovulation", title: "Estimated ovulation"))
-        }
-        if reminderPreferences.lutealNudgeEnabled {
-            items.append(ActiveReminderItem(id: "luteal", title: "Luteal-window heads-up"))
-        }
-        if reminderPreferences.dailyLogReminderEnabled {
-            items.append(ActiveReminderItem(id: "daily", title: "Daily log reminder"))
-        }
-        return items
     }
 
-    private var sharedReminderTimeCaption: String {
-        "Usually at \(reminderPreferences.reminderTimeFormatted)"
-    }
-
-    private var myRemindersAccessibilityLabel: String {
-        if activeReminderItems.isEmpty {
-            return "My reminders. None on. Turn one on to get a reminder."
-        }
-        let titles = activeReminderItems
-            .map(\.title)
-            .joined(separator: ". ")
-        return "My reminders. \(titles). \(sharedReminderTimeCaption)"
-    }
-
-    private var remindersSettings: some View {
-        RemindersSettingsView(
-            schema: schema,
-            reminderPreferences: reminderPreferences
+    private func rescheduleReminders() {
+        ReminderScheduling.reschedule(
+            preferences: reminderPreferences,
+            cycleService: cycleService,
+            entries: entries
         )
     }
 
@@ -210,45 +166,35 @@ struct CareView: View {
     }
 }
 
-private struct ActiveReminderItem: Identifiable {
-    let id: String
-    let title: String
-}
-
-#Preview("Default reminders") {
+#Preview("Default") {
     CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
         .environment(MedicationPreferences())
         .environment(ReminderPreferences())
+        .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
 
-#Preview("Cycle nudges on") {
+#Preview("Some reminders on") {
     let preferences = ReminderPreferences()
     preferences.periodStartNudgeEnabled = true
-    return CareView(schema: try! SchemaConfig.load())
-        .environment(\.theme, .softPaper)
-        .environment(MedicationPreferences())
-        .environment(preferences)
-}
-
-#Preview("All reminders on") {
-    let preferences = ReminderPreferences()
-    preferences.periodStartNudgeEnabled = true
-    preferences.ovulationNudgeEnabled = true
     preferences.lutealNudgeEnabled = true
-    preferences.dailyLogReminderEnabled = true
     return CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
         .environment(MedicationPreferences())
         .environment(preferences)
+        .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
 
-#Preview("None on") {
-    let preferences = ReminderPreferences()
-    preferences.lutealNudgeEnabled = false
-    preferences.ovulationNudgeEnabled = false
+#Preview("Saved medications") {
+    let medications = MedicationPreferences()
+    medications.setSaved("ibuprofen", isSaved: true)
+    medications.setSaved("triptan", isSaved: true)
     return CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
-        .environment(MedicationPreferences())
-        .environment(preferences)
+        .environment(medications)
+        .environment(ReminderPreferences())
+        .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .modelContainer(for: SymptomEntry.self, inMemory: true)
 }

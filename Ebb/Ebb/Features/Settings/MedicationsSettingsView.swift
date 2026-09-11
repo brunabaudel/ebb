@@ -6,10 +6,6 @@ struct MedicationsSettingsView: View {
 
     @Environment(\.theme) private var theme
 
-    private var reliefField: SchemaField? {
-        schema.field(forKey: "relief_taken")
-    }
-
     var body: some View {
         List {
             Section {
@@ -19,29 +15,21 @@ struct MedicationsSettingsView: View {
                     .themeListRow()
             }
 
-            if let reliefField {
-                Section {
-                    ForEach(reliefField.values) { option in
-                        Toggle(isOn: savedBinding(for: option.key)) {
-                            Text(option.label)
-                        }
-                        .themeListRow()
-                    }
-                } header: {
-                    Text(reliefField.label)
-                }
+            Section {
+                MedicationTileGrid(
+                    schema: schema,
+                    medicationPreferences: medicationPreferences
+                )
+                .padding(.vertical, 4)
             }
+            .listRowBackground(theme.base)
+            .listRowSeparator(.hidden)
+            .listSectionSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
         }
         .themeSettingsList()
         .navigationTitle("My medications")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func savedBinding(for key: String) -> Binding<Bool> {
-        Binding(
-            get: { medicationPreferences.isSaved(key) },
-            set: { medicationPreferences.setSaved(key, isSaved: $0) }
-        )
     }
 }
 

@@ -1,0 +1,174 @@
+import SwiftData
+import SwiftUI
+
+enum ReminderScheduling {
+    static func reschedule(
+        preferences: ReminderPreferences,
+        cycleService: CycleService,
+        entries: [SymptomEntry]
+    ) {
+        Task {
+            let overlay = cycleService.makeOverlay(from: entries)
+            await ReminderScheduler.reschedule(
+                input: ReminderScheduler.ScheduleInput(
+                    preferences: preferences,
+                    overlay: overlay,
+                    entries: entries,
+                    now: .now
+                )
+            )
+        }
+    }
+}
+
+struct ReminderTileGrid: View {
+    @Bindable var preferences: ReminderPreferences
+    var onToggle: () -> Void
+
+    var body: some View {
+        CareTileGrid {
+            GridRow {
+                reminderTile(
+                    title: "Period starting",
+                    isOn: $preferences.periodStartNudgeEnabled
+                )
+                reminderTile(
+                    title: "Estimated ovulation",
+                    isOn: $preferences.ovulationNudgeEnabled
+                )
+            }
+            GridRow {
+                reminderTile(
+                    title: "Luteal-window heads-up",
+                    isOn: $preferences.lutealNudgeEnabled
+                )
+                reminderTile(
+                    title: "Daily log reminder",
+                    isOn: $preferences.dailyLogReminderEnabled
+                )
+            }
+        }
+    }
+
+    private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
+        CareSelectionTile(
+            title: title,
+            isSelected: isOn.wrappedValue
+        ) {
+            isOn.wrappedValue.toggle()
+            onToggle()
+        }
+    }
+}
+
+struct ReminderTimeRow: View {
+    @Bindable var preferences: ReminderPreferences
+    var onTap: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Button(action: onTap) {
+            LabeledContent("Reminder time") {
+                Text(preferences.reminderTimeFormatted)
+                    .foregroundStyle(theme.muted)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ReminderPauseDuringMigraineToggle: View {
+    @Bindable var preferences: ReminderPreferences
+    var onChange: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Toggle(isOn: $preferences.pauseDuringMigraine) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Pause reminders during a migraine")
+                Text("When a migraine is logged, reminders stay quiet until it's over.")
+                    .font(.caption)
+                    .foregroundStyle(theme.muted)
+            }
+        }
+        .tint(theme.ok)
+        .onChange(of: preferences.pauseDuringMigraine) { _, _ in
+            onChange()
+        }
+    }
+}
+
+struct ReminderTimeAndPauseCard: View {
+    @Bindable var preferences: ReminderPreferences
+    var onTimeTap: () -> Void
+    var onPauseChange: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if preferences.hasAnyNudgeEnabled {
+                ReminderTimeRow(preferences: preferences, onTap: onTimeTap)
+                Divider().overlay(theme.line)
+            }
+
+            ReminderPauseDuringMigraineToggle(
+                preferences: preferences,
+                onChange: onPauseChange
+            )
+        }
+        .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+    }
+}
+
+struct ReminderTimePickerSheet: View {
+    @Bindable var preferences: ReminderPreferences
+    var onSave: () -> Void
+
+    @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedTime: Date
+
+    init(preferences: ReminderPreferences, onSave: @escaping () -> Void) {
+        self.preferences = preferences
+        self.onSave = onSave
+        var components = DateComponents()
+        components.hour = preferences.reminderHour
+        components.minute = preferences.reminderMinute
+        _selectedTime = State(initialValue: Calendar.current.date(from: components) ?? .now)
+    }
+
+    var body: some View {
+        NavigationStack {
+            DatePicker(
+                "Reminder time",
+                selection: $selectedTime,
+                displayedComponents: .hourAndMinute
+            )
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+            .padding()
+            .navigationTitle("Reminder time")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let parts = Calendar.current.dateComponents([.hour, .minute], from: selectedTime)
+                        preferences.reminderHour = parts.hour ?? ReminderPreferences.defaultReminderHour
+                        preferences.reminderMinute = parts.minute ?? ReminderPreferences.defaultReminderMinute
+                        onSave()
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .themeSettingsScreen()
+        .presentationDetents([.medium])
+    }
+}
