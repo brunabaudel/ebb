@@ -88,6 +88,8 @@ struct GuidedLogFlowView: View {
             locationStep
         case .relief:
             reliefStep
+        case .triggers:
+            triggersStep
         case .cycleAndContext:
             cycleContextStep
         case .review:
@@ -213,10 +215,22 @@ struct GuidedLogFlowView: View {
         .onAppear { applyMedicationPrefillIfNeeded() }
     }
 
+    private var triggersStep: some View {
+        focusShell(
+            title: schema.field(forKey: "triggers")?.label ?? "Possible triggers",
+            subtitle: "Select all that apply. Skip if none."
+        ) {
+            if let field = schema.field(forKey: "triggers") {
+                fieldPills(field: field, accent: .pain)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
     private var cycleContextStep: some View {
         focusShell(
             title: "Anything else today?",
-            subtitle: "Cycle & triggers — skip what doesn't apply."
+            subtitle: "Cycle — skip what doesn't apply."
         ) {
             VStack(alignment: .center, spacing: 18) {
                 if let field = schema.field(forKey: "bleeding") {
@@ -233,9 +247,6 @@ struct GuidedLogFlowView: View {
                         selection: scaleBinding(for: field.key),
                         accent: .cycle
                     )
-                }
-                if let field = schema.field(forKey: "triggers") {
-                    fieldPills(field: field, accent: .pain, limit: 4)
                 }
             }
             .frame(maxWidth: .infinity)
