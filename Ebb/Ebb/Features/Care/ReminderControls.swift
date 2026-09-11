@@ -2,12 +2,13 @@ import SwiftData
 import SwiftUI
 
 enum ReminderScheduling {
+    @MainActor
     static func reschedule(
         preferences: ReminderPreferences,
         cycleService: CycleService,
         entries: [SymptomEntry]
     ) {
-        Task {
+        Task { @MainActor in
             let overlay = cycleService.makeOverlay(from: entries)
             await ReminderScheduler.reschedule(
                 input: ReminderScheduler.ScheduleInput(
