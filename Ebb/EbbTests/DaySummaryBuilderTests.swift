@@ -99,7 +99,7 @@ struct DaySummaryBuilderTests {
             ],
             cyclePhase: .luteal
         )
-        #expect(DaySummaryBuilder.todayRowCycleSummary(migraineLuteal, schema: schema) == "luteal")
+        #expect(DaySummaryBuilder.todayRowCycleSummary(migraineLuteal, schema: schema) == nil)
 
         let migraineWithBleeding = SymptomEntry(
             timestamp: today,
@@ -113,7 +113,7 @@ struct DaySummaryBuilderTests {
         )
         #expect(
             DaySummaryBuilder.todayRowCycleSummary(migraineWithBleeding, schema: schema)
-                == "menstrual · spotting"
+                == "spotting"
         )
 
         let noMigraineLuteal = SymptomEntry(
@@ -122,7 +122,7 @@ struct DaySummaryBuilderTests {
             fieldValues: ["migraine_present": .boolean(false)],
             cyclePhase: .luteal
         )
-        #expect(DaySummaryBuilder.todayRowCycleSummary(noMigraineLuteal, schema: schema) == "luteal")
+        #expect(DaySummaryBuilder.todayRowCycleSummary(noMigraineLuteal, schema: schema) == nil)
 
         let migraineNoCycle = SymptomEntry(
             timestamp: today,
@@ -144,5 +144,35 @@ struct DaySummaryBuilderTests {
             cyclePhase: .luteal
         )
         #expect(DaySummaryBuilder.todayRowCycleSummary(spotting, schema: schema) == nil)
+
+        let migraineWithCramps = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(2),
+                "cramps_severity": .scale(1),
+            ],
+            cyclePhase: .luteal
+        )
+        #expect(
+            DaySummaryBuilder.todayRowCycleSummary(migraineWithCramps, schema: schema)
+                == "barely there cramps"
+        )
+
+        let noMigraineWithBleedingAndCramps = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(false),
+                "bleeding": .choice("light"),
+                "cramps_severity": .scale(3),
+            ],
+            cyclePhase: .menstrual
+        )
+        #expect(
+            DaySummaryBuilder.todayRowCycleSummary(noMigraineWithBleedingAndCramps, schema: schema)
+                == "light · moderate cramps"
+        )
     }
 }
