@@ -114,15 +114,14 @@ struct RemindersSettingsView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 10)
                 .aspectRatio(1, contentMode: .fit)
-                .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .top) {
-                    if isOn.wrappedValue {
+                .background {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isOn.wrappedValue ? theme.painDim : theme.surface)
+                }
+                .overlay {
+                    if !isOn.wrappedValue {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(theme.pain)
-                            .frame(height: 2)
-                            .mask(alignment: .top) {
-                                Rectangle().frame(height: 2)
-                            }
+                            .strokeBorder(theme.line, lineWidth: 1)
                     }
                 }
         }
