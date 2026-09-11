@@ -18,6 +18,32 @@ struct RemindersSettingsView: View {
     var body: some View {
         List {
             Section {
+                Toggle(isOn: $reminderPreferences.periodStartNudgeEnabled) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Period starting")
+                        Text("A gentle nudge when your estimated period window begins.")
+                            .font(.caption)
+                            .foregroundStyle(theme.muted)
+                    }
+                }
+                .themeListRow()
+                .onChange(of: reminderPreferences.periodStartNudgeEnabled) { _, _ in
+                    rescheduleReminders()
+                }
+
+                Toggle(isOn: $reminderPreferences.ovulationNudgeEnabled) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Estimated ovulation")
+                        Text("A log nudge on your estimated ovulation day.")
+                            .font(.caption)
+                            .foregroundStyle(theme.muted)
+                    }
+                }
+                .themeListRow()
+                .onChange(of: reminderPreferences.ovulationNudgeEnabled) { _, _ in
+                    rescheduleReminders()
+                }
+
                 Toggle(isOn: $reminderPreferences.lutealNudgeEnabled) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Luteal-window heads-up")
@@ -44,7 +70,7 @@ struct RemindersSettingsView: View {
                     rescheduleReminders()
                 }
 
-                if reminderPreferences.lutealNudgeEnabled || reminderPreferences.dailyLogReminderEnabled {
+                if reminderPreferences.hasAnyNudgeEnabled {
                     Button {
                         showTimePicker = true
                     } label: {

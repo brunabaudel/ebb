@@ -68,6 +68,89 @@ struct ReminderSchedulerTests {
         #expect(calendar.isDate(lutealStart, inSameDayAs: expected))
     }
 
+    @Test func nextOvulationDateUsesUpcomingCycleDay() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 5)))
+        let ovulationDate = try #require(overlay.nextOvulationDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 14)))
+        #expect(calendar.isDate(ovulationDate, inSameDayAs: expected))
+    }
+
+    @Test func nextOvulationDateRollsToNextCycleAfterCurrentWindow() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 20)))
+        let ovulationDate = try #require(overlay.nextOvulationDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 7, day: 12)))
+        #expect(calendar.isDate(ovulationDate, inSameDayAs: expected))
+    }
+
+    @Test func nextPeriodNotificationDateUsesCurrentPeriodStartOnDayOne() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let nextPeriod = try #require(overlay.nextPeriodNotificationDate(from: reference))
+        #expect(calendar.isDate(nextPeriod, inSameDayAs: periodStart))
+    }
+
+    @Test func nextPeriodNotificationDateSkipsToNextCycleAfterPeriodBegins() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 5)))
+        let nextPeriod = try #require(overlay.nextPeriodNotificationDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 29)))
+        #expect(calendar.isDate(nextPeriod, inSameDayAs: expected))
+    }
+
+    @Test func reminderPreferencesDefaultsMatchProductSpec() {
+        let preferences = ReminderPreferences(defaults: makeDefaults())
+        #expect(!preferences.periodStartNudgeEnabled)
+        #expect(preferences.ovulationNudgeEnabled)
+        #expect(preferences.lutealNudgeEnabled)
+        #expect(!preferences.dailyLogReminderEnabled)
+    }
+
+    @Test func reminderPreferencesResetToDefaults() {
+        let defaults = makeDefaults()
+        let preferences = ReminderPreferences(defaults: defaults)
+        preferences.periodStartNudgeEnabled = true
+        preferences.ovulationNudgeEnabled = false
+        preferences.lutealNudgeEnabled = false
+        preferences.dailyLogReminderEnabled = true
+
+        preferences.resetToDefaults()
+
+        #expect(!preferences.periodStartNudgeEnabled)
+        #expect(preferences.ovulationNudgeEnabled)
+        #expect(preferences.lutealNudgeEnabled)
+        #expect(!preferences.dailyLogReminderEnabled)
+    }
+
     private func makeDefaults() -> UserDefaults {
         UserDefaults(suiteName: "ReminderSchedulerTests.\(UUID().uuidString)")!
     }

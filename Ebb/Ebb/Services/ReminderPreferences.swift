@@ -7,6 +7,14 @@ final class ReminderPreferences {
     static let defaultReminderHour = 21
     static let defaultReminderMinute = 0
 
+    var periodStartNudgeEnabled: Bool {
+        didSet { defaults.set(periodStartNudgeEnabled, forKey: Keys.periodStartNudge) }
+    }
+
+    var ovulationNudgeEnabled: Bool {
+        didSet { defaults.set(ovulationNudgeEnabled, forKey: Keys.ovulationNudge) }
+    }
+
     var lutealNudgeEnabled: Bool {
         didSet { defaults.set(lutealNudgeEnabled, forKey: Keys.lutealNudge) }
     }
@@ -29,6 +37,8 @@ final class ReminderPreferences {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        periodStartNudgeEnabled = defaults.bool(forKey: Keys.periodStartNudge)
+        ovulationNudgeEnabled = defaults.object(forKey: Keys.ovulationNudge) as? Bool ?? true
         lutealNudgeEnabled = defaults.object(forKey: Keys.lutealNudge) as? Bool ?? true
         dailyLogReminderEnabled = defaults.bool(forKey: Keys.dailyLog)
         pauseDuringMigraine = defaults.object(forKey: Keys.pauseDuringMigraine) as? Bool ?? true
@@ -54,6 +64,8 @@ final class ReminderPreferences {
     }
 
     func resetToDefaults() {
+        periodStartNudgeEnabled = false
+        ovulationNudgeEnabled = true
         lutealNudgeEnabled = true
         dailyLogReminderEnabled = false
         pauseDuringMigraine = true
@@ -61,9 +73,18 @@ final class ReminderPreferences {
         reminderMinute = Self.defaultReminderMinute
     }
 
+    var hasAnyNudgeEnabled: Bool {
+        periodStartNudgeEnabled
+            || ovulationNudgeEnabled
+            || lutealNudgeEnabled
+            || dailyLogReminderEnabled
+    }
+
     // MARK: - Private
 
     private enum Keys {
+        static let periodStartNudge = "ebb.reminders.periodStartNudge"
+        static let ovulationNudge = "ebb.reminders.ovulationNudge"
         static let lutealNudge = "ebb.reminders.lutealNudge"
         static let dailyLog = "ebb.reminders.dailyLog"
         static let pauseDuringMigraine = "ebb.reminders.pauseDuringMigraine"

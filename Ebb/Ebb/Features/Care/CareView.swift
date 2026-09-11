@@ -15,7 +15,7 @@ struct CareView: View {
                         .padding(.bottom, 24)
 
                     VStack(spacing: 14) {
-                        remindersSection
+                        myRemindersCard
 
                         careCard(
                             title: "My medications",
@@ -59,48 +59,84 @@ struct CareView: View {
         }
     }
 
-    private var remindersSection: some View {
-        VStack(spacing: 14) {
-            careCard(
-                title: "My reminders",
-                caption: "What's on, and when.",
-                systemImage: "bell"
-            ) {
-                remindersSettings
-            }
+    private var myRemindersCard: some View {
+        NavigationLink {
+            remindersSettings
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "bell")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(theme.pain)
+                    .frame(width: 40, height: 40)
+                    .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityHidden(true)
 
-            reminderStatusCards
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("My reminders")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(theme.text)
+
+                    if activeReminderItems.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("None on")
+                            Text("Turn one on to get a nudge.")
+                        }
+                        .font(.footnote)
+                        .foregroundStyle(theme.muted)
+                    } else {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(activeReminderItems) { item in
+                                Text("\(item.title) · \(reminderPreferences.reminderTimeFormatted)")
+                                    .font(.footnote)
+                                    .foregroundStyle(theme.muted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(theme.muted)
+                    .padding(.top, 4)
+                    .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(myRemindersAccessibilityLabel)
         }
+        .buttonStyle(.plain)
     }
 
-    @ViewBuilder
-    private var reminderStatusCards: some View {
+    private var activeReminderItems: [ActiveReminderItem] {
+        var items: [ActiveReminderItem] = []
+        if reminderPreferences.periodStartNudgeEnabled {
+            items.append(ActiveReminderItem(id: "period", title: "Period starting"))
+        }
+        if reminderPreferences.ovulationNudgeEnabled {
+            items.append(ActiveReminderItem(id: "ovulation", title: "Estimated ovulation"))
+        }
         if reminderPreferences.lutealNudgeEnabled {
-            reminderStatusCard(
-                title: "Luteal-window heads-up",
-                caption: reminderPreferences.reminderTimeFormatted,
-                systemImage: "bell.fill",
-                isMuted: false
-            )
+            items.append(ActiveReminderItem(id: "luteal", title: "Luteal-window heads-up"))
         }
-
         if reminderPreferences.dailyLogReminderEnabled {
-            reminderStatusCard(
-                title: "Daily log reminder",
-                caption: reminderPreferences.reminderTimeFormatted,
-                systemImage: "bell.fill",
-                isMuted: false
-            )
+            items.append(ActiveReminderItem(id: "daily", title: "Daily log reminder"))
         }
+        return items
+    }
 
-        if !reminderPreferences.lutealNudgeEnabled && !reminderPreferences.dailyLogReminderEnabled {
-            reminderStatusCard(
-                title: "None on",
-                caption: "Turn one on in My reminders.",
-                systemImage: "bell.slash",
-                isMuted: true
-            )
+    private var myRemindersAccessibilityLabel: String {
+        if activeReminderItems.isEmpty {
+            return "My reminders. None on. Turn one on to get a nudge."
         }
+        let rows = activeReminderItems
+            .map { "\($0.title) at \(reminderPreferences.reminderTimeFormatted)" }
+            .joined(separator: ". ")
+        return "My reminders. \(rows)"
     }
 
     private var remindersSettings: some View {
@@ -108,25 +144,6 @@ struct CareView: View {
             schema: schema,
             reminderPreferences: reminderPreferences
         )
-    }
-
-    private func reminderStatusCard(
-        title: String,
-        caption: String,
-        systemImage: String,
-        isMuted: Bool
-    ) -> some View {
-        NavigationLink {
-            remindersSettings
-        } label: {
-            careCardLabel(
-                title: title,
-                caption: caption,
-                systemImage: systemImage,
-                isMuted: isMuted
-            )
-        }
-        .buttonStyle(.plain)
     }
 
     private func careCard<Destination: View>(
@@ -182,6 +199,11 @@ struct CareView: View {
     }
 }
 
+private struct ActiveReminderItem: Identifiable {
+    let id: String
+    let title: String
+}
+
 #Preview("Default reminders") {
     CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
@@ -189,9 +211,9 @@ struct CareView: View {
         .environment(ReminderPreferences())
 }
 
-#Preview("Both reminders on") {
+#Preview("Cycle nudges on") {
     let preferences = ReminderPreferences()
-    preferences.dailyLogReminderEnabled = true
+    preferences.periodStartNudgeEnabled = true
     return CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
         .environment(MedicationPreferences())
@@ -201,6 +223,7 @@ struct CareView: View {
 #Preview("None on") {
     let preferences = ReminderPreferences()
     preferences.lutealNudgeEnabled = false
+    preferences.ovulationNudgeEnabled = false
     return CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
         .environment(MedicationPreferences())
