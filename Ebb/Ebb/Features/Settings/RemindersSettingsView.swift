@@ -4,6 +4,7 @@ import SwiftUI
 private enum ReminderTileLayout {
     static let size: CGFloat = 104
     static let gutter: CGFloat = 10
+    static let cornerRadius: CGFloat = 24
 }
 
 struct RemindersSettingsView: View {
@@ -30,10 +31,6 @@ struct RemindersSettingsView: View {
                             isOn: $reminderPreferences.periodStartNudgeEnabled
                         )
                         reminderTile(
-                            title: "After period",
-                            isOn: $reminderPreferences.afterPeriodNudgeEnabled
-                        )
-                        reminderTile(
                             title: "Estimated ovulation",
                             isOn: $reminderPreferences.ovulationNudgeEnabled
                         )
@@ -42,10 +39,6 @@ struct RemindersSettingsView: View {
                         reminderTile(
                             title: "Luteal-window heads-up",
                             isOn: $reminderPreferences.lutealNudgeEnabled
-                        )
-                        reminderTile(
-                            title: "A few days before",
-                            isOn: $reminderPreferences.fewDaysBeforeNudgeEnabled
                         )
                         reminderTile(
                             title: "Daily log reminder",
@@ -115,6 +108,7 @@ struct RemindersSettingsView: View {
 
     private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
         let tileOn = isOn.wrappedValue
+        let cornerRadius = max(ReminderTileLayout.cornerRadius, theme.cardCornerRadius)
         return Button {
             isOn.wrappedValue.toggle()
             rescheduleReminders()
@@ -129,7 +123,7 @@ struct RemindersSettingsView: View {
                 .frame(width: ReminderTileLayout.size, height: ReminderTileLayout.size)
                 .background {
                     if tileOn {
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: cornerRadius)
                             .fill(
                                 LinearGradient(
                                     colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
@@ -138,13 +132,13 @@ struct RemindersSettingsView: View {
                                 )
                             )
                     } else {
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: cornerRadius)
                             .fill(theme.surface)
                     }
                 }
                 .overlay {
                     if tileOn {
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: cornerRadius)
                             .inset(by: 0.5)
                             .stroke(
                                 LinearGradient(
@@ -155,7 +149,7 @@ struct RemindersSettingsView: View {
                                 lineWidth: 1
                             )
                     } else {
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: cornerRadius)
                             .strokeBorder(theme.line, lineWidth: 1)
                     }
                 }

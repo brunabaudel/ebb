@@ -19,14 +19,6 @@ final class ReminderPreferences {
         didSet { defaults.set(lutealNudgeEnabled, forKey: Keys.lutealNudge) }
     }
 
-    var afterPeriodNudgeEnabled: Bool {
-        didSet { defaults.set(afterPeriodNudgeEnabled, forKey: Keys.afterPeriodNudge) }
-    }
-
-    var fewDaysBeforeNudgeEnabled: Bool {
-        didSet { defaults.set(fewDaysBeforeNudgeEnabled, forKey: Keys.fewDaysBeforeNudge) }
-    }
-
     var dailyLogReminderEnabled: Bool {
         didSet { defaults.set(dailyLogReminderEnabled, forKey: Keys.dailyLog) }
     }
@@ -48,8 +40,6 @@ final class ReminderPreferences {
         periodStartNudgeEnabled = defaults.bool(forKey: Keys.periodStartNudge)
         ovulationNudgeEnabled = defaults.object(forKey: Keys.ovulationNudge) as? Bool ?? true
         lutealNudgeEnabled = defaults.object(forKey: Keys.lutealNudge) as? Bool ?? true
-        afterPeriodNudgeEnabled = defaults.bool(forKey: Keys.afterPeriodNudge)
-        fewDaysBeforeNudgeEnabled = defaults.object(forKey: Keys.fewDaysBeforeNudge) as? Bool ?? true
         dailyLogReminderEnabled = defaults.bool(forKey: Keys.dailyLog)
         pauseDuringMigraine = defaults.object(forKey: Keys.pauseDuringMigraine) as? Bool ?? true
         reminderHour = defaults.object(forKey: Keys.reminderHour) as? Int ?? Self.defaultReminderHour
@@ -77,8 +67,6 @@ final class ReminderPreferences {
         periodStartNudgeEnabled = false
         ovulationNudgeEnabled = true
         lutealNudgeEnabled = true
-        afterPeriodNudgeEnabled = false
-        fewDaysBeforeNudgeEnabled = true
         dailyLogReminderEnabled = false
         pauseDuringMigraine = true
         reminderHour = Self.defaultReminderHour
@@ -87,10 +75,8 @@ final class ReminderPreferences {
 
     var hasAnyNudgeEnabled: Bool {
         periodStartNudgeEnabled
-            || afterPeriodNudgeEnabled
             || ovulationNudgeEnabled
             || lutealNudgeEnabled
-            || fewDaysBeforeNudgeEnabled
             || dailyLogReminderEnabled
     }
 
@@ -100,8 +86,6 @@ final class ReminderPreferences {
         static let periodStartNudge = "ebb.reminders.periodStartNudge"
         static let ovulationNudge = "ebb.reminders.ovulationNudge"
         static let lutealNudge = "ebb.reminders.lutealNudge"
-        static let afterPeriodNudge = "ebb.reminders.afterPeriodNudge"
-        static let fewDaysBeforeNudge = "ebb.reminders.fewDaysBeforeNudge"
         static let dailyLog = "ebb.reminders.dailyLog"
         static let pauseDuringMigraine = "ebb.reminders.pauseDuringMigraine"
         static let reminderHour = "ebb.reminders.hour"
