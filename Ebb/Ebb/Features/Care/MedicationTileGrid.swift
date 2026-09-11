@@ -4,13 +4,13 @@ private enum MedicationTileGridLayout {
     static let columnCount = 3
 
     static func tileSize(forContentWidth contentWidth: CGFloat) -> CGFloat {
-        let gutter = CareTileLayout.gutter
         let preferredSize = CareTileLayout.size
+        let gutter = CareTileLayout.gutter
         let requiredWidth = CGFloat(columnCount) * preferredSize + CGFloat(columnCount - 1) * gutter
         guard requiredWidth > contentWidth, contentWidth > 0 else {
             return preferredSize
         }
-        return floor((contentWidth - CGFloat(columnCount - 1) * gutter) / CGFloat(columnCount))
+        return CareTileLayout.columnWidth(forContentWidth: contentWidth, columnCount: columnCount)
     }
 }
 

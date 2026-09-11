@@ -5,13 +5,27 @@ enum CareTileLayout {
     static let gutter: CGFloat = 10
     static let cornerRadius: CGFloat = 24
     static let columnCount = 2
+    static let reminderHeight: CGFloat = 70
+
+    static func columnWidth(forContentWidth contentWidth: CGFloat, columnCount: Int = columnCount) -> CGFloat {
+        let gutter = CareTileLayout.gutter
+        guard contentWidth > 0, columnCount > 0 else {
+            return size
+        }
+        return floor((contentWidth - CGFloat(columnCount - 1) * gutter) / CGFloat(columnCount))
+    }
 }
 
 struct CareSelectionTile: View {
     let title: String
     let isSelected: Bool
     var tileSize: CGFloat = CareTileLayout.size
+    var tileWidth: CGFloat?
+    var tileHeight: CGFloat?
     var action: () -> Void
+
+    private var resolvedWidth: CGFloat { tileWidth ?? tileSize }
+    private var resolvedHeight: CGFloat { tileHeight ?? tileSize }
 
     @Environment(\.theme) private var theme
 
@@ -26,7 +40,7 @@ struct CareSelectionTile: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
                 .padding(.horizontal, 8)
-                .frame(width: tileSize, height: tileSize)
+                .frame(width: resolvedWidth, height: resolvedHeight)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: cornerRadius)
@@ -81,4 +95,21 @@ struct CareTileGrid<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
+}
+
+#Preview("Square tile") {
+    CareSelectionTile(title: "Ibuprofen", isSelected: true) {}
+        .padding()
+        .environment(\.theme, .softPaper)
+}
+
+#Preview("Landscape tile") {
+    CareSelectionTile(
+        title: "Luteal-window heads-up",
+        isSelected: false,
+        tileWidth: 160,
+        tileHeight: CareTileLayout.reminderHeight
+    ) {}
+    .padding()
+    .environment(\.theme, .softPaper)
 }
