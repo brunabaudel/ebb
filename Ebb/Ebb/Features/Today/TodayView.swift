@@ -8,7 +8,6 @@ struct TodayView: View {
     @Environment(CycleService.self) private var cycleService
     @Environment(\.symptomClassifier) private var symptomClassifier
     @Environment(MedicationPreferences.self) private var medicationPreferences
-    @Environment(ReminderPreferences.self) private var reminderPreferences
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
     @State private var showTapLog = false
@@ -49,12 +48,9 @@ struct TodayView: View {
                 .padding(20)
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        entriesSection
-                        careToolsCard
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                    entriesSection
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
                 }
                 .scrollIndicators(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -276,63 +272,6 @@ struct TodayView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var careToolsCard: some View {
-        VStack(spacing: 0) {
-            NavigationLink {
-                RemindersSettingsView(
-                    schema: schema,
-                    reminderPreferences: reminderPreferences
-                )
-            } label: {
-                careToolsRow(title: "Reminders", systemImage: "bell")
-            }
-            .buttonStyle(.plain)
-
-            Divider().overlay(theme.line)
-
-            NavigationLink {
-                MedicationsSettingsView(
-                    schema: schema,
-                    medicationPreferences: medicationPreferences
-                )
-            } label: {
-                careToolsRow(title: "My medications", systemImage: "pills")
-            }
-            .buttonStyle(.plain)
-
-            Divider().overlay(theme.line)
-
-            NavigationLink {
-                DoctorExportView(schema: schema)
-            } label: {
-                careToolsRow(title: "Bring to your doctor", systemImage: "doc.text")
-            }
-            .buttonStyle(.plain)
-        }
-        .themeCard(padding: 0, cornerRadius: theme.cardCornerRadius)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Reminders, medications, and doctor export")
-    }
-
-    private func careToolsRow(title: String, systemImage: String) -> some View {
-        HStack(spacing: 12) {
-            Label {
-                Text(title)
-                    .font(.body)
-                    .foregroundStyle(theme.text)
-            } icon: {
-                Image(systemName: systemImage)
-                    .foregroundStyle(theme.muted)
-            }
-            Spacer(minLength: 8)
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(theme.muted)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .contentShape(Rectangle())
-    }
 }
 
 #Preview("Empty") {
