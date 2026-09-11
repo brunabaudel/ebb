@@ -16,6 +16,7 @@ struct CareView: View {
     var body: some View {
         @Bindable var reminderPreferences = reminderPreferences
         @Bindable var medicationPreferences = medicationPreferences
+        @Bindable var cyclePreferences = cycleService.preferences
 
         NavigationStack {
             ScrollView {
@@ -33,7 +34,8 @@ struct CareView: View {
 
                     selectedTabContent(
                         reminderPreferences: reminderPreferences,
-                        medicationPreferences: medicationPreferences
+                        medicationPreferences: medicationPreferences,
+                        cyclePreferences: cyclePreferences
                     )
                 }
                 .padding(.horizontal, 20)
@@ -56,14 +58,16 @@ struct CareView: View {
     }
 
     private var header: some View {
-        Text("Care")
+        Text("My care")
             .font(.system(.title, design: .serif))
+            .accessibilityAddTraits(.isHeader)
     }
 
     @ViewBuilder
     private func selectedTabContent(
         reminderPreferences: ReminderPreferences,
-        medicationPreferences: MedicationPreferences
+        medicationPreferences: MedicationPreferences,
+        cyclePreferences: CyclePreferences
     ) -> some View {
         switch selectedTab {
         case .doctor:
@@ -75,6 +79,8 @@ struct CareView: View {
             )
         case .reminders:
             remindersContent(reminderPreferences: reminderPreferences)
+        case .cycle:
+            CycleInfoControls(preferences: cyclePreferences)
         }
     }
 
@@ -115,6 +121,7 @@ private enum CareTab: String, CaseIterable, Identifiable {
     case doctor
     case medications
     case reminders
+    case cycle
 
     var id: String { rawValue }
 
@@ -123,6 +130,7 @@ private enum CareTab: String, CaseIterable, Identifiable {
         case .doctor: "Doctor"
         case .medications: "Medications"
         case .reminders: "Reminders"
+        case .cycle: "Cycle"
         }
     }
 }
