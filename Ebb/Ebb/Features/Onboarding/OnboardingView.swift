@@ -62,17 +62,17 @@ struct OnboardingView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("A calmer way to track migraines and your cycle.")
-                        .font(.system(.title2, design: .serif))
-                        .fixedSize(horizontal: false, vertical: true)
+                Text("This stays on your phone.")
+                    .font(.system(.title2, design: .serif))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text("Everything stays on your phone. On-device migraine and cycle tracking — talk or tap, your choice every time.")
-                        .font(.subheadline)
-                        .foregroundStyle(theme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 14) {
+                    welcomeFeatureRow(symbol: "lock.fill", text: "No account. No cloud.")
+                    welcomeFeatureRow(symbol: "waveform", text: "Talk or tap, every log.")
+                    welcomeFeatureRow(symbol: "drop.fill", text: "Cycle next to each migraine.")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .themeCard(padding: 16)
 
                 Text(MedicalDisclaimer.shortLine)
                     .font(.footnote)
@@ -96,8 +96,8 @@ struct OnboardingView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 stepHeader(
-                    title: "Your cycle",
-                    subtitle: "Optional — helps when HealthKit has no recent flow data."
+                    title: "Typical cycle length",
+                    subtitle: "Used on days Apple Health has no period data. You can change this later."
                 )
 
                 Stepper(
@@ -105,9 +105,8 @@ struct OnboardingView: View {
                     in: CyclePreferences.cycleLengthRange,
                     step: 1
                 ) {
-                    LabeledContent("Typical cycle length") {
-                        Text("\(preferences.typicalCycleLength) days")
-                    }
+                    Text("\(preferences.typicalCycleLength) days")
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .themeCard(padding: 16)
                 .accessibilityLabel("Typical cycle length, \(preferences.typicalCycleLength) days")
@@ -115,7 +114,7 @@ struct OnboardingView: View {
                 Toggle(isOn: $preferences.hasAura) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("I get migraine aura")
-                        Text("Visual or sensory warning before a migraine. Recorded for your doctor export — Ebb never gives medical advice.")
+                        Text("Visual or sensory warning before an attack. Kept with your logs — Ebb never gives medical advice.")
                             .font(.caption)
                             .foregroundStyle(theme.muted)
                     }
@@ -134,28 +133,28 @@ struct OnboardingView: View {
     private var healthKitContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                EbbIllustrationWell(variant: .listen, diameter: 88, mascotSize: 64)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityHidden(true)
-
                 stepHeader(
-                    title: "Connect Apple Health",
-                    subtitle: "Ebb reads menstrual flow to tag your cycle phase and predict your next period. Nothing is written to HealthKit."
+                    title: "Read period data from Health",
+                    subtitle: "Ebb uses menstrual flow to place logs in your cycle. It never writes anything back."
                 )
 
                 HStack(alignment: .top, spacing: 14) {
                     Image(systemName: "heart.text.square.fill")
                         .font(.title3)
-                        .foregroundStyle(theme.cycle)
+                        .foregroundStyle(theme.pain)
                         .frame(width: 28)
                         .accessibilityHidden(true)
 
-                    Text("Read-only access to menstrual flow. Your migraine logs never leave your phone.")
+                    Text("Menstrual flow only. Migraine notes stay on this phone.")
                         .font(.footnote)
                         .foregroundStyle(theme.muted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .themeCard(padding: 16)
+
+                EbbIllustrationWell(variant: .listen, diameter: 88, mascotSize: 64)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityHidden(true)
             }
             .padding(.horizontal, 24)
             .padding(.top, 8)
@@ -208,7 +207,7 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 switch viewModel.step {
                 case .welcome:
-                    primaryButton("Get started") {
+                    primaryButton("Continue") {
                         viewModel.advance(from: onboardingPreferences)
                     }
 
@@ -216,12 +215,9 @@ struct OnboardingView: View {
                     primaryButton("Continue") {
                         viewModel.advance(from: onboardingPreferences)
                     }
-                    secondaryButton("Skip") {
-                        viewModel.advance(from: onboardingPreferences)
-                    }
 
                 case .healthKit:
-                    primaryButton(viewModel.isRequestingPermission ? "Connecting…" : "Connect Health") {
+                    primaryButton(viewModel.isRequestingPermission ? "Connecting…" : "Allow") {
                         Task {
                             await viewModel.requestHealthKit(cycleService: cycleService, appLock: appLock)
                             viewModel.advance(from: onboardingPreferences)
@@ -242,6 +238,21 @@ struct OnboardingView: View {
     }
 
     // MARK: - Shared pieces
+
+    private func welcomeFeatureRow(symbol: String, text: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.body)
+                .foregroundStyle(theme.pain)
+                .frame(width: 24, alignment: .center)
+                .accessibilityHidden(true)
+
+            Text(text)
+                .font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
     private func stepHeader(title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
