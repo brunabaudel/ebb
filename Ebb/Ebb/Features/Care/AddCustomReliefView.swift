@@ -28,7 +28,7 @@ struct AddCustomReliefView: View {
         }
         .scrollContentBackground(.hidden)
         .themeSettingsScreen()
-        .navigationTitle("Add medication")
+        .navigationTitle("Add relief")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
