@@ -172,7 +172,7 @@ struct TapLogView: View {
 
     private func save() {
         saveErrorMessage = nil
-        let validated = schema.validated(values)
+        let validated = schema.validated(values, customReliefs: medicationPreferences.customReliefs)
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let storedNote = trimmedNote.isEmpty ? nil : trimmedNote
 

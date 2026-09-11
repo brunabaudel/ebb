@@ -11,6 +11,7 @@ struct ConfirmView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(CycleService.self) private var cycleService
+    @Environment(MedicationPreferences.self) private var medicationPreferences
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
     @State private var saveErrorMessage: String?
@@ -134,7 +135,10 @@ struct ConfirmView: View {
     }
 
     private func save() {
-        let validated = schema.validated(viewModel.values)
+        let validated = schema.validated(
+            viewModel.values,
+            customReliefs: medicationPreferences.customReliefs
+        )
         let trimmedNote = viewModel.transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         let storedNote = trimmedNote.isEmpty ? nil : trimmedNote
         let timestamp = Date.now

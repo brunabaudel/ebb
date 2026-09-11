@@ -58,6 +58,12 @@ struct FieldValueOption: Equatable, Sendable, Identifiable {
     let synonyms: [String]
 
     var id: String { key }
+
+    init(key: String, label: String, synonyms: [String] = []) {
+        self.key = key
+        self.label = label
+        self.synonyms = synonyms
+    }
 }
 
 // MARK: - Decoding
@@ -139,9 +145,18 @@ extension SchemaConfig {
     /// manual code paths. Never throws: off-menu input is silently discarded
     /// because omission is always a safe answer.
     func validated(_ values: [String: FieldValue]) -> [String: FieldValue] {
+        validated(values, customReliefs: [])
+    }
+
+    func validated(
+        _ values: [String: FieldValue],
+        customReliefs: [CustomReliefOption]
+    ) -> [String: FieldValue] {
+        let extraReliefKeys = Set(customReliefs.map(\.key))
         values.reduce(into: [:]) { result, pair in
-            guard let field = field(forKey: pair.key),
-                  let value = field.validated(pair.value) else { return }
+            guard let field = field(forKey: pair.key) else { return }
+            let extraKeys = field.key == ReliefEffects.takenFieldKey ? extraReliefKeys : []
+            guard let value = field.validated(pair.value, extraAllowedKeys: extraKeys) else { return }
             result[pair.key] = value
         }
     }
@@ -151,6 +166,11 @@ extension SchemaField {
     /// Returns the value if it fits this field's type and vocabulary, a filtered
     /// copy for partially valid multi-selections, or nil when nothing survives.
     func validated(_ value: FieldValue) -> FieldValue? {
+        validated(value, extraAllowedKeys: [])
+    }
+
+    func validated(_ value: FieldValue, extraAllowedKeys: Set<String>) -> FieldValue? {
+        let allowed = allowedValueKeys.union(extraAllowedKeys)
         switch (type, value) {
         case (.boolean, .boolean):
             return value
@@ -160,11 +180,11 @@ extension SchemaField {
             return value
 
         case (.singleEnum, .choice(let choice)):
-            return allowedValueKeys.contains(choice) ? value : nil
+            return allowed.contains(choice) ? value : nil
 
         case (.multiEnum, .choices(let choices)):
             var seen = Set<String>()
-            let kept = choices.filter { allowedValueKeys.contains($0) && seen.insert($0).inserted }
+            let kept = choices.filter { allowed.contains($0) && seen.insert($0).inserted }
             return kept.isEmpty ? nil : .choices(kept)
 
         case (.stringMap, .stringMap(let map)):

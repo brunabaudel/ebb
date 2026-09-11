@@ -78,7 +78,9 @@
         { "key": "triptan",        "label": "Triptan",          "synonyms": ["triptan", "sumatriptan", "imitrex"] },
         { "key": "rest_dark_room", "label": "Rest / dark room", "synonyms": ["lay down", "dark room", "rested"] },
         { "key": "cold_pack",      "label": "Cold pack",        "synonyms": ["ice", "cold pack", "cold compress"] },
-        { "key": "caffeine",       "label": "Caffeine",         "synonyms": ["coffee", "caffeine"] }
+        { "key": "caffeine",       "label": "Caffeine",         "synonyms": ["coffee", "caffeine"] },
+        { "key": "heat_pack",      "label": "Heat pack",        "synonyms": ["heat pack", "heating pad", "heat", "hot water bottle"] },
+        { "key": "water",          "label": "Water",            "synonyms": ["water", "hydrate", "hydration", "drank water"] }
       ]
     },
     {

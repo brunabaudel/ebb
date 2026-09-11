@@ -6,6 +6,7 @@ struct PatternsView: View {
 
     @Environment(\.theme) private var theme
     @Environment(CycleService.self) private var cycleService
+    @Environment(MedicationPreferences.self) private var medicationPreferences
     @Environment(EntitlementsService.self) private var entitlements
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
@@ -19,7 +20,8 @@ struct PatternsView: View {
         PatternStatsEngine.buildReport(
             entries: entries,
             schema: schema,
-            overlay: overlay
+            overlay: overlay,
+            customReliefs: medicationPreferences.customReliefs
         )
     }
 

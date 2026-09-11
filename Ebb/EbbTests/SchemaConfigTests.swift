@@ -48,6 +48,14 @@ struct SchemaLoadingTests {
         #expect(jaw.synonyms.contains("mandíbula"))
     }
 
+    @Test func reliefTakenHasNineOptions() throws {
+        let relief = try #require(schema.field(forKey: "relief_taken"))
+        #expect(relief.allowedValueKeys == [
+            "ibuprofen", "naproxen", "paracetamol", "triptan",
+            "rest_dark_room", "cold_pack", "caffeine", "heat_pack", "water",
+        ])
+    }
+
     @Test func missingResourceThrows() {
         #expect(throws: SchemaConfig.LoadError.resourceNotFound("symptom-schema.json")) {
             try SchemaConfig.load(from: Bundle(for: BundleToken.self))
@@ -119,5 +127,15 @@ struct ValidationGateTests {
             "relief_effects": .stringMap(["ibuprofen": "partial"]),
         ]
         #expect(schema.validated(input) == input)
+    }
+
+    @Test func validatedKeepsCustomReliefKeys() {
+        let custom = [CustomReliefOption(key: "custom_abc", label: "My med")]
+        let input: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen", "custom_abc", "not_allowed"]),
+        ]
+        #expect(schema.validated(input, customReliefs: custom) == [
+            "relief_taken": .choices(["ibuprofen", "custom_abc"]),
+        ])
     }
 }

@@ -8,10 +8,19 @@ struct ReliefTakenControl: View {
     @Binding var values: [String: FieldValue]
 
     @Environment(\.theme) private var theme
+    @Environment(MedicationPreferences.self) private var medicationPreferences
+
+    private var reliefOptions: [FieldValueOption] {
+        ReliefOptions.all(from: schema, customReliefs: medicationPreferences.customReliefs)
+    }
+
+    private var extraReliefKeys: Set<String> {
+        Set(medicationPreferences.customReliefs.map(\.key))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(Array(takenField.values.enumerated()), id: \.element.id) { index, option in
+            ForEach(Array(reliefOptions.enumerated()), id: \.element.id) { index, option in
                 let isSelected = selectedTakenKeys.contains(option.key)
                 VStack(spacing: 0) {
                     Button {
@@ -49,7 +58,8 @@ struct ReliefTakenControl: View {
                                         reliefKey: option.key,
                                         effectKey: effectOption.key,
                                         in: &values,
-                                        schema: schema
+                                        schema: schema,
+                                        extraReliefKeys: extraReliefKeys
                                     )
                                 }
                             }
@@ -60,7 +70,7 @@ struct ReliefTakenControl: View {
                     }
                 }
 
-                if index < takenField.values.count - 1 {
+                if index < reliefOptions.count - 1 {
                     Divider()
                         .overlay(theme.line)
                         .padding(.leading, 48)

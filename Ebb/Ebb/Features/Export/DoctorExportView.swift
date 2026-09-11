@@ -7,6 +7,7 @@ struct DoctorExportView: View {
 
     @Environment(\.theme) private var theme
     @Environment(CycleService.self) private var cycleService
+    @Environment(MedicationPreferences.self) private var medicationPreferences
     @Environment(EntitlementsService.self) private var entitlements
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
@@ -26,7 +27,8 @@ struct DoctorExportView: View {
             schema: schema,
             overlay: overlay,
             hasAuraPreference: cycleService.preferences.hasAura,
-            typicalCycleLength: cycleService.preferences.typicalCycleLength
+            typicalCycleLength: cycleService.preferences.typicalCycleLength,
+            customReliefs: medicationPreferences.customReliefs
         )
     }
 

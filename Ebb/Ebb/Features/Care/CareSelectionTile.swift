@@ -5,12 +5,14 @@ enum CareTileLayout {
     static let gutter: CGFloat = 10
     static let cornerRadius: CGFloat = 24
     static let columnCount = 2
+    static let reminderTileHeight: CGFloat = 70
 }
 
 struct CareSelectionTile: View {
     let title: String
     let isSelected: Bool
-    var tileSize: CGFloat = CareTileLayout.size
+    var tileWidth: CGFloat = CareTileLayout.size
+    var tileHeight: CGFloat = CareTileLayout.size
     var action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -26,7 +28,7 @@ struct CareSelectionTile: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
                 .padding(.horizontal, 8)
-                .frame(width: tileSize, height: tileSize)
+                .frame(width: tileWidth, height: tileHeight)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: cornerRadius)
@@ -66,6 +68,28 @@ struct CareSelectionTile: View {
         .accessibilityLabel(title)
         .accessibilityValue(isSelected ? "On" : "Off")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+}
+
+struct CareAddReliefTile: View {
+    var tileWidth: CGFloat = CareTileLayout.size
+    var tileHeight: CGFloat = CareTileLayout.size
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let cornerRadius = max(CareTileLayout.cornerRadius, theme.cardCornerRadius)
+
+        Image(systemName: "plus")
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(theme.muted)
+            .frame(width: tileWidth, height: tileHeight)
+            .background(theme.surface, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(theme.line, lineWidth: 1)
+            }
+            .accessibilityLabel("Add medication or relief")
     }
 }
 

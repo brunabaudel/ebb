@@ -7,6 +7,7 @@ struct EntryOverviewView: View {
 
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
+    @Environment(MedicationPreferences.self) private var medicationPreferences
 
     @State private var showEdit = false
 
@@ -23,7 +24,11 @@ struct EntryOverviewView: View {
     }
 
     private var detailRows: [ReviewDetailRow] {
-        LogSymptomsSentenceBuilder.filledDetailRows(values: entry.fieldValues, schema: schema)
+        LogSymptomsSentenceBuilder.filledDetailRows(
+            values: entry.fieldValues,
+            schema: schema,
+            customReliefs: medicationPreferences.customReliefs
+        )
     }
 
     var body: some View {

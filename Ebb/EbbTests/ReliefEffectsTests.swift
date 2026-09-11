@@ -87,4 +87,18 @@ struct ReliefEffectsTests {
         #expect(values["relief_effect"] == nil)
         #expect(values["relief_effects"] == .stringMap(["ibuprofen": "full", "naproxen": "partial"]))
     }
+
+    @Test func sanitizedMapKeepsCustomReliefKeys() {
+        var values: [String: FieldValue] = [
+            "relief_taken": .choices(["custom_xyz"]),
+        ]
+        ReliefEffects.toggleEffect(
+            reliefKey: "custom_xyz",
+            effectKey: "partial",
+            in: &values,
+            schema: schema,
+            extraReliefKeys: ["custom_xyz"]
+        )
+        #expect(values["relief_effects"] == .stringMap(["custom_xyz": "partial"]))
+    }
 }
