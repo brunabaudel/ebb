@@ -1,74 +1,96 @@
 import SwiftUI
 
-/// First-run flow: disclaimer, cycle info, and in-context permissions (Phase 9).
+/// First-run flow: disclaimer, cycle info, and HealthKit (Phase 9).
 struct OnboardingView: View {
     @Bindable var viewModel: OnboardingViewModel
     @Bindable var onboardingPreferences: OnboardingPreferences
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(CycleService.self) private var cycleService
     @Environment(AppLockController.self) private var appLock
 
+    @State private var primaryHapticTrigger = 0
+    @State private var secondaryHapticTrigger = 0
+
+    private var stepIndex: Int { viewModel.step.rawValue }
+    private var totalSteps: Int { OnboardingViewModel.Step.allCases.count }
+    private var progressFraction: Double {
+        Double(stepIndex + 1) / Double(totalSteps)
+    }
+
     var body: some View {
         NavigationStack {
-            Group {
-                switch viewModel.step {
-                case .welcome:
-                    welcomeStep
-                case .cycleInfo:
-                    cycleInfoStep
-                case .healthKit:
-                    healthKitStep
+            VStack(spacing: 0) {
+                if viewModel.step != .welcome {
+                    stepProgressHeader
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
+                        .padding(.bottom, 4)
                 }
+
+                Group {
+                    switch viewModel.step {
+                    case .welcome:
+                        welcomeContent
+                    case .cycleInfo:
+                        cycleInfoContent
+                    case .healthKit:
+                        healthKitContent
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .id(viewModel.step)
+                .transition(reduceMotion ? .identity : .opacity)
+
+                stickyFooter
             }
             .background(theme.base)
             .foregroundStyle(theme.text)
             .navigationBarTitleDisplayMode(.inline)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.28), value: viewModel.step)
         }
         .interactiveDismissDisabled()
     }
 
     // MARK: - Welcome
 
-    private var welcomeStep: some View {
+    private var welcomeContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(spacing: 28) {
                 EbbIllustrationWell(variant: .happy, diameter: 120, mascotSize: 96)
                     .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("A calmer way to track ")
+                    Text("A calmer way to track migraines and your cycle.")
                         .font(.system(.title2, design: .serif))
-                    + Text("migraines")
-                        .font(.system(.title2, design: .serif))
-                        .foregroundColor(theme.pain)
-                    + Text(" and your cycle.")
-                        .font(.system(.title2, design: .serif))
-                    Text("Everything stays on your phone. Talk or tap — your choice, every time.")
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Everything stays on your phone. On-device migraine and cycle tracking — talk or tap, your choice every time.")
                         .font(.subheadline)
                         .foregroundStyle(theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                permissionCard(
-                    icon: "heart.text.square.fill",
-                    title: "Apple Health",
-                    detail: "Reads your cycle dates so migraines line up with your hormones — no double entry."
-                )
-
-                disclaimerRow
-
-                primaryButton("Get started") {
-                    viewModel.advance(from: onboardingPreferences)
-                }
+                Text(MedicalDisclaimer.shortLine)
+                    .font(.footnote)
+                    .foregroundStyle(theme.faint)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("Medical disclaimer. \(MedicalDisclaimer.shortLine)")
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
         }
+        .scrollIndicators(.hidden)
     }
 
     // MARK: - Cycle info
 
-    private var cycleInfoStep: some View {
+    private var cycleInfoContent: some View {
         @Bindable var preferences = cycleService.preferences
 
         return ScrollView {
@@ -87,12 +109,8 @@ struct OnboardingView: View {
                         Text("\(preferences.typicalCycleLength) days")
                     }
                 }
-                .padding(16)
-                .background(theme.surface, in: RoundedRectangle(cornerRadius: 14))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(theme.line, lineWidth: 1)
-                }
+                .themeCard(padding: 16)
+                .accessibilityLabel("Typical cycle length, \(preferences.typicalCycleLength) days")
 
                 Toggle(isOn: $preferences.hasAura) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -102,71 +120,128 @@ struct OnboardingView: View {
                             .foregroundStyle(theme.muted)
                     }
                 }
-                .padding(16)
-                .background(theme.surface, in: RoundedRectangle(cornerRadius: 14))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(theme.line, lineWidth: 1)
-                }
-
-                HStack(spacing: 12) {
-                    secondaryButton("Skip") {
-                        viewModel.advance(from: onboardingPreferences)
-                    }
-                    primaryButton("Continue") {
-                        viewModel.advance(from: onboardingPreferences)
-                    }
-                }
+                .themeCard(padding: 16)
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
         }
+        .scrollIndicators(.hidden)
     }
 
     // MARK: - HealthKit
 
-    private var healthKitStep: some View {
-        permissionStep(
-            icon: "heart.text.square.fill",
-            title: "Connect Apple Health",
-            detail: "Ebb reads menstrual flow to tag your cycle phase and predict your next period. Nothing is written to HealthKit.",
-            primaryTitle: viewModel.isRequestingPermission ? "Connecting…" : "Connect Health",
-            primaryAction: {
-                Task {
-                    await viewModel.requestHealthKit(cycleService: cycleService, appLock: appLock)
-                    viewModel.advance(from: onboardingPreferences)
+    private var healthKitContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                EbbIllustrationWell(variant: .listen, diameter: 88, mascotSize: 64)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityHidden(true)
+
+                stepHeader(
+                    title: "Connect Apple Health",
+                    subtitle: "Ebb reads menstrual flow to tag your cycle phase and predict your next period. Nothing is written to HealthKit."
+                )
+
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.title3)
+                        .foregroundStyle(theme.cycle)
+                        .frame(width: 28)
+                        .accessibilityHidden(true)
+
+                    Text("Read-only access to menstrual flow. Your migraine logs never leave your phone.")
+                        .font(.footnote)
+                        .foregroundStyle(theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-            },
-            skipAction: { viewModel.advance(from: onboardingPreferences) }
-        )
+                .themeCard(padding: 16)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    // MARK: - Progress
+
+    private var stepProgressHeader: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 6) {
+                ForEach(0..<totalSteps, id: \.self) { index in
+                    Circle()
+                        .fill(index <= stepIndex ? theme.pain : theme.line)
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .accessibilityHidden(true)
+
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(theme.line)
+                        .frame(height: 3)
+                    Capsule()
+                        .fill(theme.pain)
+                        .frame(width: geometry.size.width * progressFraction, height: 3)
+                }
+            }
+            .frame(height: 3)
+
+            Text("\(stepIndex + 1) of \(totalSteps)")
+                .font(.system(size: 10, design: .monospaced))
+                .kerning(0.4)
+                .foregroundStyle(theme.faint)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Step \(stepIndex + 1) of \(totalSteps)")
+    }
+
+    // MARK: - Sticky footer
+
+    @ViewBuilder
+    private var stickyFooter: some View {
+        VStack(spacing: 0) {
+            Divider().overlay(theme.line)
+
+            VStack(spacing: 12) {
+                switch viewModel.step {
+                case .welcome:
+                    primaryButton("Get started") {
+                        viewModel.advance(from: onboardingPreferences)
+                    }
+
+                case .cycleInfo:
+                    primaryButton("Continue") {
+                        viewModel.advance(from: onboardingPreferences)
+                    }
+                    secondaryButton("Skip") {
+                        viewModel.advance(from: onboardingPreferences)
+                    }
+
+                case .healthKit:
+                    primaryButton(viewModel.isRequestingPermission ? "Connecting…" : "Connect Health") {
+                        Task {
+                            await viewModel.requestHealthKit(cycleService: cycleService, appLock: appLock)
+                            viewModel.advance(from: onboardingPreferences)
+                        }
+                    }
+                    .disabled(viewModel.isRequestingPermission)
+
+                    secondaryButton("Not now") {
+                        viewModel.advance(from: onboardingPreferences)
+                    }
+                    .disabled(viewModel.isRequestingPermission)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+        }
+        .background(theme.base)
     }
 
     // MARK: - Shared pieces
-
-    private func permissionStep(
-        icon: String,
-        title: String,
-        detail: String,
-        primaryTitle: String,
-        primaryAction: @escaping () -> Void,
-        skipAction: @escaping () -> Void
-    ) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                permissionCard(icon: icon, title: title, detail: detail)
-
-                HStack(spacing: 12) {
-                    secondaryButton("Not now") {
-                        skipAction()
-                    }
-                    Button(primaryTitle, action: primaryAction)
-                        .buttonStyle(.borderedProminent)
-                        .tint(theme.pain)
-                        .disabled(viewModel.isRequestingPermission)
-                }
-            }
-            .padding(24)
-        }
-    }
 
     private func stepHeader(title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -179,51 +254,30 @@ struct OnboardingView: View {
         }
     }
 
-    private func permissionCard(icon: String, title: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(theme.cycle)
-                .frame(width: 28)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                Text(detail)
-                    .font(.footnote)
-                    .foregroundStyle(theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .themeCard(padding: 16, cornerRadius: theme.isLight ? 18 : 14)
-    }
-
-    private var disclaimerRow: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Circle()
-                .fill(theme.cycle)
-                .frame(width: 6, height: 6)
-                .padding(.top, 6)
-            Text(MedicalDisclaimer.shortLine)
-                .font(.footnote)
-                .foregroundStyle(theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
     private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .buttonStyle(.borderedProminent)
-            .tint(theme.pain)
-            .frame(maxWidth: .infinity)
+        Button {
+            primaryHapticTrigger += 1
+            action()
+        } label: {
+            Text(title)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(theme.pain)
+        .sensoryFeedback(.selection, trigger: primaryHapticTrigger)
     }
 
     private func secondaryButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .buttonStyle(.bordered)
-            .tint(theme.muted)
-            .frame(maxWidth: .infinity)
+        Button {
+            secondaryHapticTrigger += 1
+            action()
+        } label: {
+            Text(title)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .tint(theme.muted)
+        .sensoryFeedback(.selection, trigger: secondaryHapticTrigger)
     }
 }
 
@@ -232,7 +286,8 @@ struct OnboardingView: View {
         viewModel: OnboardingViewModel(),
         onboardingPreferences: OnboardingPreferences()
     )
-    .environment(\.theme, .plumEmber)
+    .background(Theme.softPaper.base)
+    .environment(\.theme, .softPaper)
     .environment(CycleService(provider: MockCycleDataProvider()))
     .environment(AppLockController())
 }
