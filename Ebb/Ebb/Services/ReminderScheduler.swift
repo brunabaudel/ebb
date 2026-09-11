@@ -6,12 +6,16 @@ enum ReminderScheduler {
     static let periodStartNotificationID = "ebb.reminder.periodStart"
     static let ovulationNotificationID = "ebb.reminder.ovulation"
     static let lutealNotificationID = "ebb.reminder.luteal"
+    static let afterPeriodNotificationID = "ebb.reminder.afterPeriod"
+    static let fewDaysBeforeNotificationID = "ebb.reminder.fewDaysBefore"
     static let dailyLogNotificationID = "ebb.reminder.dailyLog"
 
     private static let notificationIDs = [
         periodStartNotificationID,
         ovulationNotificationID,
         lutealNotificationID,
+        afterPeriodNotificationID,
+        fewDaysBeforeNotificationID,
         dailyLogNotificationID,
     ]
 
@@ -73,6 +77,20 @@ enum ReminderScheduler {
         overlay.nextLutealStart(from: now)
     }
 
+    static func nextAfterPeriodNotificationDate(
+        overlay: CalendarCycleOverlay,
+        from now: Date = .now
+    ) -> Date? {
+        overlay.nextAfterPeriodDate(from: now)
+    }
+
+    static func nextFewDaysBeforeNotificationDate(
+        overlay: CalendarCycleOverlay,
+        from now: Date = .now
+    ) -> Date? {
+        overlay.nextFewDaysBeforeDate(from: now)
+    }
+
     @MainActor
     static func reschedule(input: ScheduleInput) async {
         let center = UNUserNotificationCenter.current()
@@ -126,6 +144,36 @@ enum ReminderScheduler {
                 title: "Luteal phase starting",
                 body: "Your higher-risk window is beginning. A quick log helps you spot patterns.",
                 on: lutealDate,
+                hour: input.preferences.reminderHour,
+                minute: input.preferences.reminderMinute,
+                calendar: calendar,
+                now: input.now
+            )
+        }
+
+        if input.preferences.afterPeriodNudgeEnabled,
+           let afterPeriodDate = nextAfterPeriodNotificationDate(overlay: input.overlay, from: input.now) {
+            await scheduleOneShot(
+                center: center,
+                identifier: afterPeriodNotificationID,
+                title: "After your period",
+                body: "Your estimated bleeding window has ended. A log can help you see the quieter stretch.",
+                on: afterPeriodDate,
+                hour: input.preferences.reminderHour,
+                minute: input.preferences.reminderMinute,
+                calendar: calendar,
+                now: input.now
+            )
+        }
+
+        if input.preferences.fewDaysBeforeNudgeEnabled,
+           let fewDaysBeforeDate = nextFewDaysBeforeNotificationDate(overlay: input.overlay, from: input.now) {
+            await scheduleOneShot(
+                center: center,
+                identifier: fewDaysBeforeNotificationID,
+                title: "A few days before",
+                body: "Your next period may be a few days away. A log now can help you spot the run-up.",
+                on: fewDaysBeforeDate,
                 hour: input.preferences.reminderHour,
                 minute: input.preferences.reminderMinute,
                 calendar: calendar,

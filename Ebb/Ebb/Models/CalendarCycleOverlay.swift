@@ -153,6 +153,50 @@ struct CalendarCycleOverlay: Equatable, Sendable {
         return calendar.startOfDay(for: nextPeriod)
     }
 
+    /// Start-of-day for the first follicular day after bleeding (cycle day `periodLength + 1`).
+    func nextAfterPeriodDate(from date: Date = .now) -> Date? {
+        guard anchorPeriodStart != nil else { return nil }
+
+        let today = calendar.startOfDay(for: date)
+        guard let periodStart = periodStart(containing: date) else { return nil }
+
+        if let currentAfterPeriod = calendar.date(byAdding: .day, value: periodLength, to: periodStart) {
+            let afterPeriodDay = calendar.startOfDay(for: currentAfterPeriod)
+            if afterPeriodDay >= today {
+                return afterPeriodDay
+            }
+        }
+
+        guard let nextPeriod = calendar.date(byAdding: .day, value: cycleLength, to: periodStart),
+              let nextAfterPeriod = calendar.date(byAdding: .day, value: periodLength, to: nextPeriod)
+        else { return nil }
+
+        return calendar.startOfDay(for: nextAfterPeriod)
+    }
+
+    /// Start-of-day two days before the next estimated period start.
+    func nextFewDaysBeforeDate(from date: Date = .now) -> Date? {
+        guard anchorPeriodStart != nil else { return nil }
+
+        let today = calendar.startOfDay(for: date)
+        guard let periodStart = periodStart(containing: date) else { return nil }
+
+        guard let nextPeriod = nextPeriodStart(onOrAfter: today, from: periodStart) else { return nil }
+
+        if let fewDaysBefore = calendar.date(byAdding: .day, value: -2, to: nextPeriod) {
+            let fewDaysBeforeDay = calendar.startOfDay(for: fewDaysBefore)
+            if fewDaysBeforeDay >= today {
+                return fewDaysBeforeDay
+            }
+        }
+
+        guard let followingPeriod = calendar.date(byAdding: .day, value: cycleLength, to: nextPeriod),
+              let fewDaysBefore = calendar.date(byAdding: .day, value: -2, to: followingPeriod)
+        else { return nil }
+
+        return calendar.startOfDay(for: fewDaysBefore)
+    }
+
     /// Start-of-day for the next luteal-window heads-up (cycle day 15).
     func nextLutealStart(from date: Date = .now) -> Date? {
         guard anchorPeriodStart != nil else { return nil }
@@ -183,6 +227,18 @@ struct CalendarCycleOverlay: Equatable, Sendable {
     }
 
     // MARK: - Private
+
+    private func nextPeriodStart(onOrAfter today: Date, from periodStart: Date) -> Date? {
+        let currentPeriodStart = calendar.startOfDay(for: periodStart)
+        if currentPeriodStart >= today {
+            return currentPeriodStart
+        }
+
+        guard let nextPeriod = calendar.date(byAdding: .day, value: cycleLength, to: periodStart)
+        else { return nil }
+
+        return calendar.startOfDay(for: nextPeriod)
+    }
 
     private func periodStart(for date: Date) -> Date? {
         guard var start = anchorPeriodStart else { return nil }
