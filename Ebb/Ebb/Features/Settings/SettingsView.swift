@@ -155,13 +155,10 @@ struct SettingsView: View {
         Section {
             Toggle(isOn: iCloudSyncToggleBinding) {
                 VStack(alignment: .leading, spacing: 4) {
-                    LabeledContent {
-                        Text(cloudSyncStatus.statusLabel)
-                            .foregroundStyle(iCloudStatusColor)
-                            .multilineTextAlignment(.trailing)
-                    } label: {
-                        Text("iCloud backup & sync")
-                    }
+                    Text("iCloud backup & sync")
+
+                    Text(cloudSyncStatus.statusLabel)
+                        .foregroundStyle(iCloudStatusColor)
 
                     Text("Back up logs and sync iPhone and iPad via your Apple ID. Turn off to keep data on this device only.")
                         .font(.caption)
@@ -209,12 +206,7 @@ struct SettingsView: View {
 
             Toggle(isOn: appLockToggleBinding) {
                 VStack(alignment: .leading, spacing: 4) {
-                    LabeledContent {
-                        Text(appLock.lockMethodLabel)
-                            .foregroundStyle(appLock.isEnabled ? theme.ok : theme.muted)
-                    } label: {
-                        Text("Lock with Face ID")
-                    }
+                    Text("Lock with Face ID")
 
                     Text("Require Face ID, Touch ID, or your device passcode to open Ebb.")
                         .font(.caption)
