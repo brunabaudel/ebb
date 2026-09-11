@@ -126,6 +126,26 @@ enum LogSymptomsSentenceBuilder {
             ))
         }
 
+        // Aura
+        appendSeparator(&result, id: "sep_aura")
+        if let aura = choiceLabels(values["aura"], fieldKey: "aura", schema: schema) {
+            result.append(SentenceSegment(
+                id: "aura",
+                text: "aura: \(aura)",
+                isFilled: true,
+                step: .aura,
+                accent: .pain
+            ))
+        } else {
+            result.append(SentenceSegment(
+                id: "aura",
+                text: "aura?",
+                isFilled: false,
+                step: .aura,
+                accent: .pain
+            ))
+        }
+
         result.append(SentenceSegment(id: "sep_end_pain", text: ".", isFilled: true, step: nil, accent: .pain))
         appendSeparator(&result, id: "sep_context")
         result.append(contentsOf: contextSegments(values: values, schema: schema, includePlaceholders: true))
@@ -193,7 +213,7 @@ enum LogSymptomsSentenceBuilder {
                     id: "aura",
                     label: fieldLabel("aura", schema: schema, fallback: "Aura"),
                     value: aura,
-                    step: .headachePresent,
+                    step: .aura,
                     accent: .pain
                 ))
             }
@@ -269,6 +289,9 @@ enum LogSymptomsSentenceBuilder {
             }
             if values["worse_with_movement"] == nil {
                 unset.append(("Worse with movement", .headachePresent))
+            }
+            if values["aura"] == nil {
+                unset.append(("Aura", .aura))
             }
             if values[ReliefEffects.takenFieldKey] == nil {
                 unset.append(("Relief taken", .relief))

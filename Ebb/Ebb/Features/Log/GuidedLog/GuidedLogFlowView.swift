@@ -86,6 +86,8 @@ struct GuidedLogFlowView: View {
             EmptyView()
         case .location:
             locationStep
+        case .aura:
+            auraStep
         case .relief:
             reliefStep
         case .triggers:
@@ -197,6 +199,18 @@ struct GuidedLogFlowView: View {
         ) {
             if let field = schema.field(forKey: "location") {
                 multiChoiceList(field: field, fieldKey: "location", accent: .pain)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private var auraStep: some View {
+        focusShell(
+            title: "Any aura?",
+            subtitle: "Select all that apply. Skip if none."
+        ) {
+            if let field = schema.field(forKey: "aura") {
+                fieldPills(field: field, accent: .pain)
                     .frame(maxWidth: .infinity)
             }
         }
