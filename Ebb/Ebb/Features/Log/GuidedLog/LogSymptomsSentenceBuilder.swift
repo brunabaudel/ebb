@@ -158,115 +158,10 @@ enum LogSymptomsSentenceBuilder {
         values: [String: FieldValue],
         schema: SchemaConfig
     ) -> [ReviewDetailRow] {
-        var rows: [ReviewDetailRow] = []
         let hasHeadache = booleanValue(values["migraine_present"])
-
-        if let hasHeadache {
-            rows.append(ReviewDetailRow(
-                id: "migraine_present",
-                label: fieldLabel("migraine_present", schema: schema, fallback: "Headache"),
-                value: hasHeadache ? "Yes" : "No",
-                step: .headachePresent,
-                accent: .pain
-            ))
+        return LogSymptomsFieldOrder.displayFieldKeys.compactMap { key in
+            detailRow(for: key, values: values, schema: schema, hasHeadache: hasHeadache)
         }
-
-        if hasHeadache == true {
-            if let severity = scaleValue(values["severity"]) {
-                rows.append(ReviewDetailRow(
-                    id: "severity",
-                    label: fieldLabel("severity", schema: schema, fallback: "Severity"),
-                    value: "\(severity)/5",
-                    step: .headachePresent,
-                    accent: .pain
-                ))
-            }
-            if let location = choiceLabels(values["location"], fieldKey: "location", schema: schema) {
-                rows.append(ReviewDetailRow(
-                    id: "location",
-                    label: fieldLabel("location", schema: schema, fallback: "Location"),
-                    value: location,
-                    step: .location,
-                    accent: .pain
-                ))
-            }
-            if let quality = choiceLabels(values["quality"], fieldKey: "quality", schema: schema) {
-                rows.append(ReviewDetailRow(
-                    id: "quality",
-                    label: fieldLabel("quality", schema: schema, fallback: "Quality"),
-                    value: quality,
-                    step: .headachePresent,
-                    accent: .pain
-                ))
-            }
-            if let worse = booleanValue(values["worse_with_movement"]) {
-                rows.append(ReviewDetailRow(
-                    id: "worse_with_movement",
-                    label: fieldLabel("worse_with_movement", schema: schema, fallback: "Movement"),
-                    value: worse ? "Worse with movement" : "Not worse with movement",
-                    step: .headachePresent,
-                    accent: .pain
-                ))
-            }
-            if let aura = choiceLabels(values["aura"], fieldKey: "aura", schema: schema) {
-                rows.append(ReviewDetailRow(
-                    id: "aura",
-                    label: fieldLabel("aura", schema: schema, fallback: "Aura"),
-                    value: aura,
-                    step: .aura,
-                    accent: .pain
-                ))
-            }
-            if let relief = reliefSummary(values: values, schema: schema) {
-                rows.append(ReviewDetailRow(
-                    id: "relief_taken",
-                    label: fieldLabel("relief_taken", schema: schema, fallback: "Relief"),
-                    value: relief,
-                    step: .relief,
-                    accent: .pain
-                ))
-            }
-            if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
-                rows.append(ReviewDetailRow(
-                    id: "triggers",
-                    label: fieldLabel("triggers", schema: schema, fallback: "Triggers"),
-                    value: triggers,
-                    step: .triggers,
-                    accent: .pain
-                ))
-            }
-        }
-
-        if let bleeding = choiceLabel(values["bleeding"], fieldKey: "bleeding", schema: schema) {
-            rows.append(ReviewDetailRow(
-                id: "bleeding",
-                label: fieldLabel("bleeding", schema: schema, fallback: "Bleeding"),
-                value: bleeding,
-                step: .cycleAndContext,
-                accent: .cycle
-            ))
-        }
-        if let cramps = scaleValue(values["cramps_severity"]) {
-            let scaleLabel = schema.field(forKey: "cramps_severity")?.scaleLabels[cramps]
-            let value = scaleLabel.map { "\($0) (\(cramps)/5)" } ?? "\(cramps)/5"
-            rows.append(ReviewDetailRow(
-                id: "cramps_severity",
-                label: fieldLabel("cramps_severity", schema: schema, fallback: "Cramps"),
-                value: value,
-                step: .cycleAndContext,
-                accent: .cycle
-            ))
-        }
-        if let other = choiceLabels(values["associated_symptoms"], fieldKey: "associated_symptoms", schema: schema) {
-            rows.append(ReviewDetailRow(
-                id: "associated_symptoms",
-                label: fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
-                value: other,
-                step: .associatedSymptoms,
-                accent: .pain
-            ))
-        }
-        return rows
     }
 
     static func unsetFieldLabels(
@@ -277,46 +172,195 @@ enum LogSymptomsSentenceBuilder {
         let hasHeadache = booleanValue(values["migraine_present"]) == true
 
         if hasHeadache {
-            if values["severity"] == nil {
-                unset.append(("Severity", .headachePresent))
-            }
-            if values["location"] == nil {
-                unset.append(("Location", .location))
-            }
-            if values["quality"] == nil {
-                unset.append(("Quality", .headachePresent))
-            }
-            if values["worse_with_movement"] == nil {
-                unset.append(("Worse with movement", .headachePresent))
-            }
-            if values["aura"] == nil {
-                unset.append(("Aura", .aura))
-            }
-            if values[ReliefEffects.takenFieldKey] == nil {
-                unset.append(("Relief taken", .relief))
-            } else if !allTakenReliefItemsHaveEffects(values: values) {
-                unset.append(("Did it help?", .relief))
-            }
-            if values["triggers"] == nil {
-                unset.append(("Triggers", .triggers))
+            for key in LogSymptomsFieldOrder.displayFieldKeys where headacheOnlyFieldKeys.contains(key) {
+                if let unsetLabel = unsetLabel(for: key, values: values, schema: schema) {
+                    unset.append(unsetLabel)
+                }
             }
         }
-        if values["bleeding"] == nil {
-            unset.append(("Bleeding", .cycleAndContext))
-        }
-        if values["cramps_severity"] == nil {
-            unset.append(("Cramps", .cycleAndContext))
-        }
-        if values["associated_symptoms"] == nil {
-            unset.append((
-                fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
-                .associatedSymptoms
-            ))
+        for key in ["bleeding", "cramps_severity", "associated_symptoms"] {
+            if let unsetLabel = unsetLabel(for: key, values: values, schema: schema) {
+                unset.append(unsetLabel)
+            }
         }
         return unset
     }
 
     // MARK: - Private
+
+    private static let headacheOnlyFieldKeys: Set<String> = [
+        "severity", "quality", "worse_with_movement", "location", "aura",
+        ReliefEffects.takenFieldKey, "triggers",
+    ]
+
+    private static func detailRow(
+        for key: String,
+        values: [String: FieldValue],
+        schema: SchemaConfig,
+        hasHeadache: Bool?
+    ) -> ReviewDetailRow? {
+        switch key {
+        case "migraine_present":
+            guard let hasHeadache else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Headache"),
+                value: hasHeadache ? "Yes" : "No",
+                step: .headachePresent,
+                accent: .pain
+            )
+        case "severity":
+            guard hasHeadache == true, let severity = scaleValue(values[key]) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Severity"),
+                value: "\(severity)/5",
+                step: .headachePresent,
+                accent: .pain
+            )
+        case "quality":
+            guard hasHeadache == true,
+                  let quality = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Quality"),
+                value: quality,
+                step: .headachePresent,
+                accent: .pain
+            )
+        case "worse_with_movement":
+            guard hasHeadache == true, let worse = booleanValue(values[key]) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Movement"),
+                value: worse ? "Worse with movement" : "Not worse with movement",
+                step: .headachePresent,
+                accent: .pain
+            )
+        case "location":
+            guard hasHeadache == true,
+                  let location = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Location"),
+                value: location,
+                step: .location,
+                accent: .pain
+            )
+        case "aura":
+            guard hasHeadache == true,
+                  let aura = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Aura"),
+                value: aura,
+                step: .aura,
+                accent: .pain
+            )
+        case ReliefEffects.takenFieldKey:
+            guard hasHeadache == true,
+                  let relief = reliefSummary(values: values, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Relief"),
+                value: relief,
+                step: .relief,
+                accent: .pain
+            )
+        case "relief_effect":
+            return nil
+        case "triggers":
+            guard hasHeadache == true,
+                  let triggers = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Triggers"),
+                value: triggers,
+                step: .triggers,
+                accent: .pain
+            )
+        case "bleeding":
+            guard let bleeding = choiceLabel(values[key], fieldKey: key, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Bleeding"),
+                value: bleeding,
+                step: .cycleAndContext,
+                accent: .cycle
+            )
+        case "cramps_severity":
+            guard let cramps = scaleValue(values[key]) else { return nil }
+            let scaleLabel = schema.field(forKey: key)?.scaleLabels[cramps]
+            let value = scaleLabel.map { "\($0) (\(cramps)/5)" } ?? "\(cramps)/5"
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Cramps"),
+                value: value,
+                step: .cycleAndContext,
+                accent: .cycle
+            )
+        case "associated_symptoms":
+            guard let other = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+            return ReviewDetailRow(
+                id: key,
+                label: fieldLabel(key, schema: schema, fallback: "Other symptoms"),
+                value: other,
+                step: .associatedSymptoms,
+                accent: .pain
+            )
+        default:
+            return nil
+        }
+    }
+
+    private static func unsetLabel(
+        for key: String,
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> (label: String, step: LogSymptomsFlowStep)? {
+        switch key {
+        case "severity":
+            guard values[key] == nil else { return nil }
+            return ("Severity", .headachePresent)
+        case "quality":
+            guard values[key] == nil else { return nil }
+            return ("Quality", .headachePresent)
+        case "worse_with_movement":
+            guard values[key] == nil else { return nil }
+            return ("Worse with movement", .headachePresent)
+        case "location":
+            guard values[key] == nil else { return nil }
+            return ("Location", .location)
+        case "aura":
+            guard values[key] == nil else { return nil }
+            return ("Aura", .aura)
+        case ReliefEffects.takenFieldKey:
+            if values[key] == nil {
+                return ("Relief taken", .relief)
+            }
+            if !allTakenReliefItemsHaveEffects(values: values) {
+                return ("Did it help?", .relief)
+            }
+            return nil
+        case "triggers":
+            guard values[key] == nil else { return nil }
+            return ("Triggers", .triggers)
+        case "bleeding":
+            guard values[key] == nil else { return nil }
+            return ("Bleeding", .cycleAndContext)
+        case "cramps_severity":
+            guard values[key] == nil else { return nil }
+            return ("Cramps", .cycleAndContext)
+        case "associated_symptoms":
+            guard values[key] == nil else { return nil }
+            return (
+                fieldLabel(key, schema: schema, fallback: "Other symptoms"),
+                .associatedSymptoms
+            )
+        default:
+            return nil
+        }
+    }
 
     private static func fieldLabel(_ key: String, schema: SchemaConfig, fallback: String) -> String {
         schema.field(forKey: key)?.label ?? fallback

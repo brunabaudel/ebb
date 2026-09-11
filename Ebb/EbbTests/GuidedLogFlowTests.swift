@@ -1,6 +1,38 @@
 import XCTest
 @testable import Ebb
 
+final class LogSymptomsFieldOrderTests: XCTestCase {
+    private let schema = try! SchemaConfig.load()
+
+    func testDisplayFieldKeysMatchSchemaOrderExcludingStringMap() {
+        let schemaKeys = schema.fields
+            .filter { $0.type != .stringMap }
+            .map(\.key)
+        XCTAssertEqual(LogSymptomsFieldOrder.displayFieldKeys, schemaKeys)
+    }
+
+    func testOrderedVisibleFieldsFollowGuidedSequenceWhenHeadachePresent() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "relief_taken": .choices(["ibuprofen"]),
+        ]
+        let keys = LogSymptomsFieldOrder.orderedVisibleFields(in: schema, values: values).map(\.key)
+        XCTAssertEqual(keys, [
+            "migraine_present", "severity", "quality", "worse_with_movement",
+            "location", "aura", "relief_taken", "relief_effect", "triggers",
+            "bleeding", "cramps_severity", "associated_symptoms",
+        ])
+    }
+
+    func testOrderedVisibleFieldsHideHeadacheFieldsWhenMigraineNo() {
+        let values: [String: FieldValue] = ["migraine_present": .boolean(false)]
+        let keys = LogSymptomsFieldOrder.orderedVisibleFields(in: schema, values: values).map(\.key)
+        XCTAssertEqual(keys, [
+            "migraine_present", "relief_taken", "bleeding", "cramps_severity", "associated_symptoms",
+        ])
+    }
+}
+
 final class LogSymptomsFlowStepTests: XCTestCase {
     func testQuestionStepsWithHeadacheIncludesAuraReliefAndTriggers() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: true)
@@ -121,8 +153,8 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
         let ids = rows.map(\.id)
         XCTAssertEqual(ids, [
-            "migraine_present", "severity", "location", "quality",
-            "worse_with_movement", "aura", "relief_taken", "triggers",
+            "migraine_present", "severity", "quality", "worse_with_movement",
+            "location", "aura", "relief_taken", "triggers",
             "bleeding", "cramps_severity", "associated_symptoms",
         ])
         XCTAssertEqual(rows.first(where: { $0.id == "aura" })?.step, .aura)

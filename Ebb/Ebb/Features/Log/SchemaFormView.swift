@@ -24,10 +24,7 @@ struct SchemaFormView: View {
     }
 
     private var visibleFields: [SchemaField] {
-        // Per-relief maps are edited in guided log; TapLog keeps legacy single relief_effect.
-        schema.fields.filter {
-            $0.type != .stringMap && AppliesWhenEvaluator.isVisible(field: $0, values: values)
-        }
+        LogSymptomsFieldOrder.orderedVisibleFields(in: schema, values: values)
     }
 
     private var visibleFieldKeys: [String] {
