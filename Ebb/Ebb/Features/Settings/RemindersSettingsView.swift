@@ -69,20 +69,22 @@ struct RemindersSettingsView: View {
                 .onChange(of: reminderPreferences.dailyLogReminderEnabled) { _, _ in
                     rescheduleReminders()
                 }
+            }
 
-                if reminderPreferences.hasAnyNudgeEnabled {
+            if reminderPreferences.hasAnyNudgeEnabled {
+                Section {
                     Button {
                         showTimePicker = true
                     } label: {
                         LabeledContent("Reminder time") {
-                            Text(reminderPreferences.reminderTimeLabel)
+                            Text(reminderPreferences.reminderTimeFormatted)
                                 .foregroundStyle(theme.muted)
                         }
                     }
                     .themeListRow()
+                } footer: {
+                    Text("Shared by the reminders that are on.")
                 }
-            } header: {
-                Text("Reminders")
             }
 
             Section {
@@ -107,7 +109,7 @@ struct RemindersSettingsView: View {
             #endif
         }
         .themeSettingsList()
-        .navigationTitle("Reminders")
+        .navigationTitle("My reminders")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showTimePicker) {
             ReminderTimePickerSheet(preferences: reminderPreferences) {
