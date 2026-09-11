@@ -209,7 +209,7 @@ struct GuidedLogFlowView: View {
     private var auraStep: some View {
         focusShell(
             title: "Any aura?",
-            subtitle: "Select all that apply. Skip if none."
+            subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: "aura") {
                 fieldPills(field: field, accent: .pain)
@@ -221,7 +221,7 @@ struct GuidedLogFlowView: View {
     private var reliefStep: some View {
         focusShell(
             title: "Any medication or relief?",
-            subtitle: "Select all that apply. Skip if none."
+            subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: ReliefEffects.takenFieldKey),
                let effectField = schema.field(forKey: ReliefEffects.legacyEffectFieldKey) {
@@ -234,7 +234,7 @@ struct GuidedLogFlowView: View {
     private var triggersStep: some View {
         focusShell(
             title: schema.field(forKey: "triggers")?.label ?? "Possible triggers",
-            subtitle: "Select all that apply. Skip if none."
+            subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: "triggers") {
                 multiChoiceList(field: field, fieldKey: "triggers", accent: .pain)
@@ -246,7 +246,7 @@ struct GuidedLogFlowView: View {
     private var associatedSymptomsStep: some View {
         focusShell(
             title: schema.field(forKey: "associated_symptoms")?.label ?? "Other symptoms",
-            subtitle: "Select all that apply. Skip if none."
+            subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: "associated_symptoms") {
                 multiChoiceList(field: field, fieldKey: "associated_symptoms", accent: .pain)
@@ -258,7 +258,7 @@ struct GuidedLogFlowView: View {
     private var cycleContextStep: some View {
         focusShell(
             title: "How's your cycle?",
-            subtitle: "Bleeding & cramps — skip what doesn't apply."
+            subtitle: "Bleeding & cramps."
         ) {
             VStack(alignment: .center, spacing: 18) {
                 if let field = schema.field(forKey: "bleeding") {
