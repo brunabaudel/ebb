@@ -102,29 +102,6 @@ struct ReminderPauseDuringMigraineToggle: View {
     }
 }
 
-struct ReminderTimeAndPauseCard: View {
-    @Bindable var preferences: ReminderPreferences
-    var onTimeTap: () -> Void
-    var onPauseChange: () -> Void
-
-    @Environment(\.theme) private var theme
-
-    var body: some View {
-        VStack(spacing: 0) {
-            if preferences.hasAnyNudgeEnabled {
-                ReminderTimeRow(preferences: preferences, onTap: onTimeTap)
-                Divider().overlay(theme.line)
-            }
-
-            ReminderPauseDuringMigraineToggle(
-                preferences: preferences,
-                onChange: onPauseChange
-            )
-        }
-        .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
-    }
-}
-
 struct ReminderTimePickerSheet: View {
     @Bindable var preferences: ReminderPreferences
     var onSave: () -> Void
