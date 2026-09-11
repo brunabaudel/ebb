@@ -30,14 +30,24 @@ struct RemindersSettingsView: View {
                             isOn: $reminderPreferences.periodStartNudgeEnabled
                         )
                         reminderTile(
-                            title: "Estimated ovulation",
-                            isOn: $reminderPreferences.ovulationNudgeEnabled
+                            title: "After period",
+                            isOn: $reminderPreferences.afterPeriodNudgeEnabled
                         )
                     }
                     GridRow {
                         reminderTile(
+                            title: "Estimated ovulation",
+                            isOn: $reminderPreferences.ovulationNudgeEnabled
+                        )
+                        reminderTile(
                             title: "Luteal-window heads-up",
                             isOn: $reminderPreferences.lutealNudgeEnabled
+                        )
+                    }
+                    GridRow {
+                        reminderTile(
+                            title: "A few days before",
+                            isOn: $reminderPreferences.fewDaysBeforeNudgeEnabled
                         )
                         reminderTile(
                             title: "Daily log reminder",
@@ -106,33 +116,58 @@ struct RemindersSettingsView: View {
     }
 
     private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
-        Button {
+        let tileOn = isOn.wrappedValue
+        return Button {
             isOn.wrappedValue.toggle()
             rescheduleReminders()
         } label: {
             Text(title)
-                .font(.footnote.weight(isOn.wrappedValue ? .semibold : .regular))
-                .foregroundStyle(isOn.wrappedValue ? theme.text : theme.muted)
+                .font(.footnote.weight(tileOn ? .semibold : .regular))
+                .foregroundStyle(tileOn ? theme.text : theme.muted)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
                 .padding(.horizontal, 8)
                 .frame(width: ReminderTileLayout.size, height: ReminderTileLayout.size)
                 .background {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(isOn.wrappedValue ? theme.pain.opacity(0.28) : theme.surface)
+                    if tileOn {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                LinearGradient(
+                                    colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(theme.surface)
+                    }
                 }
                 .overlay {
-                    if !isOn.wrappedValue {
+                    if tileOn {
+                        RoundedRectangle(cornerRadius: 12)
+                            .inset(by: 0.5)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
+                                    startPoint: .top,
+                                    endPoint: .center
+                                ),
+                                lineWidth: 1
+                            )
+                    } else {
                         RoundedRectangle(cornerRadius: 12)
                             .strokeBorder(theme.line, lineWidth: 1)
                     }
                 }
+                .shadow(color: tileOn ? theme.pain.opacity(0.32) : .clear, radius: 10, y: 3)
+                .shadow(color: tileOn ? theme.pain.opacity(0.12) : .clear, radius: 2, y: 1)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityValue(isOn.wrappedValue ? "On" : "Off")
-        .accessibilityAddTraits(isOn.wrappedValue ? [.isSelected] : [])
+        .accessibilityValue(tileOn ? "On" : "Off")
+        .accessibilityAddTraits(tileOn ? [.isSelected] : [])
     }
 
     private func rescheduleReminders() {

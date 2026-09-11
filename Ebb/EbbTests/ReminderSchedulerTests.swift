@@ -127,11 +127,73 @@ struct ReminderSchedulerTests {
         #expect(calendar.isDate(nextPeriod, inSameDayAs: expected))
     }
 
+    @Test func nextAfterPeriodDateUsesUpcomingCycleDay() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 3)))
+        let afterPeriodDate = try #require(overlay.nextAfterPeriodDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 6)))
+        #expect(calendar.isDate(afterPeriodDate, inSameDayAs: expected))
+    }
+
+    @Test func nextAfterPeriodDateRollsToNextCycleAfterCurrentWindow() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 10)))
+        let afterPeriodDate = try #require(overlay.nextAfterPeriodDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 7, day: 4)))
+        #expect(calendar.isDate(afterPeriodDate, inSameDayAs: expected))
+    }
+
+    @Test func nextFewDaysBeforeDateUsesUpcomingCycleDay() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 5)))
+        let fewDaysBeforeDate = try #require(overlay.nextFewDaysBeforeDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 27)))
+        #expect(calendar.isDate(fewDaysBeforeDate, inSameDayAs: expected))
+    }
+
+    @Test func nextFewDaysBeforeDateRollsToNextCycleAfterCurrentWindow() throws {
+        let calendar = Calendar.ebbCalendar
+        let periodStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let overlay = CalendarCycleOverlay(
+            calendar: calendar,
+            cycleLength: 28,
+            periodLength: 5,
+            anchorPeriodStart: periodStart
+        )
+        let reference = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 28)))
+        let fewDaysBeforeDate = try #require(overlay.nextFewDaysBeforeDate(from: reference))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 7, day: 25)))
+        #expect(calendar.isDate(fewDaysBeforeDate, inSameDayAs: expected))
+    }
+
     @Test func reminderPreferencesDefaultsMatchProductSpec() {
         let preferences = ReminderPreferences(defaults: makeDefaults())
         #expect(!preferences.periodStartNudgeEnabled)
+        #expect(!preferences.afterPeriodNudgeEnabled)
         #expect(preferences.ovulationNudgeEnabled)
         #expect(preferences.lutealNudgeEnabled)
+        #expect(preferences.fewDaysBeforeNudgeEnabled)
         #expect(!preferences.dailyLogReminderEnabled)
     }
 
@@ -139,15 +201,19 @@ struct ReminderSchedulerTests {
         let defaults = makeDefaults()
         let preferences = ReminderPreferences(defaults: defaults)
         preferences.periodStartNudgeEnabled = true
+        preferences.afterPeriodNudgeEnabled = true
         preferences.ovulationNudgeEnabled = false
         preferences.lutealNudgeEnabled = false
+        preferences.fewDaysBeforeNudgeEnabled = false
         preferences.dailyLogReminderEnabled = true
 
         preferences.resetToDefaults()
 
         #expect(!preferences.periodStartNudgeEnabled)
+        #expect(!preferences.afterPeriodNudgeEnabled)
         #expect(preferences.ovulationNudgeEnabled)
         #expect(preferences.lutealNudgeEnabled)
+        #expect(preferences.fewDaysBeforeNudgeEnabled)
         #expect(!preferences.dailyLogReminderEnabled)
     }
 

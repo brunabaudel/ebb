@@ -124,11 +124,17 @@ struct CareView: View {
         if reminderPreferences.periodStartNudgeEnabled {
             items.append(ActiveReminderItem(id: "period", title: "Period starting"))
         }
+        if reminderPreferences.afterPeriodNudgeEnabled {
+            items.append(ActiveReminderItem(id: "afterPeriod", title: "After period"))
+        }
         if reminderPreferences.ovulationNudgeEnabled {
             items.append(ActiveReminderItem(id: "ovulation", title: "Estimated ovulation"))
         }
         if reminderPreferences.lutealNudgeEnabled {
             items.append(ActiveReminderItem(id: "luteal", title: "Luteal-window heads-up"))
+        }
+        if reminderPreferences.fewDaysBeforeNudgeEnabled {
+            items.append(ActiveReminderItem(id: "fewDaysBefore", title: "A few days before"))
         }
         if reminderPreferences.dailyLogReminderEnabled {
             items.append(ActiveReminderItem(id: "daily", title: "Daily log reminder"))
