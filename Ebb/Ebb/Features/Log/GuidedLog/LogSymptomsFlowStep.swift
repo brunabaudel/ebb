@@ -1,5 +1,29 @@
 import Foundation
 
+/// Canonical display order for symptom fields — shared by guided add, edit form,
+/// and review/overview rows. Keeps UI surfaces aligned when schema JSON order drifts.
+enum LogSymptomsFieldOrder {
+    /// TapLog edit + review rows. `relief_effects` (string_map) is guided-only.
+    static let displayFieldKeys: [String] = [
+        "migraine_present", "severity", "quality", "worse_with_movement",
+        "location", "aura", "relief_taken", "relief_effect",
+        "triggers", "bleeding", "cramps_severity", "associated_symptoms",
+    ]
+
+    static func orderedVisibleFields(
+        in schema: SchemaConfig,
+        values: [String: FieldValue],
+        excludingTypes: Set<FieldType> = [.stringMap]
+    ) -> [SchemaField] {
+        let visibleByKey = Dictionary(
+            uniqueKeysWithValues: schema.fields
+                .filter { !excludingTypes.contains($0.type) && AppliesWhenEvaluator.isVisible(field: $0, values: values) }
+                .map { ($0.key, $0) }
+        )
+        return displayFieldKeys.compactMap { visibleByKey[$0] }
+    }
+}
+
 /// Steps in the merged I+L+J+K guided logging flow (new entries only).
 enum LogSymptomsFlowStep: Int, CaseIterable, Identifiable, Sendable {
     case headachePresent
