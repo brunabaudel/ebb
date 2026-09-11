@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ebb app icon C3 — exact sketch recipe</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1024px;
+    height: 1024px;
+    overflow: hidden;
+    background: #F8F4EF;
+  }
+  .icon {
+    width: 1024px;
+    height: 1024px;
+    /* Glow composited over oat — never over transparent/black */
+    background:
+      radial-gradient(circle at 50% 50%, rgba(198,126,114,.35), rgba(91,154,143,.12) 55%, #F8F4EF 100%),
+      #F8F4EF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ebb-svg {
+    display: block;
+    width: 72%;
+    height: 72%;
+  }
+</style>
+</head>
+<body>
+  <div class="icon">
+    <svg class="ebb-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="drop" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#E8B8C4"/>
+          <stop offset="1" stop-color="#C2607A"/>
+        </linearGradient>
+      </defs>
+      <path d="M60 20C60 20 30 52 30 72c0 17.673 13.431 32 30 32s30-14.327 30-32C90 52 60 20 60 20Z" fill="url(#drop)"/>
+      <path d="M48 60c0-1.2.9-2.2 2-2.2h0c1.1 0 2 1 2 2.2v6c0 1.2-.9 2.2-2 2.2h0c-1.1 0-2-1-2-2.2z" fill="#2A2622" opacity="0.45"/>
+      <path d="M68 60c0-1.2.9-2.2 2-2.2h0c1.1 0 2 1 2 2.2v6c0 1.2-.9 2.2-2 2.2h0c-1.1 0-2-1-2-2.2z" fill="#2A2622" opacity="0.45"/>
+      <path d="M54 76c3.2 2.4 8.8 2.4 12 0" stroke="#2A2622" stroke-width="2.1" stroke-linecap="round" opacity="0.35" fill="none"/>
+    </svg>
+  </div>
+</body>
+</html>
