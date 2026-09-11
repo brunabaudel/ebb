@@ -201,11 +201,16 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
             "relief_effects": .stringMap(["ibuprofen": "partial", "rest_dark_room": "full"]),
         ]
         let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
-        let relief = rows.first(where: { $0.id == "relief_taken" })?.value ?? ""
+        let reliefRow = rows.first(where: { $0.id == "relief_taken" })
+        let relief = reliefRow?.value ?? ""
         XCTAssertTrue(relief.contains("Ibuprofen"))
         XCTAssertTrue(relief.contains("Some relief"))
         XCTAssertTrue(relief.contains("Rest"))
         XCTAssertTrue(relief.contains("Full relief"))
+        XCTAssertEqual(reliefRow?.valueLines, [
+            "Ibuprofen · Some relief",
+            "Rest / dark room · Full relief",
+        ])
     }
 
     func testLegacySingleReliefEffectAppliesToAllTaken() {
@@ -215,9 +220,14 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
             "relief_effect": .choice("partial"),
         ]
         let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
-        let relief = rows.first(where: { $0.id == "relief_taken" })?.value ?? ""
+        let reliefRow = rows.first(where: { $0.id == "relief_taken" })
+        let relief = reliefRow?.value ?? ""
         XCTAssertTrue(relief.contains("Ibuprofen · Some relief"))
         XCTAssertTrue(relief.contains("Naproxen · Some relief"))
+        XCTAssertEqual(reliefRow?.valueLines, [
+            "Ibuprofen · Some relief",
+            "Naproxen · Some relief",
+        ])
     }
 
     func testFilledDetailRowsWithoutHeadacheOmitsPainFields() {
