@@ -114,6 +114,66 @@ struct CalendarCycleOverlay: Equatable, Sendable {
         return entries.filter { $0.timestamp >= start && $0.timestamp < endExclusive }
     }
 
+    /// Start-of-day for the next estimated ovulation (cycle day 14).
+    func nextOvulationDate(from date: Date = .now) -> Date? {
+        guard anchorPeriodStart != nil else { return nil }
+
+        let today = calendar.startOfDay(for: date)
+        guard let periodStart = periodStart(containing: date) else { return nil }
+
+        if let currentOvulation = calendar.date(byAdding: .day, value: 13, to: periodStart) {
+            let ovulationDay = calendar.startOfDay(for: currentOvulation)
+            if ovulationDay >= today {
+                return ovulationDay
+            }
+        }
+
+        guard let nextPeriod = calendar.date(byAdding: .day, value: cycleLength, to: periodStart),
+              let nextOvulation = calendar.date(byAdding: .day, value: 13, to: nextPeriod)
+        else { return nil }
+
+        return calendar.startOfDay(for: nextOvulation)
+    }
+
+    /// Start-of-day for the next period start (cycle day 1) on or after `date`.
+    func nextPeriodNotificationDate(from date: Date = .now) -> Date? {
+        guard anchorPeriodStart != nil else { return nil }
+
+        let today = calendar.startOfDay(for: date)
+        guard let periodStart = periodStart(containing: date) else { return nil }
+
+        let currentPeriodStart = calendar.startOfDay(for: periodStart)
+        if currentPeriodStart >= today {
+            return currentPeriodStart
+        }
+
+        guard let nextPeriod = calendar.date(byAdding: .day, value: cycleLength, to: periodStart)
+        else { return nil }
+
+        return calendar.startOfDay(for: nextPeriod)
+    }
+
+    /// Start-of-day for the next luteal-window heads-up (cycle day 15).
+    func nextLutealStart(from date: Date = .now) -> Date? {
+        guard anchorPeriodStart != nil else { return nil }
+
+        let today = calendar.startOfDay(for: date)
+        guard let periodStart = periodStart(containing: date) else { return nil }
+
+        if let currentLuteal = calendar.date(byAdding: .day, value: 14, to: periodStart) {
+            let lutealDay = calendar.startOfDay(for: currentLuteal)
+            if lutealDay >= today {
+                return lutealDay
+            }
+        }
+
+        guard let nextPeriod = calendar.date(byAdding: .day, value: cycleLength, to: periodStart),
+              let nextLuteal = calendar.date(byAdding: .day, value: 14, to: nextPeriod)
+        else { return nil }
+
+        return calendar.startOfDay(for: nextLuteal)
+    }
+
     /// Normalized 0…1 positions for the luteal band on a cycle timeline.
     func lutealTimelineRange() -> (start: Double, end: Double) {
         let firstLutealDay = 15

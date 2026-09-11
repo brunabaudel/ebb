@@ -1,10 +1,19 @@
 import Foundation
 import UserNotifications
 
-/// Schedules luteal-window and daily log local notifications (build-plan Phase 9).
+/// Schedules cycle-landmark and daily log local notifications (build-plan Phase 9).
 enum ReminderScheduler {
+    static let periodStartNotificationID = "ebb.reminder.periodStart"
+    static let ovulationNotificationID = "ebb.reminder.ovulation"
     static let lutealNotificationID = "ebb.reminder.luteal"
     static let dailyLogNotificationID = "ebb.reminder.dailyLog"
+
+    private static let notificationIDs = [
+        periodStartNotificationID,
+        ovulationNotificationID,
+        lutealNotificationID,
+        dailyLogNotificationID,
+    ]
 
     struct ScheduleInput {
         let preferences: ReminderPreferences
@@ -43,6 +52,20 @@ enum ReminderScheduler {
         return true
     }
 
+    static func nextPeriodNotificationDate(
+        overlay: CalendarCycleOverlay,
+        from now: Date = .now
+    ) -> Date? {
+        overlay.nextPeriodNotificationDate(from: now)
+    }
+
+    static func nextOvulationNotificationDate(
+        overlay: CalendarCycleOverlay,
+        from now: Date = .now
+    ) -> Date? {
+        overlay.nextOvulationDate(from: now)
+    }
+
     static func nextLutealNotificationDate(
         overlay: CalendarCycleOverlay,
         from now: Date = .now
@@ -53,10 +76,7 @@ enum ReminderScheduler {
     @MainActor
     static func reschedule(input: ScheduleInput) async {
         let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [
-            lutealNotificationID,
-            dailyLogNotificationID,
-        ])
+        center.removePendingNotificationRequests(withIdentifiers: notificationIDs)
 
         guard !shouldPauseReminders(
             entries: input.entries,
@@ -66,29 +86,51 @@ enum ReminderScheduler {
             return
         }
 
+        let calendar = input.overlay.calendar
+
+        if input.preferences.periodStartNudgeEnabled,
+           let periodDate = nextPeriodNotificationDate(overlay: input.overlay, from: input.now) {
+            await scheduleOneShot(
+                center: center,
+                identifier: periodStartNotificationID,
+                title: "Period may be starting",
+                body: "Your estimated period window is beginning. Log if you want it on the calendar.",
+                on: periodDate,
+                hour: input.preferences.reminderHour,
+                minute: input.preferences.reminderMinute,
+                calendar: calendar,
+                now: input.now
+            )
+        }
+
+        if input.preferences.ovulationNudgeEnabled,
+           let ovulationDate = nextOvulationNotificationDate(overlay: input.overlay, from: input.now) {
+            await scheduleOneShot(
+                center: center,
+                identifier: ovulationNotificationID,
+                title: "Estimated ovulation",
+                body: "A log today can help you see what this part of the cycle feels like.",
+                on: ovulationDate,
+                hour: input.preferences.reminderHour,
+                minute: input.preferences.reminderMinute,
+                calendar: calendar,
+                now: input.now
+            )
+        }
+
         if input.preferences.lutealNudgeEnabled,
            let lutealDate = nextLutealNotificationDate(overlay: input.overlay, from: input.now) {
-            let calendar = input.overlay.calendar
-            let fireComponents = dateComponents(
+            await scheduleOneShot(
+                center: center,
+                identifier: lutealNotificationID,
+                title: "Luteal phase starting",
+                body: "Your higher-risk window is beginning. A quick log helps you spot patterns.",
                 on: lutealDate,
                 hour: input.preferences.reminderHour,
                 minute: input.preferences.reminderMinute,
-                calendar: calendar
+                calendar: calendar,
+                now: input.now
             )
-            if let fireDate = calendar.date(from: fireComponents), fireDate > input.now {
-                let content = UNMutableNotificationContent()
-                content.title = "Luteal phase starting"
-                content.body = "Your higher-risk window is beginning. A quick log helps you spot patterns."
-                content.sound = .default
-
-                let trigger = UNCalendarNotificationTrigger(dateMatching: fireComponents, repeats: false)
-                let request = UNNotificationRequest(
-                    identifier: lutealNotificationID,
-                    content: content,
-                    trigger: trigger
-                )
-                try? await center.add(request)
-            }
         }
 
         if input.preferences.dailyLogReminderEnabled {
@@ -132,6 +174,31 @@ enum ReminderScheduler {
 
     // MARK: - Private
 
+    @MainActor
+    private static func scheduleOneShot(
+        center: UNUserNotificationCenter,
+        identifier: String,
+        title: String,
+        body: String,
+        on day: Date,
+        hour: Int,
+        minute: Int,
+        calendar: Calendar,
+        now: Date
+    ) async {
+        let fireComponents = dateComponents(on: day, hour: hour, minute: minute, calendar: calendar)
+        guard let fireDate = calendar.date(from: fireComponents), fireDate > now else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: fireComponents, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        try? await center.add(request)
+    }
+
     private static func dateComponents(
         on day: Date,
         hour: Int,
@@ -142,28 +209,5 @@ enum ReminderScheduler {
         components.hour = hour
         components.minute = minute
         return components
-    }
-}
-
-extension CalendarCycleOverlay {
-    /// Start-of-day for the next luteal-window heads-up (day 15 of the cycle).
-    func nextLutealStart(from date: Date = .now) -> Date? {
-        guard anchorPeriodStart != nil else { return nil }
-
-        let today = calendar.startOfDay(for: date)
-        guard let periodStart = periodStart(containing: date) else { return nil }
-
-        if let currentLuteal = calendar.date(byAdding: .day, value: 14, to: periodStart) {
-            let lutealDay = calendar.startOfDay(for: currentLuteal)
-            if lutealDay >= today {
-                return lutealDay
-            }
-        }
-
-        guard let nextPeriod = calendar.date(byAdding: .day, value: cycleLength, to: periodStart),
-              let nextLuteal = calendar.date(byAdding: .day, value: 14, to: nextPeriod)
-        else { return nil }
-
-        return calendar.startOfDay(for: nextLuteal)
     }
 }
