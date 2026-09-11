@@ -650,8 +650,9 @@ enum LogSymptomsSentenceBuilder {
     }
 
     /// One schema label per selected option when more than one choice is set.
-    private static func valueLinesForMultiSelect(_ labels: [String]) -> [String]? {
-        labels.count > 1 ? labels : nil
+    private static func valueLinesForMultiSelect(_ labels: [String]) -> [ReviewValueLine]? {
+        guard labels.count > 1 else { return nil }
+        return labels.map { ReviewValueLine.plain($0) }
     }
 
     private static func choiceLabels(

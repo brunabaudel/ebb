@@ -62,6 +62,10 @@ struct ReviewValueLine: Equatable, Sendable {
         }
         return prefix
     }
+
+    static func plain(_ label: String) -> ReviewValueLine {
+        ReviewValueLine(prefix: label, effectLabel: nil, reliefEffectKey: nil)
+    }
 }
 
 /// Renders one relief summary line with the effect portion color-coded.
