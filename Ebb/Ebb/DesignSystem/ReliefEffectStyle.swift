@@ -50,21 +50,43 @@ enum ReliefEffectStyle {
     }
 }
 
+/// How one overview value line should render in the review detail card.
+enum ReviewValueLineRole: Equatable, Sendable {
+    case plain
+    /// Relief effect group header (e.g. "No relief") — colored via `reliefEffectKey`.
+    case reliefGroupHeader
+    /// Medication name indented under a relief group header.
+    case reliefItem
+}
+
 /// One line in a review detail card; relief rows carry an optional effect key for coloring.
 struct ReviewValueLine: Equatable, Sendable {
     let prefix: String
     let effectLabel: String?
     let reliefEffectKey: String?
+    let role: ReviewValueLineRole
 
     var displayText: String {
-        if let effectLabel {
+        if let effectLabel, role == .plain {
             return "\(prefix) · \(effectLabel)"
         }
         return prefix
     }
 
     static func plain(_ label: String) -> ReviewValueLine {
-        ReviewValueLine(prefix: label, effectLabel: nil, reliefEffectKey: nil)
+        ReviewValueLine(prefix: label, effectLabel: nil, reliefEffectKey: nil, role: .plain)
+    }
+
+    static func reliefGroupHeader(_ label: String, effectKey: String?) -> ReviewValueLine {
+        ReviewValueLine(prefix: label, effectLabel: nil, reliefEffectKey: effectKey, role: .reliefGroupHeader)
+    }
+
+    static func reliefItem(_ medicationName: String) -> ReviewValueLine {
+        ReviewValueLine(prefix: medicationName, effectLabel: nil, reliefEffectKey: nil, role: .reliefItem)
+    }
+
+    static func inlineRelief(_ medicationName: String, effectLabel: String, effectKey: String) -> ReviewValueLine {
+        ReviewValueLine(prefix: medicationName, effectLabel: effectLabel, reliefEffectKey: effectKey, role: .plain)
     }
 }
 
@@ -77,18 +99,35 @@ struct ReliefValueLineText: View {
 
     var body: some View {
         Group {
-            if let effectKey = line.reliefEffectKey, let effectLabel = line.effectLabel {
-                (Text(line.prefix + " · ")
+            switch line.role {
+            case .reliefGroupHeader:
+                Text(line.prefix)
+                    .foregroundStyle(groupHeaderColor)
+            case .reliefItem:
+                Text(line.prefix)
                     .foregroundStyle(defaultInk)
-                 + Text(effectLabel)
-                    .foregroundStyle(ReliefEffectStyle.color(for: effectKey, in: theme)))
-            } else {
-                Text(line.displayText)
-                    .foregroundStyle(defaultInk)
+                    .padding(.leading, 12)
+            case .plain:
+                if let effectKey = line.reliefEffectKey, let effectLabel = line.effectLabel {
+                    (Text(line.prefix + " · ")
+                        .foregroundStyle(defaultInk)
+                     + Text(effectLabel)
+                        .foregroundStyle(ReliefEffectStyle.color(for: effectKey, in: theme)))
+                } else {
+                    Text(line.displayText)
+                        .foregroundStyle(defaultInk)
+                }
             }
         }
-        .fontWeight(.semibold)
+        .fontWeight(line.role == .reliefItem ? .regular : .semibold)
         .multilineTextAlignment(.trailing)
+    }
+
+    private var groupHeaderColor: Color {
+        if let effectKey = line.reliefEffectKey {
+            return ReliefEffectStyle.color(for: effectKey, in: theme)
+        }
+        return theme.muted
     }
 }
 

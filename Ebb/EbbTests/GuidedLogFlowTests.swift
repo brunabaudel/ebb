@@ -169,8 +169,11 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
             "Left side",
             "Right side",
         ])
-        XCTAssertNil(rows.first(where: { $0.id == "quality" })?.valueLines)
-        XCTAssertNil(rows.first(where: { $0.id == "associated_symptoms" })?.valueLines)
+        XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.valueLines?.map(\.displayText), ["Throbbing"])
+        XCTAssertEqual(rows.first(where: { $0.id == "aura" })?.valueLines?.map(\.displayText), [
+            "Visual (lights, zigzags, spots)",
+        ])
+        XCTAssertEqual(rows.first(where: { $0.id == "associated_symptoms" })?.valueLines?.map(\.displayText), ["Nausea"])
     }
 
     func testMultiSelectDetailRowsUseValueLines() {
@@ -249,10 +252,17 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(relief.contains("Rest"))
         XCTAssertTrue(relief.contains("Full relief"))
         XCTAssertEqual(reliefRow?.valueLines?.map(\.displayText), [
-            "Ibuprofen · Some relief",
-            "Rest / dark room · Full relief",
+            "Some relief",
+            "Ibuprofen",
+            "Full relief",
+            "Rest / dark room",
         ])
-        XCTAssertEqual(reliefRow?.valueLines?.map(\.reliefEffectKey), ["partial", "full"])
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.role), [
+            .reliefGroupHeader,
+            .reliefItem,
+            .reliefGroupHeader,
+            .reliefItem,
+        ])
     }
 
     func testLegacySingleReliefEffectAppliesToAllTaken() {
@@ -267,10 +277,54 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(relief.contains("Ibuprofen · Some relief"))
         XCTAssertTrue(relief.contains("Naproxen · Some relief"))
         XCTAssertEqual(reliefRow?.valueLines?.map(\.displayText), [
-            "Ibuprofen · Some relief",
-            "Naproxen · Some relief",
+            "Some relief",
+            "Ibuprofen",
+            "Naproxen",
         ])
-        XCTAssertEqual(reliefRow?.valueLines?.map(\.reliefEffectKey), ["partial", "partial"])
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.role), [
+            .reliefGroupHeader,
+            .reliefItem,
+            .reliefItem,
+        ])
+    }
+
+    func testReliefGroupedByEffectState() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "relief_taken": .choices(["ibuprofen", "naproxen", "cold_pack", "rest_dark_room"]),
+            "relief_effects": .stringMap([
+                "ibuprofen": "none",
+                "naproxen": "none",
+                "cold_pack": "partial",
+                "rest_dark_room": "full",
+            ]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let reliefRow = rows.first(where: { $0.id == "relief_taken" })
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.displayText), [
+            "No relief",
+            "Ibuprofen",
+            "Naproxen",
+            "Some relief",
+            "Cold pack",
+            "Full relief",
+            "Rest / dark room",
+        ])
+    }
+
+    func testReliefUnratedMedicationsGroupedAtEnd() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "relief_taken": .choices(["ibuprofen", "cold_pack"]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let reliefRow = rows.first(where: { $0.id == "relief_taken" })
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.displayText), [
+            "Not rated",
+            "Ibuprofen",
+            "Cold pack",
+        ])
+        XCTAssertEqual(reliefRow?.value, "Ibuprofen, Cold pack")
     }
 
     func testFilledDetailRowsWithoutHeadacheOmitsPainFields() {
