@@ -31,13 +31,7 @@ struct CareView: View {
                             medicationPreferences: medicationPreferences
                         )
 
-                        careCard(
-                            title: "Bring to your doctor",
-                            caption: "A PDF of your history.",
-                            systemImage: "doc.text"
-                        ) {
-                            DoctorExportView(schema: schema)
-                        }
+                        bringToDoctorSection
                     }
                 }
                 .padding(.horizontal, 20)
@@ -113,64 +107,22 @@ struct CareView: View {
         }
     }
 
+    private var bringToDoctorSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Bring to your doctor")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(theme.text)
+
+            DoctorExportContent(schema: schema)
+        }
+    }
+
     private func rescheduleReminders() {
         ReminderScheduling.reschedule(
             preferences: reminderPreferences,
             cycleService: cycleService,
             entries: entries
         )
-    }
-
-    private func careCard<Destination: View>(
-        title: String,
-        caption: String,
-        systemImage: String,
-        @ViewBuilder destination: () -> Destination
-    ) -> some View {
-        NavigationLink {
-            destination()
-        } label: {
-            careCardLabel(title: title, caption: caption, systemImage: systemImage)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func careCardLabel(
-        title: String,
-        caption: String,
-        systemImage: String,
-        isMuted: Bool = false
-    ) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(isMuted ? theme.muted : theme.pain)
-                .frame(width: 40, height: 40)
-                .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(isMuted ? theme.muted : theme.text)
-                Text(caption)
-                    .font(.footnote)
-                    .foregroundStyle(theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 8)
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(theme.muted)
-                .accessibilityHidden(true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-        .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title). \(caption)")
     }
 }
 
@@ -180,6 +132,7 @@ struct CareView: View {
         .environment(MedicationPreferences())
         .environment(ReminderPreferences())
         .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .environment(EntitlementsService(previewIsEbbPlus: false, listenForUpdates: false))
         .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
 
@@ -192,6 +145,7 @@ struct CareView: View {
         .environment(MedicationPreferences())
         .environment(preferences)
         .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .environment(EntitlementsService(previewIsEbbPlus: false, listenForUpdates: false))
         .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
 
@@ -204,5 +158,6 @@ struct CareView: View {
         .environment(medications)
         .environment(ReminderPreferences())
         .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+        .environment(EntitlementsService(previewIsEbbPlus: false, listenForUpdates: false))
         .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
