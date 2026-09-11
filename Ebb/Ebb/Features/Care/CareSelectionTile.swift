@@ -71,6 +71,28 @@ struct CareSelectionTile: View {
     }
 }
 
+struct CareAddReliefTile: View {
+    var tileWidth: CGFloat = CareTileLayout.size
+    var tileHeight: CGFloat = CareTileLayout.size
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let cornerRadius = max(CareTileLayout.cornerRadius, theme.cardCornerRadius)
+
+        Image(systemName: "plus")
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(theme.muted)
+            .frame(width: tileWidth, height: tileHeight)
+            .background(theme.surface, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(theme.line, lineWidth: 1)
+            }
+            .accessibilityLabel("Add medication or relief")
+    }
+}
+
 struct CareTileGrid<Content: View>: View {
     @ViewBuilder var content: () -> Content
 

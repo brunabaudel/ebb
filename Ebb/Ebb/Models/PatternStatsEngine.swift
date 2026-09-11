@@ -55,6 +55,7 @@ enum PatternStatsEngine {
         entries: [SymptomEntry],
         schema: SchemaConfig,
         overlay: CalendarCycleOverlay,
+        customReliefs: [CustomReliefOption] = [],
         now: Date = .now
     ) -> Report {
         let hasCycleData = overlay.anchorPeriodStart != nil
@@ -76,7 +77,11 @@ enum PatternStatsEngine {
             schema: schema,
             limit: 4
         )
-        let reliefEffectiveness = reliefStats(from: migraineEntries, schema: schema)
+        let reliefEffectiveness = reliefStats(
+            from: migraineEntries,
+            schema: schema,
+            customReliefs: customReliefs
+        )
 
         let timelineCaption = timelineCaption(
             migraineEntries: migraineEntries,
@@ -293,7 +298,8 @@ enum PatternStatsEngine {
 
     static func reliefStats(
         from migraineEntries: [SymptomEntry],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption] = []
     ) -> [ReliefStat] {
         var taken: [String: Int] = [:]
         var helpful: [String: Int] = [:]
@@ -309,12 +315,11 @@ enum PatternStatsEngine {
             }
         }
 
-        let field = schema.field(forKey: "relief_taken")
         return taken.sorted { $0.value > $1.value }.map { key, count in
             let helpCount = helpful[key] ?? 0
             return ReliefStat(
                 key: key,
-                label: field?.values.first { $0.key == key }?.label ?? key,
+                label: ReliefOptions.label(for: key, schema: schema, customReliefs: customReliefs) ?? key,
                 timesTaken: count,
                 timesHelpful: helpCount,
                 helpfulFraction: count > 0 ? Double(helpCount) / Double(count) : 0

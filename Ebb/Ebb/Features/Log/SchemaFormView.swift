@@ -112,4 +112,5 @@ struct SchemaFormView: View {
         .padding()
         .background(Theme.softPaper.base)
         .environment(\.theme, .softPaper)
+        .environment(MedicationPreferences())
 }

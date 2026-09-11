@@ -158,6 +158,8 @@ struct ReminderSchedulerTests {
 
 @Suite("Medication preferences")
 struct MedicationPreferencesTests {
+    let schema = try! SchemaConfig.load(from: .main)
+
     @Test func savesAndRestoresReliefKeys() {
         let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.\(UUID().uuidString)")!
         let preferences = MedicationPreferences(defaults: defaults)
@@ -167,6 +169,39 @@ struct MedicationPreferencesTests {
 
         let reloaded = MedicationPreferences(defaults: defaults)
         #expect(reloaded.savedReliefKeys == ["triptan"])
+    }
+
+    @Test func addsCustomReliefAndSelectsIt() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.custom.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+
+        let key = preferences.addCustomRelief(label: "Magnesium", schema: schema)
+        #expect(key?.hasPrefix("custom_") == true)
+        #expect(preferences.customReliefs.count == 1)
+        #expect(preferences.customReliefs.first?.label == "Magnesium")
+        #expect(preferences.isSaved(key!))
+
+        let reloaded = MedicationPreferences(defaults: defaults)
+        #expect(reloaded.customReliefs == preferences.customReliefs)
+        #expect(reloaded.savedReliefKeys == [key!])
+    }
+
+    @Test func duplicateLabelSelectsExistingSchemaOption() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.dup.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+
+        let key = preferences.addCustomRelief(label: "Ibuprofen", schema: schema)
+        #expect(key == "ibuprofen")
+        #expect(preferences.customReliefs.isEmpty)
+        #expect(preferences.isSaved("ibuprofen"))
+    }
+
+    @Test func emptyLabelDoesNotAdd() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.empty.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+
+        #expect(preferences.addCustomRelief(label: "   ", schema: schema) == nil)
+        #expect(preferences.customReliefs.isEmpty)
     }
 }
 

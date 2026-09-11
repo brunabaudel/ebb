@@ -51,6 +51,7 @@ enum DoctorReportEngine {
         overlay: CalendarCycleOverlay,
         hasAuraPreference: Bool,
         typicalCycleLength: Int,
+        customReliefs: [CustomReliefOption] = [],
         now: Date = .now
     ) -> Report {
         let migraineEntries = entries
@@ -84,7 +85,8 @@ enum DoctorReportEngine {
         )
         let reliefSummaries = reliefSummaries(
             from: migraineEntries,
-            schema: schema
+            schema: schema,
+            customReliefs: customReliefs
         )
 
         return Report(
@@ -234,7 +236,8 @@ enum DoctorReportEngine {
 
     private static func reliefSummaries(
         from migraineEntries: [SymptomEntry],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption]
     ) -> [ReliefSummary] {
         var taken: [String: Int] = [:]
         var effects: [String: [String: Int]] = [:]
@@ -250,11 +253,10 @@ enum DoctorReportEngine {
             }
         }
 
-        let reliefField = schema.field(forKey: "relief_taken")
         return taken.sorted { $0.value > $1.value }.map { key, _ in
             let topEffect = effects[key]?.max(by: { $0.value < $1.value })?.key ?? "none"
             return ReliefSummary(
-                label: reliefField?.values.first { $0.key == key }?.label ?? key,
+                label: ReliefOptions.label(for: key, schema: schema, customReliefs: customReliefs) ?? key,
                 detail: reliefEffectDetail(for: topEffect)
             )
         }

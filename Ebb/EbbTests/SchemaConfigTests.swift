@@ -128,4 +128,14 @@ struct ValidationGateTests {
         ]
         #expect(schema.validated(input) == input)
     }
+
+    @Test func validatedKeepsCustomReliefKeys() {
+        let custom = [CustomReliefOption(key: "custom_abc", label: "My med")]
+        let input: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen", "custom_abc", "not_allowed"]),
+        ]
+        #expect(schema.validated(input, customReliefs: custom) == [
+            "relief_taken": .choices(["ibuprofen", "custom_abc"]),
+        ])
+    }
 }

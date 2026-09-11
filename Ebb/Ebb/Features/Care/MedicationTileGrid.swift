@@ -29,15 +29,20 @@ struct MedicationTileGrid: View {
     @State private var gridWidth: CGFloat = 0
 
     private var reliefOptions: [FieldValueOption] {
-        schema.field(forKey: "relief_taken")?.values ?? []
+        ReliefOptions.all(from: schema, customReliefs: medicationPreferences.customReliefs)
     }
 
     private var columnCount: Int {
         MedicationTileGridLayout.columnCount
     }
 
+    /// Schema + custom options, then the add tile.
+    private var gridItemCount: Int {
+        reliefOptions.count + 1
+    }
+
     private var rowIndices: Range<Int> {
-        let rowCount = (reliefOptions.count + columnCount - 1) / columnCount
+        let rowCount = (gridItemCount + columnCount - 1) / columnCount
         return 0..<max(rowCount, 0)
     }
 
@@ -82,6 +87,16 @@ struct MedicationTileGrid: View {
                     isSaved: !medicationPreferences.isSaved(option.key)
                 )
             }
+        } else if index == reliefOptions.count {
+            NavigationLink {
+                AddCustomReliefView(
+                    schema: schema,
+                    medicationPreferences: medicationPreferences
+                )
+            } label: {
+                CareAddReliefTile(tileWidth: tileSize, tileHeight: tileSize)
+            }
+            .buttonStyle(.plain)
         } else if needsPlaceholder(in: rowIndex, at: index) {
             Color.clear
                 .frame(width: tileSize, height: tileSize)
@@ -90,9 +105,9 @@ struct MedicationTileGrid: View {
     }
 
     private func needsPlaceholder(in rowIndex: Int, at index: Int) -> Bool {
-        let remainder = reliefOptions.count % columnCount
+        let remainder = gridItemCount % columnCount
         guard remainder != 0 else { return false }
-        let lastRowIndex = reliefOptions.count / columnCount
-        return rowIndex == lastRowIndex && index >= reliefOptions.count
+        let lastRowIndex = gridItemCount / columnCount
+        return rowIndex == lastRowIndex && index >= gridItemCount
     }
 }

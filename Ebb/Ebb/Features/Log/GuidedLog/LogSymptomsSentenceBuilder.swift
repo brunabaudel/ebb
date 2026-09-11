@@ -39,12 +39,13 @@ struct SentenceSegment: Identifiable, Equatable, Sendable {
 enum LogSymptomsSentenceBuilder {
     static func segments(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption] = []
     ) -> [SentenceSegment] {
         let hasHeadache = booleanValue(values["migraine_present"])
 
         guard hasHeadache != false else {
-            return noHeadacheSegments(values: values, schema: schema)
+            return noHeadacheSegments(values: values, schema: schema, customReliefs: customReliefs)
         }
 
         var result: [SentenceSegment] = []
@@ -58,7 +59,12 @@ enum LogSymptomsSentenceBuilder {
                 accent: .pain
             ))
             appendSeparator(&result, id: "sep_early")
-            result.append(contentsOf: contextSegments(values: values, schema: schema, includePlaceholders: true))
+            result.append(contentsOf: contextSegments(
+                values: values,
+                schema: schema,
+                includePlaceholders: true,
+                customReliefs: customReliefs
+            ))
             return result
         }
 
@@ -166,7 +172,12 @@ enum LogSymptomsSentenceBuilder {
 
         result.append(SentenceSegment(id: "sep_end_pain", text: ".", isFilled: true, step: nil, accent: .pain))
         appendSeparator(&result, id: "sep_context")
-        result.append(contentsOf: contextSegments(values: values, schema: schema, includePlaceholders: true))
+        result.append(contentsOf: contextSegments(
+            values: values,
+            schema: schema,
+            includePlaceholders: true,
+            customReliefs: customReliefs
+        ))
 
         return result
     }
@@ -174,11 +185,18 @@ enum LogSymptomsSentenceBuilder {
     /// Filled schema fields for the compact review detail card (sketch C).
     static func filledDetailRows(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption] = []
     ) -> [ReviewDetailRow] {
         let hasHeadache = booleanValue(values["migraine_present"])
         return LogSymptomsFieldOrder.displayFieldKeys.compactMap { key in
-            detailRow(for: key, values: values, schema: schema, hasHeadache: hasHeadache)
+            detailRow(
+                for: key,
+                values: values,
+                schema: schema,
+                hasHeadache: hasHeadache,
+                customReliefs: customReliefs
+            )
         }
     }
 
@@ -215,7 +233,8 @@ enum LogSymptomsSentenceBuilder {
         for key: String,
         values: [String: FieldValue],
         schema: SchemaConfig,
-        hasHeadache: Bool?
+        hasHeadache: Bool?,
+        customReliefs: [CustomReliefOption]
     ) -> ReviewDetailRow? {
         switch key {
         case "migraine_present":
@@ -280,12 +299,20 @@ enum LogSymptomsSentenceBuilder {
             )
         case ReliefEffects.takenFieldKey:
             guard hasHeadache == true else { return nil }
-            let reliefLines = perReliefGroupedLines(values: values, schema: schema)
+            let reliefLines = perReliefGroupedLines(
+                values: values,
+                schema: schema,
+                customReliefs: customReliefs
+            )
             guard !reliefLines.isEmpty else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Relief"),
-                value: perReliefFlatSummaryText(values: values, schema: schema),
+                value: perReliefFlatSummaryText(
+                    values: values,
+                    schema: schema,
+                    customReliefs: customReliefs
+                ),
                 valueLines: reliefLines,
                 step: .relief,
                 accent: .pain
@@ -393,16 +420,17 @@ enum LogSymptomsSentenceBuilder {
 
     private static func takenReliefItems(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption]
     ) -> [(key: String, label: String, effectKey: String?)] {
-        guard let takenField = schema.field(forKey: ReliefEffects.takenFieldKey),
-              case .choices(let takenKeys)? = values[ReliefEffects.takenFieldKey],
+        guard case .choices(let takenKeys)? = values[ReliefEffects.takenFieldKey],
               !takenKeys.isEmpty else {
             return []
         }
 
         return takenKeys.compactMap { key in
-            guard let label = takenField.values.first(where: { $0.key == key })?.label else { return nil }
+            guard let label = ReliefOptions.label(for: key, schema: schema, customReliefs: customReliefs)
+            else { return nil }
             return (key, label, ReliefEffects.effect(for: key, in: values))
         }
     }
@@ -410,18 +438,20 @@ enum LogSymptomsSentenceBuilder {
     /// Comma-separated inline summary for guided sentence strip and accessibility fallback.
     private static func perReliefFlatSummaryText(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption]
     ) -> String {
-        perReliefFlatSummaryLines(values: values, schema: schema)
+        perReliefFlatSummaryLines(values: values, schema: schema, customReliefs: customReliefs)
             .map(\.displayText)
             .joined(separator: ", ")
     }
 
     private static func perReliefFlatSummaryLines(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption]
     ) -> [ReviewValueLine] {
-        takenReliefItems(values: values, schema: schema).map { item in
+        takenReliefItems(values: values, schema: schema, customReliefs: customReliefs).map { item in
             guard let effectKey = item.effectKey,
                   let effectLabel = choiceLabel(
                       .choice(effectKey),
@@ -438,9 +468,10 @@ enum LogSymptomsSentenceBuilder {
     /// Groups medications under relief-effect headers for the overview card.
     private static func perReliefGroupedLines(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption]
     ) -> [ReviewValueLine] {
-        let items = takenReliefItems(values: values, schema: schema)
+        let items = takenReliefItems(values: values, schema: schema, customReliefs: customReliefs)
         guard !items.isEmpty else { return [] }
 
         let effectOrder = ["none", "partial", "full"]
@@ -475,7 +506,8 @@ enum LogSymptomsSentenceBuilder {
 
     private static func noHeadacheSegments(
         values: [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        customReliefs: [CustomReliefOption]
     ) -> [SentenceSegment] {
         var result: [SentenceSegment] = [
             SentenceSegment(
@@ -491,7 +523,8 @@ enum LogSymptomsSentenceBuilder {
             values: values,
             schema: schema,
             includePlaceholders: true,
-            includeRelief: false
+            includeRelief: false,
+            customReliefs: customReliefs
         ))
         return result
     }
@@ -502,13 +535,18 @@ enum LogSymptomsSentenceBuilder {
         values: [String: FieldValue],
         schema: SchemaConfig,
         includePlaceholders: Bool,
-        includeRelief: Bool = true
+        includeRelief: Bool = true,
+        customReliefs: [CustomReliefOption] = []
     ) -> [SentenceSegment] {
         var result: [SentenceSegment] = []
 
         // Relief (headache path only)
         if includeRelief, !ReliefEffects.takenKeys(from: values).isEmpty {
-            let summaryText = perReliefFlatSummaryText(values: values, schema: schema)
+            let summaryText = perReliefFlatSummaryText(
+                values: values,
+                schema: schema,
+                customReliefs: customReliefs
+            )
             let hasAllEffects = allTakenReliefItemsHaveEffects(values: values)
             result.append(SentenceSegment(
                 id: "relief_taken",

@@ -58,9 +58,11 @@ enum ReliefEffects {
 
     static func sanitizedMap(
         _ map: [String: String],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        extraReliefKeys: Set<String> = []
     ) -> [String: String] {
-        let allowedTaken = schema.field(forKey: takenFieldKey)?.allowedValueKeys ?? []
+        let allowedTaken = (schema.field(forKey: takenFieldKey)?.allowedValueKeys ?? [])
+            .union(extraReliefKeys)
         let allowedEffects = schema.field(forKey: legacyEffectFieldKey)?.allowedValueKeys ?? []
         return map.reduce(into: [:]) { result, pair in
             guard allowedTaken.contains(pair.key),
@@ -72,9 +74,10 @@ enum ReliefEffects {
     static func write(
         _ map: [String: String],
         to values: inout [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        extraReliefKeys: Set<String> = []
     ) {
-        let sanitized = sanitizedMap(map, schema: schema)
+        let sanitized = sanitizedMap(map, schema: schema, extraReliefKeys: extraReliefKeys)
         if sanitized.isEmpty {
             values.removeValue(forKey: effectsFieldKey)
         } else {
@@ -123,7 +126,8 @@ enum ReliefEffects {
         reliefKey: String,
         effectKey: String,
         in values: inout [String: FieldValue],
-        schema: SchemaConfig
+        schema: SchemaConfig,
+        extraReliefKeys: Set<String> = []
     ) {
         var map = effectsMap(in: values)
         if map[reliefKey] == effectKey {
@@ -131,6 +135,6 @@ enum ReliefEffects {
         } else {
             map[reliefKey] = effectKey
         }
-        write(map, to: &values, schema: schema)
+        write(map, to: &values, schema: schema, extraReliefKeys: extraReliefKeys)
     }
 }

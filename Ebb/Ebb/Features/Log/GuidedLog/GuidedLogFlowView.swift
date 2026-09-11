@@ -287,7 +287,11 @@ struct GuidedLogFlowView: View {
     }
 
     private var reviewStep: some View {
-        let filledRows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let filledRows = LogSymptomsSentenceBuilder.filledDetailRows(
+            values: values,
+            schema: schema,
+            customReliefs: medicationPreferences.customReliefs
+        )
 
         return Group {
             if filledRows.isEmpty {
@@ -628,7 +632,10 @@ struct GuidedLogFlowView: View {
         guard !didApplyMedicationPrefill else { return }
         didApplyMedicationPrefill = true
 
-        let allowed = schema.field(forKey: "relief_taken")?.allowedValueKeys ?? []
+        let allowed = ReliefOptions.allowedKeys(
+            from: schema,
+            customReliefs: medicationPreferences.customReliefs
+        )
         let saved = medicationPreferences.savedReliefKeys.filter { allowed.contains($0) }
         guard !saved.isEmpty else { return }
 

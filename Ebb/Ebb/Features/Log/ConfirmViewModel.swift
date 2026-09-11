@@ -56,7 +56,10 @@ final class ConfirmViewModel {
 
     private func applyMedicationPrefill(to values: inout [String: FieldValue]) {
         guard let medicationPreferences else { return }
-        let allowed = schema.field(forKey: "relief_taken")?.allowedValueKeys ?? []
+        let allowed = ReliefOptions.allowedKeys(
+            from: schema,
+            customReliefs: medicationPreferences.customReliefs
+        )
         let saved = medicationPreferences.savedReliefKeys.filter { allowed.contains($0) }
         guard !saved.isEmpty else { return }
 
