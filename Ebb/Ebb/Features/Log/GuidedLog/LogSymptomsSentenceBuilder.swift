@@ -280,13 +280,13 @@ enum LogSymptomsSentenceBuilder {
             )
         case ReliefEffects.takenFieldKey:
             guard hasHeadache == true else { return nil }
-            let reliefParts = perReliefSummaryLines(values: values, schema: schema)
-            guard !reliefParts.isEmpty else { return nil }
+            let reliefLines = perReliefGroupedLines(values: values, schema: schema)
+            guard !reliefLines.isEmpty else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Relief"),
-                value: reliefParts.map(\.displayText).joined(separator: ", "),
-                valueLines: reliefParts,
+                value: perReliefFlatSummaryText(values: values, schema: schema),
+                valueLines: reliefLines,
                 step: .relief,
                 accent: .pain
             )
@@ -391,10 +391,10 @@ enum LogSymptomsSentenceBuilder {
         schema.field(forKey: key)?.label ?? fallback
     }
 
-    private static func perReliefSummaryLines(
+    private static func takenReliefItems(
         values: [String: FieldValue],
         schema: SchemaConfig
-    ) -> [ReviewValueLine] {
+    ) -> [(key: String, label: String, effectKey: String?)] {
         guard let takenField = schema.field(forKey: ReliefEffects.takenFieldKey),
               case .choices(let takenKeys)? = values[ReliefEffects.takenFieldKey],
               !takenKeys.isEmpty else {
@@ -403,13 +403,68 @@ enum LogSymptomsSentenceBuilder {
 
         return takenKeys.compactMap { key in
             guard let label = takenField.values.first(where: { $0.key == key })?.label else { return nil }
-            guard let effectKey = ReliefEffects.effect(for: key, in: values),
-                  let effectLabel = choiceLabel(.choice(effectKey), fieldKey: ReliefEffects.legacyEffectFieldKey, schema: schema)
-            else {
-                return ReviewValueLine(prefix: label, effectLabel: nil, reliefEffectKey: nil)
-            }
-            return ReviewValueLine(prefix: label, effectLabel: effectLabel, reliefEffectKey: effectKey)
+            return (key, label, ReliefEffects.effect(for: key, in: values))
         }
+    }
+
+    /// Comma-separated inline summary for guided sentence strip and accessibility fallback.
+    private static func perReliefFlatSummaryText(
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> String {
+        perReliefFlatSummaryLines(values: values, schema: schema)
+            .map(\.displayText)
+            .joined(separator: ", ")
+    }
+
+    private static func perReliefFlatSummaryLines(
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> [ReviewValueLine] {
+        takenReliefItems(values: values, schema: schema).map { item in
+            guard let effectKey = item.effectKey,
+                  let effectLabel = choiceLabel(
+                      .choice(effectKey),
+                      fieldKey: ReliefEffects.legacyEffectFieldKey,
+                      schema: schema
+                  )
+            else {
+                return ReviewValueLine.plain(item.label)
+            }
+            return ReviewValueLine.inlineRelief(item.label, effectLabel: effectLabel, effectKey: effectKey)
+        }
+    }
+
+    /// Groups medications under relief-effect headers for the overview card.
+    private static func perReliefGroupedLines(
+        values: [String: FieldValue],
+        schema: SchemaConfig
+    ) -> [ReviewValueLine] {
+        let items = takenReliefItems(values: values, schema: schema)
+        guard !items.isEmpty else { return [] }
+
+        let effectOrder = ["none", "partial", "full"]
+        var lines: [ReviewValueLine] = []
+
+        for effectKey in effectOrder {
+            let group = items.filter { $0.effectKey == effectKey }
+            guard !group.isEmpty else { continue }
+            let headerLabel = choiceLabel(
+                .choice(effectKey),
+                fieldKey: ReliefEffects.legacyEffectFieldKey,
+                schema: schema
+            ) ?? effectKey
+            lines.append(ReviewValueLine.reliefGroupHeader(headerLabel, effectKey: effectKey))
+            lines.append(contentsOf: group.map { ReviewValueLine.reliefItem($0.label) })
+        }
+
+        let unrated = items.filter { $0.effectKey == nil }
+        if !unrated.isEmpty {
+            lines.append(ReviewValueLine.reliefGroupHeader("Not rated", effectKey: nil))
+            lines.append(contentsOf: unrated.map { ReviewValueLine.reliefItem($0.label) })
+        }
+
+        return lines
     }
 
     private static func allTakenReliefItemsHaveEffects(values: [String: FieldValue]) -> Bool {
@@ -453,11 +508,11 @@ enum LogSymptomsSentenceBuilder {
 
         // Relief (headache path only)
         if includeRelief, !ReliefEffects.takenKeys(from: values).isEmpty {
-            let summaryParts = perReliefSummaryLines(values: values, schema: schema)
+            let summaryText = perReliefFlatSummaryText(values: values, schema: schema)
             let hasAllEffects = allTakenReliefItemsHaveEffects(values: values)
             result.append(SentenceSegment(
                 id: "relief_taken",
-                text: "Took \(summaryParts.map(\.displayText).joined(separator: ", "))",
+                text: "Took \(summaryText)",
                 isFilled: hasAllEffects,
                 step: .relief,
                 accent: .pain
@@ -649,9 +704,9 @@ enum LogSymptomsSentenceBuilder {
         return labels.dropLast().joined(separator: ", ") + ", and " + (labels.last ?? "")
     }
 
-    /// One schema label per selected option when more than one choice is set.
+    /// One schema label per selected option for vertical overview rendering.
     private static func valueLinesForMultiSelect(_ labels: [String]) -> [ReviewValueLine]? {
-        guard labels.count > 1 else { return nil }
+        guard !labels.isEmpty else { return nil }
         return labels.map { ReviewValueLine.plain($0) }
     }
 
