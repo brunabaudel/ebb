@@ -79,18 +79,25 @@ struct CareView: View {
                     if activeReminderItems.isEmpty {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("None on")
-                            Text("Turn one on to get a nudge.")
+                            Text("Turn one on to get a reminder.")
                         }
                         .font(.footnote)
                         .foregroundStyle(theme.muted)
                     } else {
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach(activeReminderItems) { item in
-                                Text("\(item.title) · \(reminderPreferences.reminderTimeFormatted)")
-                                    .font(.footnote)
-                                    .foregroundStyle(theme.muted)
-                                    .fixedSize(horizontal: false, vertical: true)
+                        VStack(alignment: .leading, spacing: 0) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(activeReminderItems) { item in
+                                    Text(item.title)
+                                        .font(.footnote)
+                                        .foregroundStyle(theme.muted)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             }
+
+                            Text(sharedReminderTimeCaption)
+                                .font(.caption)
+                                .foregroundStyle(theme.muted)
+                                .padding(.top, 10)
                         }
                     }
                 }
@@ -129,14 +136,18 @@ struct CareView: View {
         return items
     }
 
+    private var sharedReminderTimeCaption: String {
+        "Usually at \(reminderPreferences.reminderTimeFormatted)"
+    }
+
     private var myRemindersAccessibilityLabel: String {
         if activeReminderItems.isEmpty {
-            return "My reminders. None on. Turn one on to get a nudge."
+            return "My reminders. None on. Turn one on to get a reminder."
         }
-        let rows = activeReminderItems
-            .map { "\($0.title) at \(reminderPreferences.reminderTimeFormatted)" }
+        let titles = activeReminderItems
+            .map(\.title)
             .joined(separator: ". ")
-        return "My reminders. \(rows)"
+        return "My reminders. \(titles). \(sharedReminderTimeCaption)"
     }
 
     private var remindersSettings: some View {
