@@ -45,8 +45,6 @@ struct EntryOverviewView: View {
                     } else {
                         detailCard
                     }
-
-                    editButton
                 }
                 .padding(20)
             }
@@ -57,6 +55,10 @@ struct EntryOverviewView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Edit") { showEdit = true }
+                        .accessibilityHint("Opens the edit form for this entry")
                 }
             }
             .sheet(isPresented: $showEdit) {
@@ -166,21 +168,6 @@ struct EntryOverviewView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("You said: \(note)")
-    }
-
-    private var editButton: some View {
-        Button {
-            showEdit = true
-        } label: {
-            Text("Edit")
-                .font(.headline)
-                .foregroundStyle(theme.onPain)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(theme.pain, in: RoundedRectangle(cornerRadius: 16))
-        }
-        .buttonStyle(.plain)
-        .accessibilityHint("Opens the edit form for this entry")
     }
 
     private func severityBar(level: Int) -> some View {
