@@ -1,5 +1,10 @@
 import SwiftUI
 
+private enum SoftPaperSegmentedControlMetrics {
+    static let innerHeight: CGFloat = 50
+    static let trackInset: CGFloat = 4
+}
+
 /// Custom segmented control with a taller tap target and Soft paper styling.
 /// Replaces `Picker(.segmented)`, which ignores explicit height and stays ~32pt.
 struct SoftPaperSegmentedControl<Selection: Hashable>: View {
@@ -13,16 +18,13 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
 
     @Environment(\.theme) private var theme
 
-    private static let innerHeight: CGFloat = 50
-    private static let trackInset: CGFloat = 4
-
     var body: some View {
         HStack(spacing: 4) {
             ForEach(segments) { segment in
                 segmentButton(segment)
             }
         }
-        .padding(Self.trackInset)
+        .padding(SoftPaperSegmentedControlMetrics.trackInset)
         .frame(maxWidth: .infinity)
         .background(
             theme.surface,
@@ -53,7 +55,7 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .frame(maxWidth: .infinity)
-                .frame(height: Self.innerHeight)
+                .frame(height: SoftPaperSegmentedControlMetrics.innerHeight)
                 .background {
                     if isSelected {
                         selectedSegmentBackground
