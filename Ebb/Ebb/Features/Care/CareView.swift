@@ -128,7 +128,7 @@ private enum CareTab: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .doctor: "Doctor"
-        case .medications: "Medications"
+        case .medications: "Relief"
         case .reminders: "Reminders"
         case .cycle: "Cycle"
         }

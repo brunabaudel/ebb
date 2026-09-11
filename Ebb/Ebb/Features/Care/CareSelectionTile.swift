@@ -97,7 +97,7 @@ struct CareAddReliefTile: View {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .strokeBorder(theme.line, lineWidth: 1)
             }
-            .accessibilityLabel("Add medication or relief")
+            .accessibilityLabel("Add relief")
     }
 }
 

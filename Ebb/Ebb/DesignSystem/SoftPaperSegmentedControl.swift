@@ -100,7 +100,7 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
     SoftPaperSegmentedControl(
         segments: [
             .init(id: 0, title: "Doctor"),
-            .init(id: 1, title: "Medications"),
+            .init(id: 1, title: "Relief"),
             .init(id: 2, title: "Reminders"),
             .init(id: 3, title: "Cycle"),
         ],
