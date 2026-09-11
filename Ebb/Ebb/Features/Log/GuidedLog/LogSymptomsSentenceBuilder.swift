@@ -238,11 +238,12 @@ enum LogSymptomsSentenceBuilder {
             )
         case "quality":
             guard hasHeadache == true,
-                  let quality = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+                  let labels = choiceLabelList(values[key], fieldKey: key, schema: schema) else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Quality"),
-                value: quality,
+                value: joinedChoiceLabels(labels),
+                valueLines: valueLinesForMultiSelect(labels),
                 step: .headachePresent,
                 accent: .pain
             )
@@ -257,21 +258,23 @@ enum LogSymptomsSentenceBuilder {
             )
         case "location":
             guard hasHeadache == true,
-                  let location = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+                  let labels = choiceLabelList(values[key], fieldKey: key, schema: schema) else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Location"),
-                value: location,
+                value: joinedChoiceLabels(labels),
+                valueLines: valueLinesForMultiSelect(labels),
                 step: .location,
                 accent: .pain
             )
         case "aura":
             guard hasHeadache == true,
-                  let aura = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+                  let labels = choiceLabelList(values[key], fieldKey: key, schema: schema) else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Aura"),
-                value: aura,
+                value: joinedChoiceLabels(labels),
+                valueLines: valueLinesForMultiSelect(labels),
                 step: .aura,
                 accent: .pain
             )
@@ -291,11 +294,12 @@ enum LogSymptomsSentenceBuilder {
             return nil
         case "triggers":
             guard hasHeadache == true,
-                  let triggers = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+                  let labels = choiceLabelList(values[key], fieldKey: key, schema: schema) else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Triggers"),
-                value: triggers,
+                value: joinedChoiceLabels(labels),
+                valueLines: valueLinesForMultiSelect(labels),
                 step: .triggers,
                 accent: .pain
             )
@@ -320,11 +324,12 @@ enum LogSymptomsSentenceBuilder {
                 accent: .cycle
             )
         case "associated_symptoms":
-            guard let other = choiceLabels(values[key], fieldKey: key, schema: schema) else { return nil }
+            guard let labels = choiceLabelList(values[key], fieldKey: key, schema: schema) else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Other symptoms"),
-                value: other,
+                value: joinedChoiceLabels(labels),
+                valueLines: valueLinesForMultiSelect(labels),
                 step: .associatedSymptoms,
                 accent: .pain
             )
@@ -624,19 +629,37 @@ enum LogSymptomsSentenceBuilder {
         return label
     }
 
-    private static func choiceLabels(
+    private static func choiceLabelList(
         _ value: FieldValue?,
         fieldKey: String,
         schema: SchemaConfig
-    ) -> String? {
+    ) -> [String]? {
         guard case .choices(let keys)? = value, !keys.isEmpty else { return nil }
         let field = schema.field(forKey: fieldKey)
         let labels = keys.compactMap { key in
             field?.values.first(where: { $0.key == key })?.label
         }
         guard !labels.isEmpty else { return nil }
+        return labels
+    }
+
+    private static func joinedChoiceLabels(_ labels: [String]) -> String {
         if labels.count == 1 { return labels[0] }
         if labels.count == 2 { return "\(labels[0]) and \(labels[1])" }
         return labels.dropLast().joined(separator: ", ") + ", and " + (labels.last ?? "")
+    }
+
+    /// One schema label per selected option when more than one choice is set.
+    private static func valueLinesForMultiSelect(_ labels: [String]) -> [String]? {
+        labels.count > 1 ? labels : nil
+    }
+
+    private static func choiceLabels(
+        _ value: FieldValue?,
+        fieldKey: String,
+        schema: SchemaConfig
+    ) -> String? {
+        guard let labels = choiceLabelList(value, fieldKey: fieldKey, schema: schema) else { return nil }
+        return joinedChoiceLabels(labels)
     }
 }
