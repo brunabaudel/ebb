@@ -133,6 +133,15 @@ struct FieldControl: View {
     }
 
     private func toggleChoice(_ key: String) {
+        if field.key == AuraChoices.fieldKey {
+            if let updated = AuraChoices.toggle(in: orderedChoices, optionKey: key) {
+                value = .choices(updated)
+            } else {
+                value = nil
+            }
+            return
+        }
+
         var choices = orderedChoices
         if let index = choices.firstIndex(of: key) {
             choices.remove(at: index)
