@@ -237,7 +237,7 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply. Skip if none."
         ) {
             if let field = schema.field(forKey: "triggers") {
-                fieldPills(field: field, accent: .pain)
+                multiChoiceList(field: field, fieldKey: "triggers", accent: .pain)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -249,7 +249,7 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply. Skip if none."
         ) {
             if let field = schema.field(forKey: "associated_symptoms") {
-                fieldPills(field: field, accent: .pain)
+                multiChoiceList(field: field, fieldKey: "associated_symptoms", accent: .pain)
                     .frame(maxWidth: .infinity)
             }
         }
