@@ -132,6 +132,50 @@ struct DaySummaryBuilderTests {
         #expect(DaySummaryBuilder.todayRowTitle(unsetMigraine, schema: schema) == "Symptom log")
     }
 
+    @Test func entryAccentUsesPainWhenMigrainePresentIsSet() {
+        let migraine = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(3),
+                "bleeding": .choice("spotting"),
+            ]
+        )
+        #expect(DaySummaryBuilder.entryAccent(migraine) == .pain)
+
+        let noMigraineWithSpotting = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(false),
+                "bleeding": .choice("spotting"),
+                "cramps_severity": .scale(2),
+            ]
+        )
+        #expect(DaySummaryBuilder.entryAccent(noMigraineWithSpotting) == .pain)
+    }
+
+    @Test func entryAccentUsesCycleWhenMigraineUnsetAndBleedingOrCramps() {
+        let spottingOnly = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "bleeding": .choice("spotting"),
+            ]
+        )
+        #expect(DaySummaryBuilder.entryAccent(spottingOnly) == .cycle)
+
+        let crampsOnly = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "cramps_severity": .scale(2),
+            ]
+        )
+        #expect(DaySummaryBuilder.entryAccent(crampsOnly) == .cycle)
+    }
+
     @Test func todayRowCycleSummaryOnMigraineRows() {
         let migraineLuteal = SymptomEntry(
             timestamp: today,
