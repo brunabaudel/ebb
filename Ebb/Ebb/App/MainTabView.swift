@@ -1,7 +1,7 @@
 import SwiftData
 import SwiftUI
 
-/// Root tab scaffold: Today · Care · Patterns · Settings.
+/// Root tab scaffold: Today · My care · Patterns · Settings.
 struct MainTabView: View {
     let schema: SchemaConfig
     let schemaLoadResult: Result<SchemaConfig, Error>
@@ -27,7 +27,7 @@ struct MainTabView: View {
             CareView(schema: schema)
                 .tag(AppTab.care)
                 .tabItem {
-                    Label("Care", systemImage: "cross.case")
+                    Label("My care", systemImage: "cross.case")
                 }
 
             PatternsView(schema: schema)

@@ -33,7 +33,6 @@ struct SettingsView: View {
                 dataSection
                 appearanceSection
                 healthKitSection
-                cycleInfoSection
                 aboutSection
 
                 #if DEBUG
@@ -460,52 +459,6 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Cycle info
-
-    private var cycleInfoSection: some View {
-        @Bindable var preferences = cycleService.preferences
-
-        return Section {
-            Stepper(
-                value: $preferences.typicalCycleLength,
-                in: CyclePreferences.cycleLengthRange,
-                step: 1
-            ) {
-                LabeledContent("Typical cycle length") {
-                    Text("\(preferences.typicalCycleLength) days")
-                }
-            }
-            .themeListRow()
-
-            Stepper(
-                value: $preferences.periodLength,
-                in: CyclePreferences.periodLengthRange,
-                step: 1
-            ) {
-                LabeledContent("Typical period length") {
-                    Text("\(preferences.periodLength) days")
-                }
-            }
-            .themeListRow()
-
-            Text("Used when HealthKit has no recent flow data, and to predict your next period.")
-                .font(.footnote)
-                .foregroundStyle(theme.muted)
-                .themeListRow()
-
-            Toggle(isOn: $preferences.hasAura) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("I get migraine aura")
-                    Text("Visual or sensory warning before a migraine. Recorded for your doctor export — Ebb never gives medical advice.")
-                        .font(.caption)
-                        .foregroundStyle(theme.muted)
-                }
-            }
-            .themeListRow()
-        } header: {
-            Text("Cycle info")
-        }
-    }
 }
 
 #Preview {
