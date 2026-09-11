@@ -423,21 +423,6 @@ struct GuidedLogFlowView: View {
 
                 Spacer()
 
-                if canSkipCurrentStep {
-                    Button {
-                        advance()
-                    } label: {
-                        Text("Skip")
-                            .font(.system(size: 13.5, weight: .medium))
-                            .foregroundStyle(theme.muted.opacity(0.85))
-                            .frame(minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                Spacer()
-
                 Button {
                     advance()
                 } label: {
@@ -488,10 +473,6 @@ struct GuidedLogFlowView: View {
     private var canGoBack: Bool {
         guard let index = step.index(in: activeSteps) else { return false }
         return index > 0
-    }
-
-    private var canSkipCurrentStep: Bool {
-        step != .headachePresent
     }
 
     private var canAdvance: Bool {
