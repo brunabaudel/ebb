@@ -3,6 +3,10 @@ import SwiftUI
 private enum SoftPaperSegmentedControlMetrics {
     static let innerHeight: CGFloat = 50
     static let trackInset: CGFloat = 4
+
+    static var trackHeight: CGFloat { innerHeight + trackInset * 2 }
+    static var trackCornerRadius: CGFloat { trackHeight / 2 }
+    static var selectedCornerRadius: CGFloat { innerHeight / 2 }
 }
 
 /// Custom segmented control with a taller tap target and Soft paper styling.
@@ -28,17 +32,13 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
         .frame(maxWidth: .infinity)
         .background(
             theme.surface,
-            in: RoundedRectangle(cornerRadius: theme.cardCornerRadius, style: .continuous)
+            in: Capsule(style: .continuous)
         )
         .overlay {
-            RoundedRectangle(cornerRadius: theme.cardCornerRadius, style: .continuous)
+            Capsule(style: .continuous)
                 .strokeBorder(theme.line, lineWidth: 1)
         }
         .accessibilityElement(children: .contain)
-    }
-
-    private var innerCornerRadius: CGFloat {
-        max(theme.cardCornerRadius - 6, 12)
     }
 
     private func segmentButton(_ segment: Segment) -> some View {
@@ -69,7 +69,7 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
     }
 
     private var selectedSegmentBackground: some View {
-        RoundedRectangle(cornerRadius: innerCornerRadius, style: .continuous)
+        Capsule(style: .continuous)
             .fill(
                 LinearGradient(
                     colors: [theme.pain.opacity(0.22), theme.pain.opacity(0.28)],
@@ -78,7 +78,7 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
                 )
             )
             .overlay {
-                RoundedRectangle(cornerRadius: innerCornerRadius, style: .continuous)
+                Capsule(style: .continuous)
                     .inset(by: 0.5)
                     .stroke(
                         LinearGradient(
