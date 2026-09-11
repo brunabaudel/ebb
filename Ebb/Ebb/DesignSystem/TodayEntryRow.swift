@@ -38,16 +38,25 @@ struct TodayEntryRow: View {
                 .padding(.top, 4)
                 .accessibilityHidden(true)
 
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(rowTitle)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(theme.text)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .layoutPriority(1)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(rowTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(theme.text)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .layoutPriority(1)
 
-                if let painSeverity {
-                    severityIndicator(level: painSeverity)
+                    if let painSeverity {
+                        severityIndicator(level: painSeverity)
+                            .fixedSize(horizontal: true, vertical: true)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
+                        .font(.caption2.monospaced())
+                        .foregroundStyle(theme.muted)
                         .fixedSize(horizontal: true, vertical: true)
                 }
 
@@ -57,13 +66,6 @@ struct TodayEntryRow: View {
                         .foregroundStyle(theme.cycle.opacity(0.88))
                         .lineLimit(1)
                 }
-
-                Spacer(minLength: 8)
-
-                Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(theme.muted)
-                    .fixedSize(horizontal: true, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -105,15 +107,15 @@ struct TodayEntryRow: View {
 
     private var accessibilityLabel: String {
         let time = entry.timestamp.formatted(date: .omitted, time: .shortened)
-        var headline = rowTitle
+        var parts = [rowTitle]
         if let cycleSummary {
-            headline += ", \(cycleSummary)"
+            parts.append(cycleSummary)
         }
-        var parts = ["\(headline), \(time)"]
+        parts.append(time)
         if let painSeverity {
             parts.append(severityAccessibilityLabel(for: painSeverity))
         }
-        return parts.joined(separator: ". ")
+        return parts.joined(separator: ", ")
     }
 }
 
@@ -124,6 +126,7 @@ struct TodayEntryRow: View {
         fieldValues: [
             "migraine_present": .boolean(true),
             "severity": .scale(4),
+            "bleeding": .choice("spotting"),
             "location": .choices(["right"]),
             "quality": .choices(["throbbing"]),
             "associated_symptoms": .choices(["nausea"]),
