@@ -33,18 +33,16 @@ struct RemindersSettingsView: View {
                             title: "After period",
                             isOn: $reminderPreferences.afterPeriodNudgeEnabled
                         )
-                    }
-                    GridRow {
                         reminderTile(
                             title: "Estimated ovulation",
                             isOn: $reminderPreferences.ovulationNudgeEnabled
                         )
+                    }
+                    GridRow {
                         reminderTile(
                             title: "Luteal-window heads-up",
                             isOn: $reminderPreferences.lutealNudgeEnabled
                         )
-                    }
-                    GridRow {
                         reminderTile(
                             title: "A few days before",
                             isOn: $reminderPreferences.fewDaysBeforeNudgeEnabled
@@ -55,7 +53,7 @@ struct RemindersSettingsView: View {
                         )
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 4)
             }
             .listRowBackground(theme.base)
