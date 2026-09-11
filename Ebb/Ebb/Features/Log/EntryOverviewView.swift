@@ -112,10 +112,7 @@ struct EntryOverviewView: View {
                     Text(row.label)
                         .foregroundStyle(theme.muted)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(row.value)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(row.accent == .cycle ? theme.coolInk : theme.warmInk)
-                        .multilineTextAlignment(.trailing)
+                    detailValue(for: row)
                 }
                 .font(.subheadline)
                 .padding(.vertical, 9)
@@ -129,7 +126,30 @@ struct EntryOverviewView: View {
     }
 
     private var detailAccessibilityLabel: String {
-        detailRows.map { "\($0.label): \($0.value)" }.joined(separator: ". ")
+        detailRows.map { row in
+            let valueText = row.valueLines?.joined(separator: ". ") ?? row.value
+            return "\(row.label): \(valueText)"
+        }.joined(separator: ". ")
+    }
+
+    @ViewBuilder
+    private func detailValue(for row: ReviewDetailRow) -> some View {
+        let ink = row.accent == .cycle ? theme.coolInk : theme.warmInk
+        if let lines = row.valueLines, !lines.isEmpty {
+            VStack(alignment: .trailing, spacing: 4) {
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    Text(line)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(ink)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+        } else {
+            Text(row.value)
+                .fontWeight(.semibold)
+                .foregroundStyle(ink)
+                .multilineTextAlignment(.trailing)
+        }
     }
 
     private var emptyDetails: some View {

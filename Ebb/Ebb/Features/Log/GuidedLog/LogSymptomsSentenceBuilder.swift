@@ -5,8 +5,26 @@ struct ReviewDetailRow: Identifiable, Equatable, Sendable {
     let id: String
     let label: String
     let value: String
+    /// When set, overview renders each line vertically instead of a single `value` string.
+    let valueLines: [String]?
     let step: LogSymptomsFlowStep
     let accent: FieldAccent
+
+    init(
+        id: String,
+        label: String,
+        value: String,
+        valueLines: [String]? = nil,
+        step: LogSymptomsFlowStep,
+        accent: FieldAccent
+    ) {
+        self.id = id
+        self.label = label
+        self.value = value
+        self.valueLines = valueLines
+        self.step = step
+        self.accent = accent
+    }
 }
 
 /// One tappable fragment in the live sentence strip (mockup J).
@@ -258,12 +276,14 @@ enum LogSymptomsSentenceBuilder {
                 accent: .pain
             )
         case ReliefEffects.takenFieldKey:
-            guard hasHeadache == true,
-                  let relief = reliefSummary(values: values, schema: schema) else { return nil }
+            guard hasHeadache == true else { return nil }
+            let reliefParts = perReliefSummaryParts(values: values, schema: schema)
+            guard !reliefParts.isEmpty else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Relief"),
-                value: relief,
+                value: reliefParts.joined(separator: ", "),
+                valueLines: reliefParts,
                 step: .relief,
                 accent: .pain
             )
@@ -364,15 +384,6 @@ enum LogSymptomsSentenceBuilder {
 
     private static func fieldLabel(_ key: String, schema: SchemaConfig, fallback: String) -> String {
         schema.field(forKey: key)?.label ?? fallback
-    }
-
-    private static func reliefSummary(
-        values: [String: FieldValue],
-        schema: SchemaConfig
-    ) -> String? {
-        let parts = perReliefSummaryParts(values: values, schema: schema)
-        guard !parts.isEmpty else { return nil }
-        return parts.joined(separator: ", ")
     }
 
     private static func perReliefSummaryParts(
