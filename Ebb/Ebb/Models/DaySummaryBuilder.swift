@@ -83,7 +83,7 @@ enum DaySummaryBuilder {
 
         if let bleeding = choiceLabel(for: "bleeding", in: values, schema: schema),
            bleeding.lowercased() != "none" {
-            parts.append(bleeding.lowercased())
+            parts.append("\(bleeding.lowercased()) bleeding")
         }
 
         if case .scale(let step)? = values["cramps_severity"], step > 0,
