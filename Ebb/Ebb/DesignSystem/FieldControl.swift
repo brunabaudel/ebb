@@ -7,6 +7,7 @@ struct FieldControl: View {
     @Binding var value: FieldValue?
     var highlightedValues: Set<String> = []
     var accent: FieldAccent?
+    var showsLabel: Bool = true
 
     @Environment(\.theme) private var theme
 
@@ -16,11 +17,13 @@ struct FieldControl: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text(field.label.uppercased())
-                .font(.caption2.weight(.semibold))
-                .kerning(1.2)
-                .foregroundStyle(theme.muted)
-                .accessibilityHidden(true)
+            if showsLabel {
+                Text(field.label.uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .kerning(1.2)
+                    .foregroundStyle(theme.muted)
+                    .accessibilityHidden(true)
+            }
 
             switch field.type {
             case .boolean:

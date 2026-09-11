@@ -34,4 +34,57 @@ struct ReliefEffectsTests {
         #expect(values["relief_effect"] == nil)
         #expect(values["relief_effects"] == .stringMap(["ibuprofen": "full"]))
     }
+
+    @Test func toggleTakenKeyPrunesEffectsWhenDeselected() {
+        var values: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen", "naproxen"]),
+            "relief_effects": .stringMap(["ibuprofen": "partial", "naproxen": "full"]),
+        ]
+        ReliefEffects.toggleTakenKey("naproxen", in: &values)
+        #expect(values["relief_taken"] == .choices(["ibuprofen"]))
+        #expect(values["relief_effects"] == .stringMap(["ibuprofen": "partial"]))
+    }
+
+    @Test func toggleTakenKeyClearsAllReliefDataWhenEmpty() {
+        var values: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen"]),
+            "relief_effects": .stringMap(["ibuprofen": "partial"]),
+            "relief_effect": .choice("partial"),
+        ]
+        ReliefEffects.toggleTakenKey("ibuprofen", in: &values)
+        #expect(values["relief_taken"] == nil)
+        #expect(values["relief_effects"] == nil)
+        #expect(values["relief_effect"] == nil)
+    }
+
+    @Test func toggleEffectWritesPerMedMapAndClearsLegacy() {
+        var values: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen", "naproxen"]),
+            "relief_effect": .choice("partial"),
+        ]
+        ReliefEffects.toggleEffect(reliefKey: "ibuprofen", effectKey: "full", in: &values, schema: schema)
+        ReliefEffects.toggleEffect(reliefKey: "naproxen", effectKey: "none", in: &values, schema: schema)
+        #expect(values["relief_effect"] == nil)
+        #expect(values["relief_effects"] == .stringMap(["ibuprofen": "full", "naproxen": "none"]))
+    }
+
+    @Test func toggleEffectDeselectsWhenSameKeyTapped() {
+        var values: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen"]),
+            "relief_effects": .stringMap(["ibuprofen": "full"]),
+        ]
+        ReliefEffects.toggleEffect(reliefKey: "ibuprofen", effectKey: "full", in: &values, schema: schema)
+        #expect(values["relief_effects"] == nil)
+    }
+
+    @Test func editRoundTripMigratesLegacyToPerMedOnEffectChange() {
+        var values: [String: FieldValue] = [
+            "relief_taken": .choices(["ibuprofen", "naproxen"]),
+            "relief_effect": .choice("partial"),
+        ]
+        #expect(ReliefEffects.effect(for: "ibuprofen", in: values) == "partial")
+        ReliefEffects.toggleEffect(reliefKey: "ibuprofen", effectKey: "full", in: &values, schema: schema)
+        #expect(values["relief_effect"] == nil)
+        #expect(values["relief_effects"] == .stringMap(["ibuprofen": "full", "naproxen": "partial"]))
+    }
 }

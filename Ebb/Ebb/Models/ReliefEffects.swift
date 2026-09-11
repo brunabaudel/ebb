@@ -102,4 +102,35 @@ enum ReliefEffects {
             values[effectsFieldKey] = .stringMap(map)
         }
     }
+
+    static func toggleTakenKey(_ optionKey: String, in values: inout [String: FieldValue]) {
+        var keys = takenKeys(from: values)
+        if let index = keys.firstIndex(of: optionKey) {
+            keys.remove(at: index)
+        } else {
+            keys.append(optionKey)
+        }
+        if keys.isEmpty {
+            values.removeValue(forKey: takenFieldKey)
+            clear(from: &values)
+        } else {
+            values[takenFieldKey] = .choices(keys)
+            prune(toTakenKeys: Set(keys), in: &values)
+        }
+    }
+
+    static func toggleEffect(
+        reliefKey: String,
+        effectKey: String,
+        in values: inout [String: FieldValue],
+        schema: SchemaConfig
+    ) {
+        var map = effectsMap(in: values)
+        if map[reliefKey] == effectKey {
+            map.removeValue(forKey: reliefKey)
+        } else {
+            map[reliefKey] = effectKey
+        }
+        write(map, to: &values, schema: schema)
+    }
 }

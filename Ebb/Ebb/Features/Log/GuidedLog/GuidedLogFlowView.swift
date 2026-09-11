@@ -200,7 +200,7 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: "location") {
-                multiChoiceList(field: field, fieldKey: "location", accent: .pain)
+                MultiChoiceListControl(field: field, value: binding(for: field.key), accent: .pain)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -225,7 +225,12 @@ struct GuidedLogFlowView: View {
         ) {
             if let field = schema.field(forKey: ReliefEffects.takenFieldKey),
                let effectField = schema.field(forKey: ReliefEffects.legacyEffectFieldKey) {
-                reliefTakenList(field: field, effectField: effectField)
+                ReliefTakenControl(
+                    schema: schema,
+                    takenField: field,
+                    effectField: effectField,
+                    values: $values
+                )
             }
         }
         .onAppear { applyMedicationPrefillIfNeeded() }
@@ -237,7 +242,7 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: "triggers") {
-                multiChoiceList(field: field, fieldKey: "triggers", accent: .pain)
+                MultiChoiceListControl(field: field, value: binding(for: field.key), accent: .pain)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -249,7 +254,7 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply."
         ) {
             if let field = schema.field(forKey: "associated_symptoms") {
-                multiChoiceList(field: field, fieldKey: "associated_symptoms", accent: .pain)
+                MultiChoiceListControl(field: field, value: binding(for: field.key), accent: .pain)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -520,107 +525,6 @@ struct GuidedLogFlowView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func reliefTakenList(field: SchemaField, effectField: SchemaField) -> some View {
-        VStack(spacing: 0) {
-            ForEach(Array(field.values.enumerated()), id: \.element.id) { index, option in
-                let isSelected = selectedChoices(ReliefEffects.takenFieldKey).contains(option.key)
-                VStack(spacing: 0) {
-                    Button {
-                        toggleChoice(option.key, fieldKey: ReliefEffects.takenFieldKey)
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                .font(.title3)
-                                .foregroundStyle(isSelected ? FieldAccent.pain.accentColor(in: theme) : theme.line)
-
-                            Text(option.label)
-                                .font(.body.weight(isSelected ? .semibold : .regular))
-                                .foregroundStyle(isSelected ? theme.text : theme.muted)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 14)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(isSelected ? .isSelected : [])
-                    .accessibilityLabel(option.label)
-
-                    if isSelected {
-                        FlowLayout(spacing: 6) {
-                            ForEach(effectField.values) { effectOption in
-                                ReliefEffectPill(
-                                    label: effectOption.label,
-                                    effectKey: effectOption.key,
-                                    isSelected: reliefEffect(for: option.key) == effectOption.key
-                                ) {
-                                    toggleReliefEffect(reliefKey: option.key, effectKey: effectOption.key)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 14)
-                        .padding(.leading, 34)
-                    }
-                }
-
-                if index < field.values.count - 1 {
-                    Divider()
-                        .overlay(theme.line)
-                        .padding(.leading, 48)
-                }
-            }
-        }
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(theme.line, lineWidth: 1)
-        }
-    }
-
-    private func multiChoiceList(field: SchemaField, fieldKey: String, accent: FieldAccent) -> some View {
-        VStack(spacing: 0) {
-            ForEach(Array(field.values.enumerated()), id: \.element.id) { index, option in
-                let isSelected = selectedChoices(fieldKey).contains(option.key)
-                Button {
-                    toggleChoice(option.key, fieldKey: fieldKey)
-                } label: {
-                    HStack(spacing: 14) {
-                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                            .font(.title3)
-                            .foregroundStyle(isSelected ? accent.accentColor(in: theme) : theme.line)
-
-                        Text(option.label)
-                            .font(.body.weight(isSelected ? .semibold : .regular))
-                            .foregroundStyle(isSelected ? theme.text : theme.muted)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
-                .accessibilityLabel(option.label)
-
-                if index < field.values.count - 1 {
-                    Divider()
-                        .overlay(theme.line)
-                        .padding(.leading, 48)
-                }
-            }
-        }
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(theme.line, lineWidth: 1)
-        }
-    }
-
     private func advance() {
         guard canAdvance else { return }
         advanceOuterStep()
@@ -657,6 +561,19 @@ struct GuidedLogFlowView: View {
         } else {
             step = activeSteps.first ?? .headachePresent
         }
+    }
+
+    private func binding(for key: String) -> Binding<FieldValue?> {
+        Binding(
+            get: { values[key] },
+            set: { newValue in
+                if let newValue {
+                    values[key] = newValue
+                } else {
+                    values.removeValue(forKey: key)
+                }
+            }
+        )
     }
 
     private func scaleBinding(for key: String) -> Binding<Int?> {
@@ -705,20 +622,6 @@ struct GuidedLogFlowView: View {
                 ReliefEffects.prune(toTakenKeys: Set(keys), in: &values)
             }
         }
-    }
-
-    private func reliefEffect(for reliefKey: String) -> String? {
-        ReliefEffects.effect(for: reliefKey, in: values)
-    }
-
-    private func toggleReliefEffect(reliefKey: String, effectKey: String) {
-        var map = ReliefEffects.effectsMap(in: values)
-        if map[reliefKey] == effectKey {
-            map.removeValue(forKey: reliefKey)
-        } else {
-            map[reliefKey] = effectKey
-        }
-        ReliefEffects.write(map, to: &values, schema: schema)
     }
 
     private func applyMedicationPrefillIfNeeded() {
