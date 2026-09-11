@@ -42,6 +42,17 @@ final class ReminderPreferences {
         String(format: "%02d:%02d", reminderHour, reminderMinute)
     }
 
+    /// Locale-aware time for UI captions (falls back to `reminderTimeLabel`).
+    var reminderTimeFormatted: String {
+        var components = DateComponents()
+        components.hour = reminderHour
+        components.minute = reminderMinute
+        guard let date = Calendar.current.date(from: components) else {
+            return reminderTimeLabel
+        }
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
     func resetToDefaults() {
         lutealNudgeEnabled = true
         dailyLogReminderEnabled = false
