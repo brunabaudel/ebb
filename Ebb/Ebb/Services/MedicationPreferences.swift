@@ -12,10 +12,16 @@ final class MedicationPreferences {
         didSet { persist() }
     }
 
+    /// Built-in schema relief keys hidden from the Care medications grid.
+    var hiddenReliefKeys: [String] {
+        didSet { persist() }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         savedReliefKeys = defaults.stringArray(forKey: Keys.savedReliefKeys) ?? []
         customReliefs = Self.loadCustomReliefs(from: defaults)
+        hiddenReliefKeys = defaults.stringArray(forKey: Keys.hiddenReliefKeys) ?? []
     }
 
     func isSaved(_ key: String) -> Bool {
@@ -42,6 +48,7 @@ final class MedicationPreferences {
             schema: schema,
             customReliefs: customReliefs
         ) {
+            hiddenReliefKeys.removeAll { $0 == existingKey }
             setSaved(existingKey, isSaved: true)
             return existingKey
         }
@@ -53,9 +60,22 @@ final class MedicationPreferences {
         return key
     }
 
+    /// Removes a medication from the grid. Custom reliefs are deleted; built-in schema options are hidden.
+    func removeRelief(key: String) {
+        setSaved(key, isSaved: false)
+
+        if key.hasPrefix("custom_") {
+            customReliefs.removeAll { $0.key == key }
+        } else {
+            guard !hiddenReliefKeys.contains(key) else { return }
+            hiddenReliefKeys.append(key)
+        }
+    }
+
     func resetToDefaults() {
         savedReliefKeys = []
         customReliefs = []
+        hiddenReliefKeys = []
     }
 
     // MARK: - Private
@@ -63,12 +83,14 @@ final class MedicationPreferences {
     private enum Keys {
         static let savedReliefKeys = "ebb.medications.savedReliefKeys"
         static let customReliefs = "ebb.medications.customReliefs"
+        static let hiddenReliefKeys = "ebb.medications.hiddenReliefKeys"
     }
 
     private let defaults: UserDefaults
 
     private func persist() {
         defaults.set(savedReliefKeys, forKey: Keys.savedReliefKeys)
+        defaults.set(hiddenReliefKeys, forKey: Keys.hiddenReliefKeys)
         if let data = try? JSONEncoder().encode(customReliefs) {
             defaults.set(data, forKey: Keys.customReliefs)
         } else {

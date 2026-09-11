@@ -23,6 +23,16 @@ enum ReliefOptions {
         }
     }
 
+    /// Relief options shown in the Care medications grid (excludes user-hidden built-in schema keys).
+    static func gridOptions(
+        from schema: SchemaConfig,
+        customReliefs: [CustomReliefOption],
+        hiddenReliefKeys: [String]
+    ) -> [FieldValueOption] {
+        let hidden = Set(hiddenReliefKeys)
+        return all(from: schema, customReliefs: customReliefs).filter { !hidden.contains($0.key) }
+    }
+
     static func allowedKeys(
         from schema: SchemaConfig,
         customReliefs: [CustomReliefOption]
