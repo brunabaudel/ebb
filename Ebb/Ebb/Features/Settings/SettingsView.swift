@@ -29,8 +29,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 ebbPlusSection
-                privacyStatusSection
-                privacyControlsSection
+                backupAndLockSection
                 dataSection
                 appearanceSection
                 trackingSection
@@ -150,66 +149,77 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Privacy status
+    // MARK: - Backup & lock
 
-    private var privacyStatusSection: some View {
+    private var backupAndLockSection: some View {
         Section {
-            iCloudBackupRows
+            Toggle(isOn: iCloudSyncToggleBinding) {
+                VStack(alignment: .leading, spacing: 4) {
+                    LabeledContent {
+                        Text(cloudSyncStatus.statusLabel)
+                            .foregroundStyle(iCloudStatusColor)
+                            .multilineTextAlignment(.trailing)
+                    } label: {
+                        Text("iCloud backup & sync")
+                    }
 
-            LabeledContent {
-                Text(appLock.lockMethodLabel)
-                    .foregroundStyle(appLock.isEnabled ? theme.ok : theme.muted)
-            } label: {
-                Label("App lock", systemImage: "lock.fill")
+                    Text("Back up logs and sync iPhone and iPad via your Apple ID. Turn off to keep data on this device only.")
+                        .font(.caption)
+                        .foregroundStyle(theme.muted)
+                }
             }
             .themeListRow()
 
-            Text(privacyExplanation)
-                .font(.footnote)
-                .foregroundStyle(theme.muted)
+            if showInlineBackupProgress {
+                CloudBackupProgressView(
+                    phaseLabel: cloudSyncStatus.backupPhaseLabel,
+                    progress: cloudSyncStatus.backupProgress,
+                    verificationStep: cloudSyncStatus.verificationStep,
+                    verificationStepCount: cloudSyncStatus.verificationStepCount,
+                    isIndeterminate: cloudSyncStatus.backupPhase == .uploading
+                        && !cloudSyncStatus.isExportInProgress,
+                    isExtendedConfirmation: cloudSyncStatus.isInExtendedBackupConfirmation
+                )
                 .themeListRow()
-        } header: {
-            Text("Privacy")
-        }
-    }
+            }
 
-    @ViewBuilder
-    private var iCloudBackupRows: some View {
-        LabeledContent {
-            Text(cloudSyncStatus.statusLabel)
-                .foregroundStyle(iCloudStatusColor)
-                .multilineTextAlignment(.trailing)
-        } label: {
-            Label("iCloud backup", systemImage: "icloud")
-        }
-        .themeListRow()
+            if let message = iCloudBackupMessage {
+                Text(message)
+                    .font(.footnote)
+                    .foregroundStyle(iCloudMessageColor)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .themeListRow()
+            }
 
-        if showInlineBackupProgress {
-            CloudBackupProgressView(
-                phaseLabel: cloudSyncStatus.backupPhaseLabel,
-                progress: cloudSyncStatus.backupProgress,
-                verificationStep: cloudSyncStatus.verificationStep,
-                verificationStepCount: cloudSyncStatus.verificationStepCount,
-                isIndeterminate: cloudSyncStatus.backupPhase == .uploading
-                    && !cloudSyncStatus.isExportInProgress,
-                isExtendedConfirmation: cloudSyncStatus.isInExtendedBackupConfirmation
-            )
-            .themeListRow()
-        }
-
-        if let message = iCloudBackupMessage {
-            Text(message)
-                .font(.footnote)
-                .foregroundStyle(iCloudMessageColor)
-                .fixedSize(horizontal: false, vertical: true)
+            if showRetryBackup {
+                Button {
+                    cloudSyncStatus.retryBackupAttempt()
+                } label: {
+                    Label("Retry backup", systemImage: "arrow.clockwise.icloud")
+                }
                 .themeListRow()
-        }
+            }
 
-        if showRetryBackup {
-            Button {
-                cloudSyncStatus.retryBackupAttempt()
-            } label: {
-                Label("Retry backup", systemImage: "arrow.clockwise.icloud")
+            if syncPreferenceMismatch {
+                Text("Quit and reopen Ebb to apply this change.")
+                    .font(.footnote)
+                    .foregroundStyle(theme.pain)
+                    .themeListRow()
+            }
+
+            Toggle(isOn: appLockToggleBinding) {
+                VStack(alignment: .leading, spacing: 4) {
+                    LabeledContent {
+                        Text(appLock.lockMethodLabel)
+                            .foregroundStyle(appLock.isEnabled ? theme.ok : theme.muted)
+                    } label: {
+                        Text("Lock with Face ID")
+                    }
+
+                    Text("Require Face ID, Touch ID, or your device passcode to open Ebb.")
+                        .font(.caption)
+                        .foregroundStyle(theme.muted)
+                }
             }
             .themeListRow()
         }
@@ -259,53 +269,11 @@ struct SettingsView: View {
             && !cloudSyncStatus.hasConfirmedBackup
     }
 
-    private var privacyExplanation: String {
-        if cloudSyncStatus.isCloudKitSyncActive {
-            return "No account, ever. Your logs sync to your private iCloud database — Ebb never sees them."
-        }
-        return "No account, ever. Your logs stay on this device only — Ebb never sees them."
-    }
-
     private var showInlineBackupProgress: Bool {
         cloudSyncStatus.isCloudKitSyncActive
             && (cloudSyncStatus.isBackupInProgress
                 || cloudSyncStatus.backupPhase == .stalled
                 || cloudSyncStatus.statusLabel == "Backing up to iCloud…")
-    }
-
-    // MARK: - Privacy controls
-
-    private var privacyControlsSection: some View {
-        Section {
-            Toggle(isOn: iCloudSyncToggleBinding) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("iCloud backup & sync")
-                    Text("Back up logs and sync iPhone and iPad via your Apple ID. Turn off to keep data on this device only.")
-                        .font(.caption)
-                        .foregroundStyle(theme.muted)
-                }
-            }
-            .themeListRow()
-
-            if syncPreferenceMismatch {
-                Text("Quit and reopen Ebb to apply this change.")
-                    .font(.footnote)
-                    .foregroundStyle(theme.pain)
-                    .themeListRow()
-            }
-
-            Toggle(isOn: appLockToggleBinding) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Lock with Face ID")
-                    Text("Require Face ID, Touch ID, or your device passcode to open Ebb.")
-                        .font(.caption)
-                        .foregroundStyle(theme.muted)
-                }
-            }
-            .themeListRow()
-        } header: {
-            Text("Backup & lock")
-        }
     }
 
     // MARK: - Data export / delete
