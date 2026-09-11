@@ -30,7 +30,11 @@ struct MedicationTileGrid: View {
     @State private var showAddRelief = false
 
     private var reliefOptions: [FieldValueOption] {
-        ReliefOptions.all(from: schema, customReliefs: medicationPreferences.customReliefs)
+        ReliefOptions.gridOptions(
+            from: schema,
+            customReliefs: medicationPreferences.customReliefs,
+            hiddenReliefKeys: medicationPreferences.hiddenReliefKeys
+        )
     }
 
     private var columnCount: Int {
@@ -99,6 +103,11 @@ struct MedicationTileGrid: View {
                     option.key,
                     isSaved: !medicationPreferences.isSaved(option.key)
                 )
+            }
+            .contextMenu {
+                Button("Remove", role: .destructive) {
+                    medicationPreferences.removeRelief(key: option.key)
+                }
             }
         } else if index == reliefOptions.count {
             Button {

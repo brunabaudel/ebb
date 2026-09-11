@@ -203,6 +203,65 @@ struct MedicationPreferencesTests {
         #expect(preferences.addCustomRelief(label: "   ", schema: schema) == nil)
         #expect(preferences.customReliefs.isEmpty)
     }
+
+    @Test func removeCustomReliefDeletesItFromPreferences() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.removeCustom.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        let key = preferences.addCustomRelief(label: "Magnesium", schema: schema)!
+        #expect(preferences.isSaved(key))
+
+        preferences.removeRelief(key: key)
+
+        #expect(preferences.customReliefs.isEmpty)
+        #expect(!preferences.isSaved(key))
+        #expect(ReliefOptions.all(from: schema, customReliefs: preferences.customReliefs).map(\.key).contains(key) == false)
+
+        let reloaded = MedicationPreferences(defaults: defaults)
+        #expect(reloaded.customReliefs.isEmpty)
+        #expect(reloaded.savedReliefKeys.isEmpty)
+    }
+
+    @Test func removeBuiltInSchemaOptionHidesItFromGrid() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.hideSchema.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        preferences.setSaved("ibuprofen", isSaved: true)
+
+        preferences.removeRelief(key: "ibuprofen")
+
+        #expect(preferences.hiddenReliefKeys == ["ibuprofen"])
+        #expect(!preferences.isSaved("ibuprofen"))
+        #expect(
+            ReliefOptions.gridOptions(
+                from: schema,
+                customReliefs: preferences.customReliefs,
+                hiddenReliefKeys: preferences.hiddenReliefKeys
+            ).map(\.key).contains("ibuprofen") == false
+        )
+        #expect(ReliefOptions.all(from: schema, customReliefs: preferences.customReliefs).map(\.key).contains("ibuprofen"))
+
+        let reloaded = MedicationPreferences(defaults: defaults)
+        #expect(reloaded.hiddenReliefKeys == ["ibuprofen"])
+    }
+
+    @Test func reAddingHiddenSchemaOptionUnhidesIt() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.readdSchema.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        preferences.removeRelief(key: "ibuprofen")
+        #expect(preferences.hiddenReliefKeys == ["ibuprofen"])
+
+        let key = preferences.addCustomRelief(label: "Ibuprofen", schema: schema)
+        #expect(key == "ibuprofen")
+        #expect(preferences.hiddenReliefKeys.isEmpty)
+        #expect(preferences.isSaved("ibuprofen"))
+        #expect(preferences.customReliefs.isEmpty)
+        #expect(
+            ReliefOptions.gridOptions(
+                from: schema,
+                customReliefs: preferences.customReliefs,
+                hiddenReliefKeys: preferences.hiddenReliefKeys
+            ).map(\.key).contains("ibuprofen")
+        )
+    }
 }
 
 @Suite("Onboarding preferences")
