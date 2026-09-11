@@ -15,16 +15,7 @@ struct CareView: View {
                         .padding(.bottom, 24)
 
                     VStack(spacing: 14) {
-                        careCard(
-                            title: "Reminders",
-                            caption: "Log on a schedule.",
-                            systemImage: "bell"
-                        ) {
-                            RemindersSettingsView(
-                                schema: schema,
-                                reminderPreferences: reminderPreferences
-                            )
-                        }
+                        remindersSection
 
                         careCard(
                             title: "My medications",
@@ -68,6 +59,76 @@ struct CareView: View {
         }
     }
 
+    private var remindersSection: some View {
+        VStack(spacing: 14) {
+            careCard(
+                title: "My reminders",
+                caption: "What's on, and when.",
+                systemImage: "bell"
+            ) {
+                remindersSettings
+            }
+
+            reminderStatusCards
+        }
+    }
+
+    @ViewBuilder
+    private var reminderStatusCards: some View {
+        if reminderPreferences.lutealNudgeEnabled {
+            reminderStatusCard(
+                title: "Luteal-window heads-up",
+                caption: reminderPreferences.reminderTimeFormatted,
+                systemImage: "bell.fill",
+                isMuted: false
+            )
+        }
+
+        if reminderPreferences.dailyLogReminderEnabled {
+            reminderStatusCard(
+                title: "Daily log reminder",
+                caption: reminderPreferences.reminderTimeFormatted,
+                systemImage: "bell.fill",
+                isMuted: false
+            )
+        }
+
+        if !reminderPreferences.lutealNudgeEnabled && !reminderPreferences.dailyLogReminderEnabled {
+            reminderStatusCard(
+                title: "None on",
+                caption: "Turn one on in My reminders.",
+                systemImage: "bell.slash",
+                isMuted: true
+            )
+        }
+    }
+
+    private var remindersSettings: some View {
+        RemindersSettingsView(
+            schema: schema,
+            reminderPreferences: reminderPreferences
+        )
+    }
+
+    private func reminderStatusCard(
+        title: String,
+        caption: String,
+        systemImage: String,
+        isMuted: Bool
+    ) -> some View {
+        NavigationLink {
+            remindersSettings
+        } label: {
+            careCardLabel(
+                title: title,
+                caption: caption,
+                systemImage: systemImage,
+                isMuted: isMuted
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private func careCard<Destination: View>(
         title: String,
         caption: String,
@@ -82,11 +143,16 @@ struct CareView: View {
         .buttonStyle(.plain)
     }
 
-    private func careCardLabel(title: String, caption: String, systemImage: String) -> some View {
+    private func careCardLabel(
+        title: String,
+        caption: String,
+        systemImage: String,
+        isMuted: Bool = false
+    ) -> some View {
         HStack(spacing: 12) {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(theme.pain)
+                .foregroundStyle(isMuted ? theme.muted : theme.pain)
                 .frame(width: 40, height: 40)
                 .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
                 .accessibilityHidden(true)
@@ -94,7 +160,7 @@ struct CareView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(theme.text)
+                    .foregroundStyle(isMuted ? theme.muted : theme.text)
                 Text(caption)
                     .font(.footnote)
                     .foregroundStyle(theme.muted)
@@ -116,9 +182,27 @@ struct CareView: View {
     }
 }
 
-#Preview {
+#Preview("Default reminders") {
     CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
         .environment(MedicationPreferences())
         .environment(ReminderPreferences())
+}
+
+#Preview("Both reminders on") {
+    let preferences = ReminderPreferences()
+    preferences.dailyLogReminderEnabled = true
+    return CareView(schema: try! SchemaConfig.load())
+        .environment(\.theme, .softPaper)
+        .environment(MedicationPreferences())
+        .environment(preferences)
+}
+
+#Preview("None on") {
+    let preferences = ReminderPreferences()
+    preferences.lutealNudgeEnabled = false
+    return CareView(schema: try! SchemaConfig.load())
+        .environment(\.theme, .softPaper)
+        .environment(MedicationPreferences())
+        .environment(preferences)
 }
