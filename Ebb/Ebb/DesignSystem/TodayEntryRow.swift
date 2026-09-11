@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Flat heat-row list item for today's logs — B timeline: node, title+time, severity bar, chips.
+/// Flat heat-row list item for today's logs — B timeline: node, title+time, severity bar.
 struct TodayEntryRow: View {
     let entry: SymptomEntry
     let schema: SchemaConfig
@@ -9,10 +9,6 @@ struct TodayEntryRow: View {
 
     private var accent: FieldAccent {
         DaySummaryBuilder.entryAccent(entry)
-    }
-
-    private var markers: [TodayRowMarker] {
-        DaySummaryBuilder.todayRowMarkers(entry, schema: schema)
     }
 
     private var painSeverity: Int? {
@@ -45,14 +41,6 @@ struct TodayEntryRow: View {
                 if let painSeverity {
                     severityBar(level: painSeverity)
                 }
-
-                if !markers.isEmpty {
-                    FlowLayout(spacing: 5) {
-                        ForEach(markers) { marker in
-                            markerChip(marker)
-                        }
-                    }
-                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -83,43 +71,6 @@ struct TodayEntryRow: View {
         }
         .frame(height: 4)
         .accessibilityLabel("Severity \(clamped) of 5")
-    }
-
-    private func markerChip(_ marker: TodayRowMarker) -> some View {
-        Text(marker.label)
-            .font(.caption2.monospaced())
-            .foregroundStyle(chipForeground(for: marker.kind))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(chipBackground(for: marker.kind), in: RoundedRectangle(cornerRadius: 6))
-            .overlay {
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(chipBorder(for: marker.kind), lineWidth: 1)
-            }
-    }
-
-    private func chipForeground(for kind: TodayRowMarker.Kind) -> Color {
-        switch kind {
-        case .pain: theme.pain
-        case .cycle: theme.cycle
-        case .neutral: theme.muted
-        }
-    }
-
-    private func chipBackground(for kind: TodayRowMarker.Kind) -> Color {
-        switch kind {
-        case .pain: theme.painDim
-        case .cycle: theme.cycleDim
-        case .neutral: .clear
-        }
-    }
-
-    private func chipBorder(for kind: TodayRowMarker.Kind) -> Color {
-        switch kind {
-        case .pain: theme.pain.opacity(0.45)
-        case .cycle: theme.cycle.opacity(0.45)
-        case .neutral: theme.line
-        }
     }
 
     private var accessibilityLabel: String {
