@@ -156,7 +156,7 @@ struct DaySummaryBuilderTests {
         )
         #expect(
             DaySummaryBuilder.todayRowCycleSummary(migraineWithBleeding, schema: schema)
-                == "spotting bleeding"
+                == "spotting"
         )
 
         let noMigraineLuteal = SymptomEntry(
@@ -189,7 +189,7 @@ struct DaySummaryBuilderTests {
         #expect(DaySummaryBuilder.todayRowTitle(spotting, schema: schema) == "No migraine")
         #expect(
             DaySummaryBuilder.todayRowCycleSummary(spotting, schema: schema)
-                == "spotting bleeding"
+                == "spotting"
         )
 
         let migraineWithLightBleeding = SymptomEntry(
@@ -205,7 +205,23 @@ struct DaySummaryBuilderTests {
         #expect(DaySummaryBuilder.todayRowTitle(migraineWithLightBleeding, schema: schema) == "Migraine")
         #expect(
             DaySummaryBuilder.todayRowCycleSummary(migraineWithLightBleeding, schema: schema)
-                == "light bleeding"
+                == "light"
+        )
+
+        let migraineWithLightBleedingAndCramps = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(2),
+                "bleeding": .choice("light"),
+                "cramps_severity": .scale(3),
+            ],
+            cyclePhase: .menstrual
+        )
+        #expect(
+            DaySummaryBuilder.todayRowCycleSummary(migraineWithLightBleedingAndCramps, schema: schema)
+                == "light"
         )
 
         let migraineWithCramps = SymptomEntry(
@@ -218,10 +234,7 @@ struct DaySummaryBuilderTests {
             ],
             cyclePhase: .luteal
         )
-        #expect(
-            DaySummaryBuilder.todayRowCycleSummary(migraineWithCramps, schema: schema)
-                == "barely there cramps"
-        )
+        #expect(DaySummaryBuilder.todayRowCycleSummary(migraineWithCramps, schema: schema) == nil)
 
         let noMigraineWithBleedingAndCramps = SymptomEntry(
             timestamp: today,
@@ -235,7 +248,7 @@ struct DaySummaryBuilderTests {
         )
         #expect(
             DaySummaryBuilder.todayRowCycleSummary(noMigraineWithBleedingAndCramps, schema: schema)
-                == "light bleeding · moderate cramps"
+                == "light"
         )
     }
 }
