@@ -53,6 +53,32 @@ struct DaySummaryBuilderTests {
         #expect(!migraineMarkersOnly.contains(where: { $0.label == "menstrual" || $0.label == "luteal" }))
     }
 
+    @Test func todayRowSeverityLabelForMigraineOnly() {
+        let migraine = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(3),
+                "location": .choices(["right"]),
+            ]
+        )
+        #expect(DaySummaryBuilder.todayRowSeverityLabel(migraine, schema: schema) == "moderate")
+        #expect(DaySummaryBuilder.todayRowDetail(migraine, schema: schema) == "moderate")
+
+        let spotting = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(false),
+                "bleeding": .choice("spotting"),
+                "cramps_severity": .scale(2),
+            ]
+        )
+        #expect(DaySummaryBuilder.todayRowSeverityLabel(spotting, schema: schema) == nil)
+        #expect(DaySummaryBuilder.todayRowDetail(spotting, schema: schema) == nil)
+    }
+
     @Test func todayRowTitleForCorruptEntry() {
         let entry = SymptomEntry(schemaVersion: schema.schemaVersion)
         entry.fieldValuesData = Data("{bad".utf8)

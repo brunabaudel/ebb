@@ -59,9 +59,18 @@ enum DaySummaryBuilder {
     }
 
     static func todayRowDetail(_ entry: SymptomEntry, schema: SchemaConfig) -> String? {
-        let markers = todayRowMarkers(entry, schema: schema)
-        guard !markers.isEmpty else { return nil }
-        return markers.map(\.label).joined(separator: " · ")
+        todayRowSeverityLabel(entry, schema: schema)
+    }
+
+    /// Lowercase severity scale label for migraine rows (e.g. "moderate").
+    static func todayRowSeverityLabel(_ entry: SymptomEntry, schema: SchemaConfig) -> String? {
+        let values = entry.fieldValues
+        guard values["migraine_present"] == .boolean(true),
+              case .scale(let step)? = values["severity"],
+              let label = schema.field(forKey: "severity")?.scaleLabels[step] else {
+            return nil
+        }
+        return label.lowercased()
     }
 
     /// Tag chips for a Today row — pain / cycle / neutral, matching mock B markers.
