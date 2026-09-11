@@ -22,22 +22,6 @@
       "appliesWhen": "migraine_present == true"
     },
     {
-      "key": "location",
-      "label": "Location",
-      "type": "multi_enum",
-      "appliesWhen": "migraine_present == true",
-      "values": [
-        { "key": "right",      "label": "Right side",       "synonyms": ["right", "right-sided", "r side"] },
-        { "key": "left",       "label": "Left side",        "synonyms": ["left", "left-sided"] },
-        { "key": "bilateral",  "label": "Both sides",       "synonyms": ["both sides", "all over", "whole head", "everywhere"] },
-        { "key": "behind_eye", "label": "Behind the eye",   "synonyms": ["behind eye", "behind my eye", "behind my left eye", "behind my right eye", "eye socket", "around the eye"] },
-        { "key": "temple",     "label": "Temple",           "synonyms": ["temple", "side of the head"] },
-        { "key": "forehead",   "label": "Forehead",         "synonyms": ["forehead", "front of head"] },
-        { "key": "jaw",        "label": "Jaw / teeth",      "synonyms": ["jaw", "teeth", "mandible", "mandíbula"] },
-        { "key": "neck",       "label": "Neck",             "synonyms": ["neck", "base of skull"] }
-      ]
-    },
-    {
       "key": "quality",
       "label": "Pain quality",
       "type": "multi_enum",
@@ -54,6 +38,22 @@
       "label": "Worse with movement",
       "type": "boolean",
       "appliesWhen": "migraine_present == true"
+    },
+    {
+      "key": "location",
+      "label": "Location",
+      "type": "multi_enum",
+      "appliesWhen": "migraine_present == true",
+      "values": [
+        { "key": "right",      "label": "Right side",       "synonyms": ["right", "right-sided", "r side"] },
+        { "key": "left",       "label": "Left side",        "synonyms": ["left", "left-sided"] },
+        { "key": "bilateral",  "label": "Both sides",       "synonyms": ["both sides", "all over", "whole head", "everywhere"] },
+        { "key": "behind_eye", "label": "Behind the eye",   "synonyms": ["behind eye", "behind my eye", "behind my left eye", "behind my right eye", "eye socket", "around the eye"] },
+        { "key": "temple",     "label": "Temple",           "synonyms": ["temple", "side of the head"] },
+        { "key": "forehead",   "label": "Forehead",         "synonyms": ["forehead", "front of head"] },
+        { "key": "jaw",        "label": "Jaw / teeth",      "synonyms": ["jaw", "teeth", "mandible", "mandíbula"] },
+        { "key": "neck",       "label": "Neck",             "synonyms": ["neck", "base of skull"] }
+      ]
     },
     {
       "key": "aura",
@@ -78,6 +78,38 @@
         { "key": "sound_sensitivity", "label": "Sound sensitivity", "synonyms": ["sound hurts", "noise", "phonophobia"] },
         { "key": "smell_sensitivity", "label": "Smell sensitivity", "synonyms": ["smells", "odors", "sensitive to smell"] }
       ]
+    },
+    {
+      "key": "relief_taken",
+      "label": "Medication / relief",
+      "type": "multi_enum",
+      "values": [
+        { "key": "ibuprofen",      "label": "Ibuprofen",        "synonyms": ["ibuprofen", "ibuprofeno", "brufen", "advil"] },
+        { "key": "naproxen",       "label": "Naproxen",         "synonyms": ["naproxen", "aleve"] },
+        { "key": "paracetamol",    "label": "Paracetamol",      "synonyms": ["paracetamol", "acetaminophen", "tylenol"] },
+        { "key": "triptan",        "label": "Triptan",          "synonyms": ["triptan", "sumatriptan", "imitrex"] },
+        { "key": "rest_dark_room", "label": "Rest / dark room", "synonyms": ["lay down", "dark room", "rested"] },
+        { "key": "cold_pack",      "label": "Cold pack",        "synonyms": ["ice", "cold pack", "cold compress"] },
+        { "key": "caffeine",       "label": "Caffeine",         "synonyms": ["coffee", "caffeine"] }
+      ]
+    },
+    {
+      "key": "relief_effect",
+      "label": "Did it help?",
+      "type": "enum",
+      "appliesWhen": "relief_taken not empty",
+      "values": [
+        { "key": "none",    "label": "No relief",    "synonyms": ["no relief", "didn't help", "did not help"] },
+        { "key": "partial", "label": "Some relief",  "synonyms": ["some relief", "a little", "a bit", "helped a little", "ajudou um pouco"] },
+        { "key": "full",    "label": "Full relief",  "synonyms": ["full relief", "helped completely", "went away", "all gone"] }
+      ]
+    },
+    {
+      "key": "relief_effects",
+      "label": "Relief effects",
+      "type": "string_map",
+      "appliesWhen": "relief_taken not empty",
+      "meaning": "Per-relief effect keys (relief_taken key → relief_effect key). Guided log writes here; TapLog keeps legacy relief_effect."
     },
     {
       "key": "triggers",
@@ -113,38 +145,6 @@
       "type": "scale",
       "range": [0, 5],
       "labels": { "0": "none", "1": "barely there", "2": "mild", "3": "moderate", "4": "severe", "5": "disabling" }
-    },
-    {
-      "key": "relief_taken",
-      "label": "Medication / relief",
-      "type": "multi_enum",
-      "values": [
-        { "key": "ibuprofen",      "label": "Ibuprofen",        "synonyms": ["ibuprofen", "ibuprofeno", "brufen", "advil"] },
-        { "key": "naproxen",       "label": "Naproxen",         "synonyms": ["naproxen", "aleve"] },
-        { "key": "paracetamol",    "label": "Paracetamol",      "synonyms": ["paracetamol", "acetaminophen", "tylenol"] },
-        { "key": "triptan",        "label": "Triptan",          "synonyms": ["triptan", "sumatriptan", "imitrex"] },
-        { "key": "rest_dark_room", "label": "Rest / dark room", "synonyms": ["lay down", "dark room", "rested"] },
-        { "key": "cold_pack",      "label": "Cold pack",        "synonyms": ["ice", "cold pack", "cold compress"] },
-        { "key": "caffeine",       "label": "Caffeine",         "synonyms": ["coffee", "caffeine"] }
-      ]
-    },
-    {
-      "key": "relief_effect",
-      "label": "Did it help?",
-      "type": "enum",
-      "appliesWhen": "relief_taken not empty",
-      "values": [
-        { "key": "none",    "label": "No relief",    "synonyms": ["no relief", "didn't help", "did not help"] },
-        { "key": "partial", "label": "Some relief",  "synonyms": ["some relief", "a little", "a bit", "helped a little", "ajudou um pouco"] },
-        { "key": "full",    "label": "Full relief",  "synonyms": ["full relief", "helped completely", "went away", "all gone"] }
-      ]
-    },
-    {
-      "key": "relief_effects",
-      "label": "Relief effects",
-      "type": "string_map",
-      "appliesWhen": "relief_taken not empty",
-      "meaning": "Per-relief effect keys (relief_taken key → relief_effect key). Guided log writes here; TapLog keeps legacy relief_effect."
     }
   ],
   "freeNote": {
