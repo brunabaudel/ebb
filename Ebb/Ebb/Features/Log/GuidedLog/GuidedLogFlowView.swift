@@ -552,21 +552,14 @@ struct GuidedLogFlowView: View {
                     .accessibilityLabel(option.label)
 
                     if isSelected {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(effectField.label.uppercased())
-                                .font(.caption2.weight(.semibold))
-                                .kerning(1.2)
-                                .foregroundStyle(theme.muted)
-
-                            FlowLayout(spacing: 6) {
-                                ForEach(effectField.values) { effectOption in
-                                    SelectablePill(
-                                        label: effectOption.label,
-                                        isSelected: reliefEffect(for: option.key) == effectOption.key,
-                                        accent: .pain
-                                    ) {
-                                        toggleReliefEffect(reliefKey: option.key, effectKey: effectOption.key)
-                                    }
+                        FlowLayout(spacing: 6) {
+                            ForEach(effectField.values) { effectOption in
+                                SelectablePill(
+                                    label: effectOption.label,
+                                    isSelected: reliefEffect(for: option.key) == effectOption.key,
+                                    accent: .pain
+                                ) {
+                                    toggleReliefEffect(reliefKey: option.key, effectKey: effectOption.key)
                                 }
                             }
                         }
