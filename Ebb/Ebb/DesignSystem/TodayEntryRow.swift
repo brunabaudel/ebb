@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Flat heat-row list item for today's logs — B timeline: node, title+time, desc, severity bar, chips.
+/// Flat heat-row list item for today's logs — B timeline: node, title+time, severity bar, chips.
 struct TodayEntryRow: View {
     let entry: SymptomEntry
     let schema: SchemaConfig
@@ -13,10 +13,6 @@ struct TodayEntryRow: View {
 
     private var markers: [TodayRowMarker] {
         DaySummaryBuilder.todayRowMarkers(entry, schema: schema)
-    }
-
-    private var description: String? {
-        DaySummaryBuilder.todayRowDescription(entry, schema: schema)
     }
 
     private var painSeverity: Int? {
@@ -44,14 +40,6 @@ struct TodayEntryRow: View {
                     Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
                         .font(.caption2.monospaced())
                         .foregroundStyle(theme.muted)
-                }
-
-                if let description {
-                    Text(description)
-                        .font(.caption)
-                        .foregroundStyle(theme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
                 }
 
                 if let painSeverity {
@@ -138,9 +126,6 @@ struct TodayEntryRow: View {
         let title = DaySummaryBuilder.todayRowTitle(entry, schema: schema)
         let time = entry.timestamp.formatted(date: .omitted, time: .shortened)
         var parts = ["\(title), \(time)"]
-        if let description {
-            parts.append(description)
-        }
         if let detail = DaySummaryBuilder.todayRowDetail(entry, schema: schema) {
             parts.append(detail)
         }
