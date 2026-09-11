@@ -23,31 +23,29 @@ struct RemindersSettingsView: View {
     var body: some View {
         List {
             Section {
-                LazyVGrid(
-                    columns: [
-                        GridItem(.fixed(ReminderTileLayout.size), spacing: ReminderTileLayout.gutter),
-                        GridItem(.fixed(ReminderTileLayout.size), spacing: ReminderTileLayout.gutter),
-                    ],
-                    alignment: .leading,
-                    spacing: ReminderTileLayout.gutter
-                ) {
-                    reminderTile(
-                        title: "Period starting",
-                        isOn: $reminderPreferences.periodStartNudgeEnabled
-                    )
-                    reminderTile(
-                        title: "Estimated ovulation",
-                        isOn: $reminderPreferences.ovulationNudgeEnabled
-                    )
-                    reminderTile(
-                        title: "Luteal-window heads-up",
-                        isOn: $reminderPreferences.lutealNudgeEnabled
-                    )
-                    reminderTile(
-                        title: "Daily log reminder",
-                        isOn: $reminderPreferences.dailyLogReminderEnabled
-                    )
+                Grid(horizontalSpacing: ReminderTileLayout.gutter, verticalSpacing: ReminderTileLayout.gutter) {
+                    GridRow {
+                        reminderTile(
+                            title: "Period starting",
+                            isOn: $reminderPreferences.periodStartNudgeEnabled
+                        )
+                        reminderTile(
+                            title: "Estimated ovulation",
+                            isOn: $reminderPreferences.ovulationNudgeEnabled
+                        )
+                    }
+                    GridRow {
+                        reminderTile(
+                            title: "Luteal-window heads-up",
+                            isOn: $reminderPreferences.lutealNudgeEnabled
+                        )
+                        reminderTile(
+                            title: "Daily log reminder",
+                            isOn: $reminderPreferences.dailyLogReminderEnabled
+                        )
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 4)
             }
             .listRowBackground(theme.base)
@@ -118,8 +116,8 @@ struct RemindersSettingsView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
-                .frame(width: ReminderTileLayout.size, height: ReminderTileLayout.size)
                 .padding(.horizontal, 8)
+                .frame(width: ReminderTileLayout.size, height: ReminderTileLayout.size)
                 .background {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(isOn.wrappedValue ? theme.pain.opacity(0.28) : theme.surface)
