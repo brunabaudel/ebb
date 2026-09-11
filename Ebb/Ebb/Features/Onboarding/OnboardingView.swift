@@ -270,11 +270,9 @@ struct OnboardingView: View {
             primaryHapticTrigger += 1
             action()
         } label: {
-            Text(title)
-                .frame(maxWidth: .infinity)
+            OnboardingPrimaryButtonLabel(title: title)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(theme.pain)
+        .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: primaryHapticTrigger)
     }
 
@@ -283,12 +281,49 @@ struct OnboardingView: View {
             secondaryHapticTrigger += 1
             action()
         } label: {
-            Text(title)
-                .frame(maxWidth: .infinity)
+            OnboardingSecondaryButtonLabel(title: title)
         }
-        .buttonStyle(.bordered)
-        .tint(theme.muted)
+        .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: secondaryHapticTrigger)
+    }
+}
+
+// MARK: - Footer button chrome (matches GuidedLogFlowView.saveBar height)
+
+private struct OnboardingPrimaryButtonLabel: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled
+
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 14.5, weight: .semibold))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(theme.pain.opacity(isEnabled ? 1 : 0.45), in: RoundedRectangle(cornerRadius: 16))
+            .foregroundStyle(theme.onPain)
+    }
+}
+
+private struct OnboardingSecondaryButtonLabel: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled
+
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 14.5, weight: .semibold))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(theme.paper, in: RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(theme.line, lineWidth: 1)
+            }
+            .foregroundStyle(theme.muted)
+            .opacity(isEnabled ? 1 : 0.5)
     }
 }
 
