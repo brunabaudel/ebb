@@ -235,6 +235,15 @@ enum LogSymptomsSentenceBuilder {
                     accent: .pain
                 ))
             }
+            if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
+                rows.append(ReviewDetailRow(
+                    id: "triggers",
+                    label: fieldLabel("triggers", schema: schema, fallback: "Triggers"),
+                    value: triggers,
+                    step: .triggers,
+                    accent: .pain
+                ))
+            }
         }
 
         if let bleeding = choiceLabel(values["bleeding"], fieldKey: "bleeding", schema: schema) {
@@ -257,16 +266,6 @@ enum LogSymptomsSentenceBuilder {
                 accent: .cycle
             ))
         }
-        if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
-            rows.append(ReviewDetailRow(
-                id: "triggers",
-                label: fieldLabel("triggers", schema: schema, fallback: "Triggers"),
-                value: triggers,
-                step: .triggers,
-                accent: .pain
-            ))
-        }
-
         return rows
     }
 
@@ -298,15 +297,15 @@ enum LogSymptomsSentenceBuilder {
             } else if !allTakenReliefItemsHaveEffects(values: values) {
                 unset.append(("Did it help?", .relief))
             }
+            if values["triggers"] == nil {
+                unset.append(("Triggers", .triggers))
+            }
         }
         if values["bleeding"] == nil {
             unset.append(("Bleeding", .cycleAndContext))
         }
         if values["cramps_severity"] == nil {
             unset.append(("Cramps", .cycleAndContext))
-        }
-        if values["triggers"] == nil {
-            unset.append(("Triggers", .triggers))
         }
         return unset
     }
@@ -376,8 +375,8 @@ enum LogSymptomsSentenceBuilder {
         return result
     }
 
-    /// Triggers, bleeding, and cramps — shared by headache and no-headache paths.
-    /// Relief is included only on the headache path (`includeRelief: true`).
+    /// Bleeding and cramps — shared by headache and no-headache paths.
+    /// Relief and triggers are included only on the headache path (`includeRelief: true`).
     private static func contextSegments(
         values: [String: FieldValue],
         schema: SchemaConfig,
@@ -421,28 +420,30 @@ enum LogSymptomsSentenceBuilder {
             appendSeparator(&result, id: "sep_after_relief")
         }
 
-        // Triggers
-        if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
-            result.append(SentenceSegment(id: "trig_label", text: "Triggers: ", isFilled: true, step: nil, accent: .pain))
-            result.append(SentenceSegment(
-                id: "triggers",
-                text: triggers,
-                isFilled: true,
-                step: .triggers,
-                accent: .pain
-            ))
-        } else if includePlaceholders {
-            result.append(SentenceSegment(
-                id: "triggers",
-                text: "triggers?",
-                isFilled: false,
-                step: .triggers,
-                accent: .pain
-            ))
-        }
+        // Triggers (headache path only)
+        if includeRelief {
+            if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
+                result.append(SentenceSegment(id: "trig_label", text: "Triggers: ", isFilled: true, step: nil, accent: .pain))
+                result.append(SentenceSegment(
+                    id: "triggers",
+                    text: triggers,
+                    isFilled: true,
+                    step: .triggers,
+                    accent: .pain
+                ))
+            } else if includePlaceholders {
+                result.append(SentenceSegment(
+                    id: "triggers",
+                    text: "triggers?",
+                    isFilled: false,
+                    step: .triggers,
+                    accent: .pain
+                ))
+            }
 
-        if !result.isEmpty || includePlaceholders {
-            appendSeparator(&result, id: "sep_after_triggers")
+            if !result.isEmpty || includePlaceholders {
+                appendSeparator(&result, id: "sep_after_triggers")
+            }
         }
 
         // Bleeding

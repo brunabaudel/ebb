@@ -650,7 +650,7 @@ struct GuidedLogFlowView: View {
 
     private func clearHeadacheDetailFields() {
         for key in [
-            "severity", "location", "quality", "worse_with_movement", "aura",
+            "severity", "location", "quality", "worse_with_movement", "aura", "triggers",
             ReliefEffects.takenFieldKey, ReliefEffects.legacyEffectFieldKey, ReliefEffects.effectsFieldKey,
         ] {
             values.removeValue(forKey: key)
