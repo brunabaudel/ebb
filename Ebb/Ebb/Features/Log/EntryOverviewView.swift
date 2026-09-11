@@ -127,29 +127,14 @@ struct EntryOverviewView: View {
 
     private var detailAccessibilityLabel: String {
         detailRows.map { row in
-            let valueText = row.valueLines?.joined(separator: ". ") ?? row.value
+            let valueText = row.valueLines?.map(\.displayText).joined(separator: ". ") ?? row.value
             return "\(row.label): \(valueText)"
         }.joined(separator: ". ")
     }
 
     @ViewBuilder
     private func detailValue(for row: ReviewDetailRow) -> some View {
-        let ink = row.accent == .cycle ? theme.coolInk : theme.warmInk
-        if let lines = row.valueLines, !lines.isEmpty {
-            VStack(alignment: .trailing, spacing: 4) {
-                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                    Text(line)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(ink)
-                        .multilineTextAlignment(.trailing)
-                }
-            }
-        } else {
-            Text(row.value)
-                .fontWeight(.semibold)
-                .foregroundStyle(ink)
-                .multilineTextAlignment(.trailing)
-        }
+        ReviewDetailValue(row: row)
     }
 
     private var emptyDetails: some View {
@@ -225,7 +210,8 @@ struct EntryOverviewView: View {
             "location": .choices(["right"]),
             "quality": .choices(["throbbing"]),
             "associated_symptoms": .choices(["nausea"]),
-            "relief_taken": .choices(["ibuprofen"]),
+            "relief_taken": .choices(["ibuprofen", "rest_dark_room"]),
+            "relief_effects": .stringMap(["ibuprofen": "partial", "rest_dark_room": "full"]),
         ],
         note: "Sharp pain after lunch.",
         cyclePhase: .luteal
