@@ -1,6 +1,11 @@
 import SwiftData
 import SwiftUI
 
+private enum ReminderTileLayout {
+    static let size: CGFloat = 104
+    static let gutter: CGFloat = 10
+}
+
 struct RemindersSettingsView: View {
     let schema: SchemaConfig
     @Bindable var reminderPreferences: ReminderPreferences
@@ -20,10 +25,11 @@ struct RemindersSettingsView: View {
             Section {
                 LazyVGrid(
                     columns: [
-                        GridItem(.flexible(), spacing: 8),
-                        GridItem(.flexible(), spacing: 8),
+                        GridItem(.fixed(ReminderTileLayout.size), spacing: ReminderTileLayout.gutter),
+                        GridItem(.fixed(ReminderTileLayout.size), spacing: ReminderTileLayout.gutter),
                     ],
-                    spacing: 8
+                    alignment: .leading,
+                    spacing: ReminderTileLayout.gutter
                 ) {
                     reminderTile(
                         title: "Period starting",
@@ -108,17 +114,15 @@ struct RemindersSettingsView: View {
         } label: {
             Text(title)
                 .font(.footnote.weight(isOn.wrappedValue ? .semibold : .regular))
-                .foregroundStyle(isOn.wrappedValue ? theme.onPain : theme.muted)
+                .foregroundStyle(isOn.wrappedValue ? theme.text : theme.muted)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(width: ReminderTileLayout.size, height: ReminderTileLayout.size)
                 .padding(.horizontal, 8)
-                .padding(.vertical, 10)
-                .aspectRatio(1, contentMode: .fit)
                 .background {
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(isOn.wrappedValue ? theme.pain : theme.surface)
+                        .fill(isOn.wrappedValue ? theme.pain.opacity(0.28) : theme.surface)
                 }
                 .overlay {
                     if !isOn.wrappedValue {
