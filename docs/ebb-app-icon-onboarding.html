@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ebb · App icon · Onboarding gradient</title>
+<style>
+  :root {
+    --surface: #FFFCFA;
+    --pain-dim: #F9EBE7;
+    --rose-wash: #F5E0E6;
+    --rose-light: #E8B8C4;
+    --rose: #C2607A;
+    --ink: #2A2622;
+    --board: #F3EEE6;
+    --line: #E6DDD2;
+    --muted: #7F746A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--board);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    padding: 48px 28px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 {
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .lead { color: var(--muted); font-size: 15px; max-width: 62ch; margin-bottom: 28px; }
+  .note {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rose);
+    background: var(--pain-dim);
+    border-radius: 999px;
+    padding: 6px 12px;
+    margin-bottom: 24px;
+  }
+  .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .panel h2 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .icon-stage {
+    width: min(320px, 100%);
+    aspect-ratio: 1;
+    margin: 0 auto 16px;
+    border-radius: 22%;
+    overflow: hidden;
+    box-shadow: 0 16px 48px -24px rgba(60, 40, 30, 0.25);
+  }
+  .icon-stage svg { display: block; width: 100%; height: 100%; }
+  .specs {
+    font-size: 13px;
+    color: var(--muted);
+    display: grid;
+    gap: 6px;
+  }
+  .specs code {
+    font-size: 12px;
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .swatch {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px 6px 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .swatch i { width: 16px; height: 16px; border-radius: 50%; display: block; }
+  footer { font-size: 13px; color: var(--muted); margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="note">Onboarding icon · source of truth</p>
+  <h1>Ebb app icon</h1>
+  <p class="lead">Marketing icon matches the first onboarding welcome hero — happy Ebb on the full soft-paper gradient field. iOS applies the squircle mask; export is a square PNG with no baked corners.</p>
+
+  <div class="panel">
+    <h2>1024 × 1024 preview</h2>
+    <div class="icon-stage" aria-label="Ebb app icon preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+        <defs>
+          <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFFCFA"/>
+            <stop offset="55%" stop-color="#F9EBE7"/>
+            <stop offset="100%" stop-color="#F5E0E6"/>
+          </linearGradient>
+          <linearGradient id="ebb-grad" x1="34" y1="22" x2="86" y2="100" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#E8B8C4"/>
+            <stop offset="1" stop-color="#C2607A"/>
+          </linearGradient>
+        </defs>
+        <rect width="1024" height="1024" fill="url(#bg-grad)"/>
+        <g transform="translate(512 512) scale(5.8) translate(-60 -60)">
+          <ellipse cx="60" cy="102" rx="30" ry="5" fill="#2A2622" opacity="0.05"/>
+          <path d="M60 16C60 16 28 50 28 72c0 18.778 14.327 34 32 34s32-15.222 32-34C92 50 60 16 60 16Z" fill="url(#ebb-grad)"/>
+          <circle cx="50" cy="60" r="3.3" fill="#2A2622" opacity="0.52"/>
+          <circle cx="70" cy="60" r="3.3" fill="#2A2622" opacity="0.52"/>
+          <path d="M52 72c3.5 4.2 12.5 4.2 16 0" stroke="#2A2622" stroke-width="2.2" stroke-linecap="round" opacity="0.4"/>
+          <circle cx="28" cy="34" r="2.4" fill="#A24D64" opacity="0.5"/>
+          <circle cx="90" cy="30" r="2" fill="#D48A9A" opacity="0.65"/>
+          <ellipse cx="44" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity="0.28"/>
+          <ellipse cx="76" cy="68" rx="3.6" ry="2.2" fill="#A24D64" opacity="0.28"/>
+        </g>
+      </svg>
+    </div>
+    <div class="specs">
+      <div>Export: <code>Ebb/Ebb/Assets.xcassets/AppIcon.appiconset/icon-1024.png</code></div>
+      <div>Background: <code>linear-gradient(135deg, #FFFCFA 0%, #F9EBE7 55%, #F5E0E6 100%)</code> edge-to-edge</div>
+      <div>Mascot: happy Ebb centered · ~68% canvas · dusty rose <code>#E8B8C4</code> → <code>#C2607A</code></div>
+      <div>Format: opaque 1024×1024 RGB · no alpha · no pre-rounded corners</div>
+    </div>
+    <div class="swatches">
+      <span class="swatch"><i style="background:#FFFCFA"></i>#FFFCFA surface</span>
+      <span class="swatch"><i style="background:#F9EBE7"></i>#F9EBE7 painDim</span>
+      <span class="swatch"><i style="background:#F5E0E6"></i>#F5E0E6 rose wash</span>
+      <span class="swatch"><i style="background:linear-gradient(135deg,#E8B8C4,#C2607A)"></i>#E8B8C4 → #C2607A</span>
+    </div>
+  </div>
+
+  <footer>
+    <p>Regenerate PNG: <code>python3 scripts/render-ebb-app-icon-onboarding.py</code></p>
+    <p>Onboarding UI still uses <code>EbbIllustrationWell(variant: .happy, …)</code>; the app icon uses the same gradient tones full-bleed instead of an inset circle.</p>
+  </footer>
+</div>
+</body>
+</html>
