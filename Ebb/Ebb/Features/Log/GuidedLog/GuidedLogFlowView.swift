@@ -229,8 +229,8 @@ struct GuidedLogFlowView: View {
 
     private var cycleContextStep: some View {
         focusShell(
-            title: "Anything else today?",
-            subtitle: "Cycle — skip what doesn't apply."
+            title: "How's your cycle?",
+            subtitle: "Bleeding & cramps — skip what doesn't apply."
         ) {
             VStack(alignment: .center, spacing: 18) {
                 if let field = schema.field(forKey: "bleeding") {
