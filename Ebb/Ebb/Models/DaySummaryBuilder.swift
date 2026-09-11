@@ -44,14 +44,6 @@ enum DaySummaryBuilder {
         if values["migraine_present"] == .boolean(true) {
             return "Migraine"
         }
-        if let bleeding = choiceLabel(for: "bleeding", in: values, schema: schema),
-           bleeding.lowercased() != "none" {
-            return bleeding
-        }
-        if case .scale(let step)? = values["cramps_severity"], step > 0,
-           let label = schema.field(forKey: "cramps_severity")?.scaleLabels[step] {
-            return "\(label.capitalized) cramps"
-        }
         if values["migraine_present"] == .boolean(false) {
             return "No migraine"
         }
