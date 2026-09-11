@@ -10,75 +10,109 @@ struct CareView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                careLinksCard
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                VStack(alignment: .leading, spacing: 0) {
+                    header
+                        .padding(.bottom, 24)
+
+                    VStack(spacing: 14) {
+                        careCard(
+                            title: "Reminders",
+                            caption: "Log on a schedule.",
+                            systemImage: "bell"
+                        ) {
+                            RemindersSettingsView(
+                                schema: schema,
+                                reminderPreferences: reminderPreferences
+                            )
+                        }
+
+                        careCard(
+                            title: "My medications",
+                            caption: "What you take with each log.",
+                            systemImage: "pills"
+                        ) {
+                            MedicationsSettingsView(
+                                schema: schema,
+                                medicationPreferences: medicationPreferences
+                            )
+                        }
+
+                        careCard(
+                            title: "Bring to your doctor",
+                            caption: "A PDF of your history.",
+                            systemImage: "doc.text"
+                        ) {
+                            DoctorExportView(schema: schema)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
             .background(theme.base)
             .foregroundStyle(theme.text)
-            .navigationTitle("Care")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
-    private var careLinksCard: some View {
-        VStack(spacing: 0) {
-            NavigationLink {
-                RemindersSettingsView(
-                    schema: schema,
-                    reminderPreferences: reminderPreferences
-                )
-            } label: {
-                careRow(title: "Reminders", systemImage: "bell")
-            }
-            .buttonStyle(.plain)
-
-            Divider().overlay(theme.line)
-
-            NavigationLink {
-                MedicationsSettingsView(
-                    schema: schema,
-                    medicationPreferences: medicationPreferences
-                )
-            } label: {
-                careRow(title: "My medications", systemImage: "pills")
-            }
-            .buttonStyle(.plain)
-
-            Divider().overlay(theme.line)
-
-            NavigationLink {
-                DoctorExportView(schema: schema)
-            } label: {
-                careRow(title: "Bring to your doctor", systemImage: "doc.text")
-            }
-            .buttonStyle(.plain)
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Care")
+                .font(.system(.title, design: .serif))
+            Text("Reminders, medications, and a note for your doctor.")
+                .font(.footnote)
+                .foregroundStyle(theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .themeCard(padding: 0, cornerRadius: theme.cardCornerRadius)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Reminders, medications, and doctor export")
     }
 
-    private func careRow(title: String, systemImage: String) -> some View {
+    private func careCard<Destination: View>(
+        title: String,
+        caption: String,
+        systemImage: String,
+        @ViewBuilder destination: () -> Destination
+    ) -> some View {
+        NavigationLink {
+            destination()
+        } label: {
+            careCardLabel(title: title, caption: caption, systemImage: systemImage)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func careCardLabel(title: String, caption: String, systemImage: String) -> some View {
         HStack(spacing: 12) {
-            Label {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(theme.pain)
+                .frame(width: 40, height: 40)
+                .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.body)
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(theme.text)
-            } icon: {
-                Image(systemName: systemImage)
+                Text(caption)
+                    .font(.footnote)
                     .foregroundStyle(theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+
             Spacer(minLength: 8)
+
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(theme.muted)
+                .accessibilityHidden(true)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
+        .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(caption)")
     }
 }
 
