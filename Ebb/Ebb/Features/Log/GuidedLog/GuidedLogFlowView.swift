@@ -152,7 +152,7 @@ struct GuidedLogFlowView: View {
         VStack(spacing: 0) {
             stackedSectionTitleBlock(
                 title: "What does it feel like?",
-                subtitle: "Pick one or more. Skip if you're not sure."
+                subtitle: "Pick one or more."
             )
             if let field = schema.field(forKey: "quality") {
                 FlowLayout(spacing: 6) {
@@ -175,7 +175,7 @@ struct GuidedLogFlowView: View {
         VStack(spacing: 0) {
             stackedSectionTitleBlock(
                 title: "Worse with movement?",
-                subtitle: "Skip if you're not sure."
+                subtitle: nil
             )
             HStack(spacing: 10) {
                 bigChoiceButton(
