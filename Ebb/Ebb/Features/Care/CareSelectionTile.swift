@@ -1,18 +1,20 @@
 import SwiftUI
 
 enum CareTileLayout {
-    static let size: CGFloat = 104
     static let gutter: CGFloat = 10
     static let cornerRadius: CGFloat = 24
-    static let columnCount = 2
     static let reminderTileHeight: CGFloat = 70
+}
+
+enum CareTileShape {
+    case landscape(height: CGFloat = CareTileLayout.reminderTileHeight)
+    case square
 }
 
 struct CareSelectionTile: View {
     let title: String
     let isSelected: Bool
-    var tileWidth: CGFloat = CareTileLayout.size
-    var tileHeight: CGFloat = CareTileLayout.size
+    var shape: CareTileShape = .square
     var action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -28,7 +30,8 @@ struct CareSelectionTile: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
                 .padding(.horizontal, 8)
-                .frame(width: tileWidth, height: tileHeight)
+                .frame(maxWidth: .infinity)
+                .careTileShape(shape)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: cornerRadius)
@@ -72,8 +75,7 @@ struct CareSelectionTile: View {
 }
 
 struct CareAddReliefTile: View {
-    var tileWidth: CGFloat = CareTileLayout.size
-    var tileHeight: CGFloat = CareTileLayout.size
+    var shape: CareTileShape = .square
 
     @Environment(\.theme) private var theme
 
@@ -83,7 +85,8 @@ struct CareAddReliefTile: View {
         Image(systemName: "plus")
             .font(.title3.weight(.semibold))
             .foregroundStyle(theme.muted)
-            .frame(width: tileWidth, height: tileHeight)
+            .frame(maxWidth: .infinity)
+            .careTileShape(shape)
             .background(theme.surface, in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius)
@@ -94,15 +97,31 @@ struct CareAddReliefTile: View {
 }
 
 struct CareTileGrid<Content: View>: View {
+    let columnCount: Int
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        Grid(
-            horizontalSpacing: CareTileLayout.gutter,
-            verticalSpacing: CareTileLayout.gutter
+        LazyVGrid(
+            columns: Array(
+                repeating: GridItem(.flexible(), spacing: CareTileLayout.gutter),
+                count: columnCount
+            ),
+            spacing: CareTileLayout.gutter
         ) {
             content()
         }
-        .frame(maxWidth: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func careTileShape(_ shape: CareTileShape) -> some View {
+        switch shape {
+        case .landscape(let height):
+            frame(height: height)
+        case .square:
+            aspectRatio(1, contentMode: .fit)
+        }
     }
 }
