@@ -242,7 +242,7 @@ enum LogSymptomsSentenceBuilder {
                 id: "triggers",
                 label: fieldLabel("triggers", schema: schema, fallback: "Triggers"),
                 value: triggers,
-                step: .cycleAndContext,
+                step: .triggers,
                 accent: .pain
             ))
         }
@@ -283,7 +283,7 @@ enum LogSymptomsSentenceBuilder {
             unset.append(("Cramps", .cycleAndContext))
         }
         if values["triggers"] == nil {
-            unset.append(("Triggers", .cycleAndContext))
+            unset.append(("Triggers", .triggers))
         }
         return unset
     }
@@ -353,7 +353,7 @@ enum LogSymptomsSentenceBuilder {
         return result
     }
 
-    /// Bleeding, cramps, and triggers — shared by headache and no-headache paths.
+    /// Triggers, bleeding, and cramps — shared by headache and no-headache paths.
     /// Relief is included only on the headache path (`includeRelief: true`).
     private static func contextSegments(
         values: [String: FieldValue],
@@ -398,6 +398,30 @@ enum LogSymptomsSentenceBuilder {
             appendSeparator(&result, id: "sep_after_relief")
         }
 
+        // Triggers
+        if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
+            result.append(SentenceSegment(id: "trig_label", text: "Triggers: ", isFilled: true, step: nil, accent: .pain))
+            result.append(SentenceSegment(
+                id: "triggers",
+                text: triggers,
+                isFilled: true,
+                step: .triggers,
+                accent: .pain
+            ))
+        } else if includePlaceholders {
+            result.append(SentenceSegment(
+                id: "triggers",
+                text: "triggers?",
+                isFilled: false,
+                step: .triggers,
+                accent: .pain
+            ))
+        }
+
+        if !result.isEmpty || includePlaceholders {
+            appendSeparator(&result, id: "sep_after_triggers")
+        }
+
         // Bleeding
         result.append(SentenceSegment(id: "bleed_label", text: "Bleeding: ", isFilled: true, step: nil, accent: .cycle))
         result.append(bleedingSegment(values: values, schema: schema))
@@ -422,28 +446,6 @@ enum LogSymptomsSentenceBuilder {
                 isFilled: false,
                 step: .cycleAndContext,
                 accent: .cycle
-            ))
-        }
-
-        appendSeparator(&result, id: "sep_triggers")
-
-        // Triggers
-        if let triggers = choiceLabels(values["triggers"], fieldKey: "triggers", schema: schema) {
-            result.append(SentenceSegment(id: "trig_label", text: "Triggers: ", isFilled: true, step: nil, accent: .pain))
-            result.append(SentenceSegment(
-                id: "triggers",
-                text: triggers,
-                isFilled: true,
-                step: .cycleAndContext,
-                accent: .pain
-            ))
-        } else if includePlaceholders {
-            result.append(SentenceSegment(
-                id: "triggers",
-                text: "triggers?",
-                isFilled: false,
-                step: .cycleAndContext,
-                accent: .pain
             ))
         }
 

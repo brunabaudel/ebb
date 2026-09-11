@@ -2,18 +2,18 @@ import XCTest
 @testable import Ebb
 
 final class LogSymptomsFlowStepTests: XCTestCase {
-    func testQuestionStepsWithHeadacheIncludesRelief() {
+    func testQuestionStepsWithHeadacheIncludesReliefAndTriggers() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: true)
         XCTAssertEqual(steps, [
             .headachePresent, .location,
-            .relief, .cycleAndContext, .review,
+            .relief, .triggers, .cycleAndContext, .review,
         ])
         XCTAssertFalse(steps.contains(.severity))
     }
 
     func testQuestionStepsWithoutHeadacheSkipsMigraineDetailsAndRelief() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: false)
-        XCTAssertEqual(steps, [.headachePresent, .cycleAndContext, .review])
+        XCTAssertEqual(steps, [.headachePresent, .triggers, .cycleAndContext, .review])
         XCTAssertFalse(steps.contains(.relief))
         XCTAssertFalse(steps.contains(.severity))
         XCTAssertFalse(steps.contains(.location))
@@ -116,6 +116,26 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertEqual(rows.first(where: { $0.id == "severity" })?.step, .headachePresent)
         XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.step, .headachePresent)
         XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.step, .headachePresent)
+        XCTAssertEqual(rows.first(where: { $0.id == "triggers" })?.step, .triggers)
+    }
+
+    func testTriggersSegmentJumpsToTriggersStep() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "triggers": .choices(["stress"]),
+        ]
+        let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
+        let triggersSegment = segments.first { $0.id == "triggers" }
+        XCTAssertEqual(triggersSegment?.step, .triggers)
+    }
+
+    func testUnsetTriggersJumpsToTriggersStep() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+        ]
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let triggers = unset.first { $0.label == "Triggers" }
+        XCTAssertEqual(triggers?.step, .triggers)
     }
 
     func testPerReliefEffectsSummary() {
