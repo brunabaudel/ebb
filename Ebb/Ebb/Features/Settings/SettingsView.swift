@@ -32,9 +32,9 @@ struct SettingsView: View {
                 backupAndLockSection
                 dataSection
                 appearanceSection
-                trackingSection
                 healthKitSection
                 cycleInfoSection
+                aboutSection
 
                 #if DEBUG
                 Section {
@@ -411,49 +411,16 @@ struct SettingsView: View {
         exportFile = nil
     }
 
-    // MARK: - Tracking
+    // MARK: - About
 
-    private var trackingSection: some View {
+    private var aboutSection: some View {
         Section {
-            NavigationLink {
-                RemindersSettingsView(
-                    schema: schema,
-                    reminderPreferences: reminderPreferences
-                )
-            } label: {
-                Label("Reminders", systemImage: "bell")
-            }
-            .themeListRow()
-
-            NavigationLink {
-                MedicationsSettingsView(
-                    schema: schema,
-                    medicationPreferences: medicationPreferences
-                )
-            } label: {
-                Label {
-                    Text("My medications")
-                } icon: {
-                    Image(systemName: "pills")
-                }
-            }
-            .themeListRow()
-
-            NavigationLink {
-                DoctorExportView(schema: schema)
-            } label: {
-                Label("Bring to your doctor", systemImage: "doc.text")
-            }
-            .themeListRow()
-
             NavigationLink {
                 AboutView()
             } label: {
                 Label("About", systemImage: "info.circle")
             }
             .themeListRow()
-        } header: {
-            Text("Tracking")
         }
     }
 
