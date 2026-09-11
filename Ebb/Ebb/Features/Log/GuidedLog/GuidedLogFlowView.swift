@@ -121,11 +121,11 @@ struct GuidedLogFlowView: View {
 
                 if values["migraine_present"] == .boolean(true) {
                     headacheSeveritySection
-                        .padding(.top, 22)
+                        .padding(.top, 36)
                     headacheQualitySection
-                        .padding(.top, 22)
+                        .padding(.top, 36)
                     headacheMovementSection
-                        .padding(.top, 22)
+                        .padding(.top, 36)
                 }
             }
         }
@@ -368,7 +368,7 @@ struct GuidedLogFlowView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(24 * 0.2)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 6)
+                .padding(.bottom, subtitle == nil ? 16 : 6)
 
             if let subtitle {
                 Text(subtitle)
