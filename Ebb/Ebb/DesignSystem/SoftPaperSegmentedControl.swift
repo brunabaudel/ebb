@@ -3,6 +3,9 @@ import SwiftUI
 private enum SoftPaperSegmentedControlMetrics {
     static let innerHeight: CGFloat = 50
     static let trackInset: CGFloat = 4
+    static let segmentSpacing: CGFloat = 4
+    static let selectedRoseTintOpacity: Double = 0.34
+    static let trackOatTintOpacity: Double = 0.55
 
     static var trackHeight: CGFloat { innerHeight + trackInset * 2 }
     static var trackCornerRadius: CGFloat { trackHeight / 2 }
@@ -11,6 +14,9 @@ private enum SoftPaperSegmentedControlMetrics {
 
 /// Custom segmented control with a taller tap target and Soft paper styling.
 /// Replaces `Picker(.segmented)`, which ignores explicit height and stays ~32pt.
+///
+/// On iOS 26+, the track and selected pill use SwiftUI Liquid Glass (`glassEffect`).
+/// Earlier OS versions keep the opaque Soft paper capsule fallback.
 struct SoftPaperSegmentedControl<Selection: Hashable>: View {
     struct Segment: Identifiable {
         let id: Selection
@@ -21,19 +27,89 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
     @Binding var selection: Selection
 
     @Environment(\.theme) private var theme
+    @Namespace private var glassNamespace
 
     var body: some View {
-        HStack(spacing: 4) {
+        if #available(iOS 26.0, *) {
+            liquidGlassBody
+        } else {
+            softPaperFallbackBody
+        }
+    }
+
+    // MARK: - iOS 26+ Liquid Glass
+
+    @available(iOS 26.0, *)
+    private var liquidGlassBody: some View {
+        GlassEffectContainer(spacing: SoftPaperSegmentedControlMetrics.trackInset) {
+            HStack(spacing: SoftPaperSegmentedControlMetrics.segmentSpacing) {
+                ForEach(segments) { segment in
+                    liquidGlassSegmentButton(segment)
+                }
+            }
+            .padding(SoftPaperSegmentedControlMetrics.trackInset)
+            .frame(maxWidth: .infinity)
+            .glassEffect(
+                .regular.tint(theme.surface.opacity(SoftPaperSegmentedControlMetrics.trackOatTintOpacity)),
+                in: Capsule(style: .continuous)
+            )
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    @available(iOS 26.0, *)
+    private func liquidGlassSegmentButton(_ segment: Segment) -> some View {
+        let isSelected = selection == segment.id
+
+        return Button {
+            withAnimation(.smooth(duration: 0.35)) {
+                selection = segment.id
+            }
+        } label: {
+            liquidGlassSegmentLabel(isSelected: isSelected, title: segment.title)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(segment.title)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+
+    @available(iOS 26.0, *)
+    @ViewBuilder
+    private func liquidGlassSegmentLabel(isSelected: Bool, title: String) -> some View {
+        let label = segmentLabel(isSelected: isSelected, title: title)
+
+        if isSelected {
+            label
+                .glassEffect(
+                    .regular
+                        .tint(theme.pain.opacity(SoftPaperSegmentedControlMetrics.selectedRoseTintOpacity))
+                        .interactive(),
+                    in: Capsule(style: .continuous)
+                )
+                .glassEffectID("selected", in: glassNamespace)
+        } else {
+            label
+        }
+    }
+
+    // MARK: - iOS 17–25 Soft paper fallback
+
+    private var softPaperFallbackBody: some View {
+        HStack(spacing: SoftPaperSegmentedControlMetrics.segmentSpacing) {
             ForEach(segments) { segment in
-                segmentButton(segment)
+                softPaperSegmentButton(segment)
             }
         }
         .padding(SoftPaperSegmentedControlMetrics.trackInset)
         .frame(maxWidth: .infinity)
-        .background(
-            theme.surface,
-            in: Capsule(style: .continuous)
-        )
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .fill(theme.surface.opacity(0.72))
+                }
+        }
         .overlay {
             Capsule(style: .continuous)
                 .strokeBorder(theme.line, lineWidth: 1)
@@ -41,7 +117,7 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
         .accessibilityElement(children: .contain)
     }
 
-    private func segmentButton(_ segment: Segment) -> some View {
+    private func softPaperSegmentButton(_ segment: Segment) -> some View {
         let isSelected = selection == segment.id
 
         return Button {
@@ -49,26 +125,30 @@ struct SoftPaperSegmentedControl<Selection: Hashable>: View {
                 selection = segment.id
             }
         } label: {
-            Text(segment.title)
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? theme.text : theme.muted)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity)
-                .frame(height: SoftPaperSegmentedControlMetrics.innerHeight)
+            segmentLabel(isSelected: isSelected, title: segment.title)
                 .background {
                     if isSelected {
-                        selectedSegmentBackground
+                        softPaperSelectedSegmentBackground
                     }
                 }
-                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(segment.title)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
-    private var selectedSegmentBackground: some View {
+    private func segmentLabel(isSelected: Bool, title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? theme.text : theme.muted)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
+            .frame(maxWidth: .infinity)
+            .frame(height: SoftPaperSegmentedControlMetrics.innerHeight)
+            .contentShape(Capsule(style: .continuous))
+    }
+
+    private var softPaperSelectedSegmentBackground: some View {
         Capsule(style: .continuous)
             .fill(
                 LinearGradient(
