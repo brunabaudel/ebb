@@ -31,6 +31,20 @@ final class LogSymptomsFieldOrderTests: XCTestCase {
             "migraine_present", "relief_taken", "bleeding", "cramps_severity", "associated_symptoms",
         ])
     }
+
+    func testEditFormExcludesLegacyReliefEffectField() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "relief_taken": .choices(["ibuprofen", "naproxen"]),
+        ]
+        let keys = LogSymptomsFieldOrder.orderedVisibleFields(
+            in: schema,
+            values: values,
+            excludingKeys: LogSymptomsFieldOrder.editExcludedFieldKeys
+        ).map(\.key)
+        XCTAssertFalse(keys.contains("relief_effect"))
+        XCTAssertTrue(keys.contains("relief_taken"))
+    }
 }
 
 final class LogSymptomsFlowStepTests: XCTestCase {

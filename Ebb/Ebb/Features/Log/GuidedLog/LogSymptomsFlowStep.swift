@@ -3,21 +3,37 @@ import Foundation
 /// Canonical display order for symptom fields — shared by guided add, edit form,
 /// and review/overview rows. Keeps UI surfaces aligned when schema JSON order drifts.
 enum LogSymptomsFieldOrder {
-    /// TapLog edit + review rows. `relief_effects` (string_map) is guided-only.
+    /// TapLog edit + review rows. `relief_effects` (string_map) is stored but rendered
+    /// inside `ReliefTakenControl`; legacy `relief_effect` is excluded from edit.
     static let displayFieldKeys: [String] = [
         "migraine_present", "severity", "quality", "worse_with_movement",
         "location", "aura", "relief_taken", "relief_effect",
         "triggers", "bleeding", "cramps_severity", "associated_symptoms",
     ]
 
+    /// Multi-select fields that use the checkmark list in guided flow and edit form.
+    static let checklistMultiEnumKeys: Set<String> = [
+        "location", "triggers", "associated_symptoms",
+    ]
+
+    /// Fields rendered by composite controls instead of standalone `FieldControl` rows.
+    static let editExcludedFieldKeys: Set<String> = [
+        ReliefEffects.legacyEffectFieldKey,
+    ]
+
     static func orderedVisibleFields(
         in schema: SchemaConfig,
         values: [String: FieldValue],
-        excludingTypes: Set<FieldType> = [.stringMap]
+        excludingTypes: Set<FieldType> = [.stringMap],
+        excludingKeys: Set<String> = []
     ) -> [SchemaField] {
         let visibleByKey = Dictionary(
             uniqueKeysWithValues: schema.fields
-                .filter { !excludingTypes.contains($0.type) && AppliesWhenEvaluator.isVisible(field: $0, values: values) }
+                .filter {
+                    !excludingTypes.contains($0.type)
+                        && !excludingKeys.contains($0.key)
+                        && AppliesWhenEvaluator.isVisible(field: $0, values: values)
+                }
                 .map { ($0.key, $0) }
         )
         return displayFieldKeys.compactMap { visibleByKey[$0] }

@@ -165,12 +165,7 @@ struct TapLogView: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(12)
-                .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(theme.line, lineWidth: 1)
-                }
+                .themeCard(padding: 12, cornerRadius: theme.isLight ? 16 : 12)
                 .accessibilityLabel("You said: \(note)")
         }
     }
