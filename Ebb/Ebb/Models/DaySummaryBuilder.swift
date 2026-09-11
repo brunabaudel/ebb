@@ -18,33 +18,6 @@ enum DaySummaryBuilder {
         }
     }
 
-    private static func choiceLabels(
-        for key: String,
-        in values: [String: FieldValue],
-        schema: SchemaConfig
-    ) -> String? {
-        guard let field = schema.field(forKey: key) else { return nil }
-        switch values[key] {
-        case .choices(let keys):
-            let labels = keys.compactMap { choice in field.values.first { $0.key == choice }?.label }
-            guard !labels.isEmpty else { return nil }
-            return listPhrase(labels)
-        default:
-            return nil
-        }
-    }
-
-    private static func listPhrase(_ items: [String]) -> String {
-        switch items.count {
-        case 0: return ""
-        case 1: return items[0].lowercased()
-        case 2: return "\(items[0].lowercased()) and \(items[1].lowercased())"
-        default:
-            let head = items.dropLast().map { $0.lowercased() }.joined(separator: ", ")
-            return "\(head), and \(items.last!.lowercased())"
-        }
-    }
-
     // MARK: - Today row presentation
 
     static func entryAccent(_ entry: SymptomEntry) -> FieldAccent {
@@ -89,72 +62,6 @@ enum DaySummaryBuilder {
         let markers = todayRowMarkers(entry, schema: schema)
         guard !markers.isEmpty else { return nil }
         return markers.map(\.label).joined(separator: " · ")
-    }
-
-    /// Prose line under the title — mock B `.desc` style.
-    static func todayRowDescription(_ entry: SymptomEntry, schema: SchemaConfig) -> String? {
-        let values = entry.fieldValues
-        var leadParts: [String] = []
-        var trailParts: [String] = []
-
-        if values["migraine_present"] == .boolean(true) {
-            var head = ""
-            if case .scale(let step)? = values["severity"],
-               let label = schema.field(forKey: "severity")?.scaleLabels[step] {
-                head = label.capitalized
-            }
-
-            var detailBits: [String] = []
-            for label in choiceLabelList(for: "location", in: values, schema: schema) {
-                detailBits.append(label.lowercased())
-            }
-            for label in choiceLabelList(for: "quality", in: values, schema: schema) {
-                detailBits.append(label.lowercased())
-            }
-
-            if !head.isEmpty, !detailBits.isEmpty {
-                leadParts.append("\(head) — \(listPhrase(detailBits))")
-            } else if !head.isEmpty {
-                leadParts.append(head)
-            } else if !detailBits.isEmpty {
-                leadParts.append(listPhrase(detailBits).capitalized)
-            }
-        } else if let bleeding = choiceLabel(for: "bleeding", in: values, schema: schema),
-                  bleeding.lowercased() != "none" {
-            if bleeding.lowercased() == "spotting" {
-                leadParts.append("Spotting")
-            } else {
-                leadParts.append("\(bleeding) bleeding")
-            }
-        }
-
-        if case .scale(let step)? = values["cramps_severity"], step > 0,
-           let label = schema.field(forKey: "cramps_severity")?.scaleLabels[step] {
-            leadParts.append("\(label) cramps")
-        }
-
-        if let relief = choiceLabels(for: "relief_taken", in: values, schema: schema), !relief.isEmpty {
-            trailParts.append("Took \(relief)")
-        }
-        if let triggers = choiceLabels(for: "triggers", in: values, schema: schema), !triggers.isEmpty {
-            let prefix = triggers.contains(" and ") || triggers.contains(",")
-                ? "Possible triggers: "
-                : "Possible trigger: "
-            trailParts.append(prefix + triggers)
-        }
-
-        let lead = leadParts.joined(separator: ", ")
-        let trail = trailParts.joined(separator: ". ")
-        switch (lead.isEmpty, trail.isEmpty) {
-        case (true, true):
-            return nil
-        case (false, true):
-            return lead + "."
-        case (true, false):
-            return trail + "."
-        case (false, false):
-            return "\(lead). \(trail)."
-        }
     }
 
     /// Tag chips for a Today row — pain / cycle / neutral, matching mock B markers.
