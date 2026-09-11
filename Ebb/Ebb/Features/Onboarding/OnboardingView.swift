@@ -13,22 +13,9 @@ struct OnboardingView: View {
     @State private var primaryHapticTrigger = 0
     @State private var secondaryHapticTrigger = 0
 
-    private var stepIndex: Int { viewModel.step.rawValue }
-    private var totalSteps: Int { OnboardingViewModel.Step.allCases.count }
-    private var progressFraction: Double {
-        Double(stepIndex + 1) / Double(totalSteps)
-    }
-
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if viewModel.step != .welcome {
-                    stepProgressHeader
-                        .padding(.horizontal, 24)
-                        .padding(.top, 12)
-                        .padding(.bottom, 4)
-                }
-
                 Group {
                     switch viewModel.step {
                     case .welcome:
@@ -161,40 +148,6 @@ struct OnboardingView: View {
             .padding(.bottom, 16)
         }
         .scrollIndicators(.hidden)
-    }
-
-    // MARK: - Progress
-
-    private var stepProgressHeader: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 6) {
-                ForEach(0..<totalSteps, id: \.self) { index in
-                    Circle()
-                        .fill(index <= stepIndex ? theme.pain : theme.line)
-                        .frame(width: 6, height: 6)
-                }
-            }
-            .accessibilityHidden(true)
-
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(theme.line)
-                        .frame(height: 3)
-                    Capsule()
-                        .fill(theme.pain)
-                        .frame(width: geometry.size.width * progressFraction, height: 3)
-                }
-            }
-            .frame(height: 3)
-
-            Text("\(stepIndex + 1) of \(totalSteps)")
-                .font(.system(size: 10, design: .monospaced))
-                .kerning(0.4)
-                .foregroundStyle(theme.faint)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Step \(stepIndex + 1) of \(totalSteps)")
     }
 
     // MARK: - Sticky footer
