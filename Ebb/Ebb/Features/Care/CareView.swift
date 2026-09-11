@@ -23,15 +23,15 @@ struct CareView: View {
                         .padding(.bottom, 24)
 
                     VStack(spacing: 14) {
-                        myRemindersSection(
-                            reminderPreferences: reminderPreferences
-                        )
+                        bringToDoctorSection
 
                         myMedicationsSection(
                             medicationPreferences: medicationPreferences
                         )
 
-                        bringToDoctorSection
+                        myRemindersSection(
+                            reminderPreferences: reminderPreferences
+                        )
                     }
                 }
                 .padding(.horizontal, 20)
@@ -57,7 +57,7 @@ struct CareView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Care")
                 .font(.system(.title, design: .serif))
-            Text("Reminders, medications, and a note for your doctor.")
+            Text("A note for your doctor, medications, and reminders.")
                 .font(.footnote)
                 .foregroundStyle(theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
