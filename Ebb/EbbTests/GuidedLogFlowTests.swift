@@ -18,8 +18,9 @@ final class LogSymptomsFlowStepTests: XCTestCase {
 
     func testQuestionStepsWithoutHeadacheSkipsMigraineDetailsAndRelief() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: false)
-        XCTAssertEqual(steps, [.headachePresent, .triggers, .cycleAndContext, .review])
+        XCTAssertEqual(steps, [.headachePresent, .cycleAndContext, .review])
         XCTAssertFalse(steps.contains(.relief))
+        XCTAssertFalse(steps.contains(.triggers))
         XCTAssertFalse(steps.contains(.severity))
         XCTAssertFalse(steps.contains(.location))
     }
@@ -84,6 +85,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(ids.contains("bleeding"))
         XCTAssertFalse(ids.contains("relief_taken"))
         XCTAssertFalse(ids.contains("relief_effect"))
+        XCTAssertFalse(ids.contains("triggers"))
     }
 
     func testUnsetFieldLabelsWithoutHeadacheOmitsRelief() {
@@ -94,6 +96,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let labels = unset.map(\.label)
         XCTAssertFalse(labels.contains("Relief taken"))
         XCTAssertFalse(labels.contains("Did it help?"))
+        XCTAssertFalse(labels.contains("Triggers"))
         XCTAssertTrue(labels.contains("Bleeding"))
     }
 
@@ -138,11 +141,19 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
 
     func testUnsetTriggersJumpsToTriggersStep() {
         let values: [String: FieldValue] = [
-            "migraine_present": .boolean(false),
+            "migraine_present": .boolean(true),
         ]
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
         let triggers = unset.first { $0.label == "Triggers" }
         XCTAssertEqual(triggers?.step, .triggers)
+    }
+
+    func testUnsetTriggersOmittedWithoutHeadache() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+        ]
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        XCTAssertNil(unset.first { $0.label == "Triggers" })
     }
 
     func testPerReliefEffectsSummary() {
@@ -182,6 +193,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(ids.contains("bleeding"))
         XCTAssertFalse(ids.contains("severity"))
         XCTAssertFalse(ids.contains("relief_taken"))
+        XCTAssertFalse(ids.contains("triggers"))
     }
 
     func testSeveritySegmentJumpsToHeadachePresent() {

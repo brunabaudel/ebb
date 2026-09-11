@@ -28,4 +28,12 @@ struct AppliesWhenTests {
         let bleeding = try #require(schema.field(forKey: "bleeding"))
         #expect(AppliesWhenEvaluator.isVisible(field: bleeding, values: [:]))
     }
+
+    @Test func triggersHiddenWhenNoMigraine() throws {
+        let triggers = try #require(schema.field(forKey: "triggers"))
+        #expect(triggers.appliesWhen == "migraine_present == true")
+        #expect(!AppliesWhenEvaluator.isVisible(field: triggers, values: [:]))
+        #expect(!AppliesWhenEvaluator.isVisible(field: triggers, values: ["migraine_present": .boolean(false)]))
+        #expect(AppliesWhenEvaluator.isVisible(field: triggers, values: ["migraine_present": .boolean(true)]))
+    }
 }

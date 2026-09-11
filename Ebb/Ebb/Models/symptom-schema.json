@@ -115,6 +115,7 @@
       "key": "triggers",
       "label": "Possible triggers",
       "type": "multi_enum",
+      "appliesWhen": "migraine_present == true",
       "values": [
         { "key": "poor_sleep",      "label": "Poor sleep",            "synonyms": ["bad sleep", "slept badly", "didn't sleep", "little sleep", "dormi mal", "slept poorly"] },
         { "key": "skipped_meal",    "label": "Skipped meal",          "synonyms": ["skipped a meal", "didn't eat", "hungry", "low blood sugar"] },
