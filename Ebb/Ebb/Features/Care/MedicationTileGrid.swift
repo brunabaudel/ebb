@@ -74,7 +74,8 @@ struct MedicationTileGrid: View {
             CareSelectionTile(
                 title: option.label,
                 isSelected: medicationPreferences.isSaved(option.key),
-                tileSize: tileSize
+                tileWidth: tileSize,
+                tileHeight: tileSize
             ) {
                 medicationPreferences.setSaved(
                     option.key,

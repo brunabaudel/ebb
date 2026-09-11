@@ -48,6 +48,14 @@ struct SchemaLoadingTests {
         #expect(jaw.synonyms.contains("mandíbula"))
     }
 
+    @Test func reliefTakenHasNineOptions() throws {
+        let relief = try #require(schema.field(forKey: "relief_taken"))
+        #expect(relief.allowedValueKeys == [
+            "ibuprofen", "naproxen", "paracetamol", "triptan",
+            "rest_dark_room", "cold_pack", "caffeine", "heat_pack", "water",
+        ])
+    }
+
     @Test func missingResourceThrows() {
         #expect(throws: SchemaConfig.LoadError.resourceNotFound("symptom-schema.json")) {
             try SchemaConfig.load(from: Bundle(for: BundleToken.self))
