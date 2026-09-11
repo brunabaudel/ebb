@@ -13,8 +13,8 @@ struct SchemaLoadingTests {
         #expect(schema.domain == "menstrual-migraine-and-period")
         #expect(schema.fields.map(\.key) == [
             "migraine_present", "severity", "quality", "worse_with_movement",
-            "location", "aura", "associated_symptoms", "relief_taken", "relief_effect",
-            "relief_effects", "triggers", "bleeding", "cramps_severity",
+            "location", "aura", "relief_taken", "relief_effect",
+            "relief_effects", "triggers", "bleeding", "cramps_severity", "associated_symptoms",
         ])
     }
 

@@ -6,7 +6,7 @@ final class LogSymptomsFlowStepTests: XCTestCase {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: true)
         XCTAssertEqual(steps, [
             .headachePresent, .location, .aura,
-            .relief, .triggers, .cycleAndContext, .review,
+            .relief, .triggers, .cycleAndContext, .associatedSymptoms, .review,
         ])
         XCTAssertFalse(steps.contains(.severity))
     }
@@ -18,7 +18,7 @@ final class LogSymptomsFlowStepTests: XCTestCase {
 
     func testQuestionStepsWithoutHeadacheSkipsMigraineDetailsAndRelief() {
         let steps = LogSymptomsFlowStep.questionSteps(hasHeadache: false)
-        XCTAssertEqual(steps, [.headachePresent, .cycleAndContext, .review])
+        XCTAssertEqual(steps, [.headachePresent, .cycleAndContext, .associatedSymptoms, .review])
         XCTAssertFalse(steps.contains(.relief))
         XCTAssertFalse(steps.contains(.triggers))
         XCTAssertFalse(steps.contains(.severity))
@@ -60,6 +60,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
             "bleeding": .choice("spotting"),
             "cramps_severity": .scale(2),
             "triggers": .choices(["stress"]),
+            "associated_symptoms": .choices(["nausea"]),
         ]
         let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
         let ids = Set(segments.map(\.id))
@@ -73,6 +74,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(ids.contains("bleeding"))
         XCTAssertTrue(ids.contains("cramps_severity"))
         XCTAssertTrue(ids.contains("triggers"))
+        XCTAssertTrue(ids.contains("associated_symptoms"))
     }
 
     func testNoHeadacheSegmentsSkipReliefPlaceholder() {
@@ -98,6 +100,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertFalse(labels.contains("Did it help?"))
         XCTAssertFalse(labels.contains("Triggers"))
         XCTAssertTrue(labels.contains("Bleeding"))
+        XCTAssertTrue(labels.contains("Other symptoms"))
     }
 
     func testFilledDetailRowsWithHeadache() {
@@ -113,12 +116,14 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
             "bleeding": .choice("spotting"),
             "cramps_severity": .scale(1),
             "triggers": .choices(["poor_sleep"]),
+            "associated_symptoms": .choices(["nausea"]),
         ]
         let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
         let ids = rows.map(\.id)
         XCTAssertEqual(ids, [
             "migraine_present", "severity", "location", "quality",
-            "worse_with_movement", "aura", "relief_taken", "bleeding", "cramps_severity", "triggers",
+            "worse_with_movement", "aura", "relief_taken", "triggers",
+            "bleeding", "cramps_severity", "associated_symptoms",
         ])
         XCTAssertEqual(rows.first(where: { $0.id == "aura" })?.step, .aura)
         XCTAssertTrue(rows.first(where: { $0.id == "relief_taken" })?.value.contains("Ibuprofen") == true)
@@ -127,6 +132,7 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertEqual(rows.first(where: { $0.id == "quality" })?.step, .headachePresent)
         XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.step, .headachePresent)
         XCTAssertEqual(rows.first(where: { $0.id == "triggers" })?.step, .triggers)
+        XCTAssertEqual(rows.first(where: { $0.id == "associated_symptoms" })?.step, .associatedSymptoms)
     }
 
     func testTriggersSegmentJumpsToTriggersStep() {
@@ -266,6 +272,37 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
         let aura = unset.first { $0.label == "Aura" }
         XCTAssertEqual(aura?.step, .aura)
+    }
+
+    func testAssociatedSymptomsSegmentJumpsToAssociatedSymptomsStep() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+            "associated_symptoms": .choices(["nausea"]),
+        ]
+        let segments = LogSymptomsSentenceBuilder.segments(values: values, schema: schema)
+        let other = segments.first { $0.id == "associated_symptoms" }
+        XCTAssertEqual(other?.step, .associatedSymptoms)
+    }
+
+    func testUnsetAssociatedSymptomsJumpsToAssociatedSymptomsStep() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+        ]
+        let unset = LogSymptomsSentenceBuilder.unsetFieldLabels(values: values, schema: schema)
+        let other = unset.first { $0.label == "Other symptoms" }
+        XCTAssertEqual(other?.step, .associatedSymptoms)
+    }
+
+    func testFilledDetailRowsWithoutHeadacheIncludesOtherSymptoms() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(false),
+            "bleeding": .choice("none"),
+            "associated_symptoms": .choices(["light_sensitivity"]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+        let other = rows.first { $0.id == "associated_symptoms" }
+        XCTAssertEqual(other?.step, .associatedSymptoms)
+        XCTAssertTrue(other?.value.localizedCaseInsensitiveContains("Light sensitivity") == true)
     }
 
 }

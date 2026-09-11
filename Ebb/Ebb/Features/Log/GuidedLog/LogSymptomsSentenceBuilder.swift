@@ -217,15 +217,6 @@ enum LogSymptomsSentenceBuilder {
                     accent: .pain
                 ))
             }
-            if let other = choiceLabels(values["associated_symptoms"], fieldKey: "associated_symptoms", schema: schema) {
-                rows.append(ReviewDetailRow(
-                    id: "associated_symptoms",
-                    label: fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
-                    value: other,
-                    step: .headachePresent,
-                    accent: .pain
-                ))
-            }
             if let relief = reliefSummary(values: values, schema: schema) {
                 rows.append(ReviewDetailRow(
                     id: "relief_taken",
@@ -264,6 +255,15 @@ enum LogSymptomsSentenceBuilder {
                 value: value,
                 step: .cycleAndContext,
                 accent: .cycle
+            ))
+        }
+        if let other = choiceLabels(values["associated_symptoms"], fieldKey: "associated_symptoms", schema: schema) {
+            rows.append(ReviewDetailRow(
+                id: "associated_symptoms",
+                label: fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
+                value: other,
+                step: .associatedSymptoms,
+                accent: .pain
             ))
         }
         return rows
@@ -306,6 +306,12 @@ enum LogSymptomsSentenceBuilder {
         }
         if values["cramps_severity"] == nil {
             unset.append(("Cramps", .cycleAndContext))
+        }
+        if values["associated_symptoms"] == nil {
+            unset.append((
+                fieldLabel("associated_symptoms", schema: schema, fallback: "Other symptoms"),
+                .associatedSymptoms
+            ))
         }
         return unset
     }
@@ -470,6 +476,34 @@ enum LogSymptomsSentenceBuilder {
                 isFilled: false,
                 step: .cycleAndContext,
                 accent: .cycle
+            ))
+        }
+
+        appendSeparator(&result, id: "sep_other_symptoms")
+
+        // Other symptoms (both paths)
+        if let other = choiceLabels(values["associated_symptoms"], fieldKey: "associated_symptoms", schema: schema) {
+            result.append(SentenceSegment(
+                id: "other_symptoms_label",
+                text: "Other symptoms: ",
+                isFilled: true,
+                step: nil,
+                accent: .pain
+            ))
+            result.append(SentenceSegment(
+                id: "associated_symptoms",
+                text: other,
+                isFilled: true,
+                step: .associatedSymptoms,
+                accent: .pain
+            ))
+        } else if includePlaceholders {
+            result.append(SentenceSegment(
+                id: "associated_symptoms",
+                text: "other symptoms?",
+                isFilled: false,
+                step: .associatedSymptoms,
+                accent: .pain
             ))
         }
 

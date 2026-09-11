@@ -9,6 +9,7 @@ enum LogSymptomsFlowStep: Int, CaseIterable, Identifiable, Sendable {
     case relief
     case triggers
     case cycleAndContext
+    case associatedSymptoms
     case review
 
     var id: Int { rawValue }
@@ -16,9 +17,12 @@ enum LogSymptomsFlowStep: Int, CaseIterable, Identifiable, Sendable {
     /// Question steps for the guided flow.
     static func questionSteps(hasHeadache: Bool) -> [LogSymptomsFlowStep] {
         if hasHeadache {
-            [.headachePresent, .location, .aura, .relief, .triggers, .cycleAndContext, .review]
+            [
+                .headachePresent, .location, .aura, .relief, .triggers,
+                .cycleAndContext, .associatedSymptoms, .review,
+            ]
         } else {
-            [.headachePresent, .cycleAndContext, .review]
+            [.headachePresent, .cycleAndContext, .associatedSymptoms, .review]
         }
     }
 
