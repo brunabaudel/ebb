@@ -165,6 +165,47 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertEqual(rows.first(where: { $0.id == "worse_with_movement" })?.step, .headachePresent)
         XCTAssertEqual(rows.first(where: { $0.id == "triggers" })?.step, .triggers)
         XCTAssertEqual(rows.first(where: { $0.id == "associated_symptoms" })?.step, .associatedSymptoms)
+        XCTAssertEqual(rows.first(where: { $0.id == "location" })?.valueLines, [
+            "Left side",
+            "Right side",
+        ])
+        XCTAssertNil(rows.first(where: { $0.id == "quality" })?.valueLines)
+        XCTAssertNil(rows.first(where: { $0.id == "associated_symptoms" })?.valueLines)
+    }
+
+    func testMultiSelectDetailRowsUseValueLines() {
+        let values: [String: FieldValue] = [
+            "migraine_present": .boolean(true),
+            "quality": .choices(["throbbing", "sharp"]),
+            "location": .choices(["left", "right", "temple"]),
+            "aura": .choices(["visual", "sensory"]),
+            "triggers": .choices(["poor_sleep", "stress", "weather"]),
+            "associated_symptoms": .choices(["nausea", "light_sensitivity"]),
+        ]
+        let rows = LogSymptomsSentenceBuilder.filledDetailRows(values: values, schema: schema)
+
+        let quality = rows.first(where: { $0.id == "quality" })
+        XCTAssertEqual(quality?.value, "Throbbing and Sharp")
+        XCTAssertEqual(quality?.valueLines, ["Throbbing", "Sharp"])
+
+        let location = rows.first(where: { $0.id == "location" })
+        XCTAssertEqual(location?.value, "Left side, Right side, and Temple")
+        XCTAssertEqual(location?.valueLines, ["Left side", "Right side", "Temple"])
+
+        let aura = rows.first(where: { $0.id == "aura" })
+        XCTAssertEqual(aura?.value, "Visual (lights, zigzags, spots) and Tingling / numbness")
+        XCTAssertEqual(aura?.valueLines, [
+            "Visual (lights, zigzags, spots)",
+            "Tingling / numbness",
+        ])
+
+        let triggers = rows.first(where: { $0.id == "triggers" })
+        XCTAssertEqual(triggers?.value, "Poor sleep, Stress, and Weather")
+        XCTAssertEqual(triggers?.valueLines, ["Poor sleep", "Stress", "Weather"])
+
+        let other = rows.first(where: { $0.id == "associated_symptoms" })
+        XCTAssertEqual(other?.value, "Nausea and Light sensitivity")
+        XCTAssertEqual(other?.valueLines, ["Nausea", "Light sensitivity"])
     }
 
     func testTriggersSegmentJumpsToTriggersStep() {
