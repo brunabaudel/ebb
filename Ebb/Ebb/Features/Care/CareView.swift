@@ -82,11 +82,19 @@ struct CareView: View {
                 rescheduleReminders()
             }
 
-            ReminderTimeAndPauseCard(
+            if reminderPreferences.hasAnyNudgeEnabled {
+                ReminderTimeRow(
+                    preferences: reminderPreferences,
+                    onTap: { showTimePicker = true }
+                )
+                .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+            }
+
+            ReminderPauseDuringMigraineToggle(
                 preferences: reminderPreferences,
-                onTimeTap: { showTimePicker = true },
-                onPauseChange: rescheduleReminders
+                onChange: rescheduleReminders
             )
+            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
         }
     }
 

@@ -10,6 +10,7 @@ enum CareTileLayout {
 struct CareSelectionTile: View {
     let title: String
     let isSelected: Bool
+    var tileSize: CGFloat = CareTileLayout.size
     var action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -25,7 +26,7 @@ struct CareSelectionTile: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
                 .padding(.horizontal, 8)
-                .frame(width: CareTileLayout.size, height: CareTileLayout.size)
+                .frame(width: tileSize, height: tileSize)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: cornerRadius)
