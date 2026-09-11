@@ -89,12 +89,7 @@ struct ReminderPauseDuringMigraineToggle: View {
 
     var body: some View {
         Toggle(isOn: $preferences.pauseDuringMigraine) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Pause reminders during a migraine")
-                Text("When a migraine is logged, reminders stay quiet until it's over.")
-                    .font(.caption)
-                    .foregroundStyle(theme.muted)
-            }
+            Text("Pause reminders during a migraine")
         }
         .tint(theme.ok)
         .onChange(of: preferences.pauseDuringMigraine) { _, _ in
