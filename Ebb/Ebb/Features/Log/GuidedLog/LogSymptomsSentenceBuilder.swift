@@ -453,11 +453,11 @@ enum LogSymptomsSentenceBuilder {
 
         // Relief (headache path only)
         if includeRelief, !ReliefEffects.takenKeys(from: values).isEmpty {
-            let summaryParts = perReliefSummaryParts(values: values, schema: schema)
+            let summaryParts = perReliefSummaryLines(values: values, schema: schema)
             let hasAllEffects = allTakenReliefItemsHaveEffects(values: values)
             result.append(SentenceSegment(
                 id: "relief_taken",
-                text: "Took \(summaryParts.joined(separator: ", "))",
+                text: "Took \(summaryParts.map(\.displayText).joined(separator: ", "))",
                 isFilled: hasAllEffects,
                 step: .relief,
                 accent: .pain
