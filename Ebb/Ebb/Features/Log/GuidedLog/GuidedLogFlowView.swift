@@ -684,6 +684,16 @@ struct GuidedLogFlowView: View {
     }
 
     private func toggleChoice(_ optionKey: String, fieldKey: String) {
+        if fieldKey == AuraChoices.fieldKey {
+            let keys = Array(selectedChoices(fieldKey))
+            if let updated = AuraChoices.toggle(in: keys, optionKey: optionKey) {
+                values[fieldKey] = .choices(updated)
+            } else {
+                values.removeValue(forKey: fieldKey)
+            }
+            return
+        }
+
         var keys = Array(selectedChoices(fieldKey))
         if let index = keys.firstIndex(of: optionKey) {
             keys.remove(at: index)
