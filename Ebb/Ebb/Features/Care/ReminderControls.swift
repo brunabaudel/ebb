@@ -24,73 +24,38 @@ enum ReminderScheduling {
 
 private enum ReminderTileGridLayout {
     static let columnCount = 2
-
-    static func tileWidth(forContentWidth contentWidth: CGFloat) -> CGFloat {
-        let gutter = CareTileLayout.gutter
-        guard contentWidth > 0 else { return CareTileLayout.size }
-        return floor((contentWidth - gutter) / CGFloat(columnCount))
-    }
-}
-
-private struct ReminderGridWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
 }
 
 struct ReminderTileGrid: View {
     @Bindable var preferences: ReminderPreferences
     var onToggle: () -> Void
 
-    @State private var gridWidth: CGFloat = 0
-
-    private var tileWidth: CGFloat {
-        ReminderTileGridLayout.tileWidth(forContentWidth: gridWidth)
-    }
-
     var body: some View {
-        CareTileGrid {
-            GridRow {
-                reminderTile(
-                    title: "Period starting",
-                    isOn: $preferences.periodStartNudgeEnabled
-                )
-                reminderTile(
-                    title: "Estimated ovulation",
-                    isOn: $preferences.ovulationNudgeEnabled
-                )
-            }
-            GridRow {
-                reminderTile(
-                    title: "Luteal-window heads-up",
-                    isOn: $preferences.lutealNudgeEnabled
-                )
-                reminderTile(
-                    title: "Daily log reminder",
-                    isOn: $preferences.dailyLogReminderEnabled
-                )
-            }
+        CareTileGrid(columnCount: ReminderTileGridLayout.columnCount) {
+            reminderTile(
+                title: "Period starting",
+                isOn: $preferences.periodStartNudgeEnabled
+            )
+            reminderTile(
+                title: "Estimated ovulation",
+                isOn: $preferences.ovulationNudgeEnabled
+            )
+            reminderTile(
+                title: "Luteal-window heads-up",
+                isOn: $preferences.lutealNudgeEnabled
+            )
+            reminderTile(
+                title: "Daily log reminder",
+                isOn: $preferences.dailyLogReminderEnabled
+            )
         }
-        .frame(maxWidth: .infinity)
-        .background {
-            GeometryReader { geometry in
-                Color.clear.preference(
-                    key: ReminderGridWidthKey.self,
-                    value: geometry.size.width
-                )
-            }
-        }
-        .onPreferenceChange(ReminderGridWidthKey.self) { gridWidth = $0 }
     }
 
     private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
         CareSelectionTile(
             title: title,
             isSelected: isOn.wrappedValue,
-            tileWidth: tileWidth,
-            tileHeight: CareTileLayout.reminderTileHeight
+            shape: .landscape()
         ) {
             isOn.wrappedValue.toggle()
             onToggle()
