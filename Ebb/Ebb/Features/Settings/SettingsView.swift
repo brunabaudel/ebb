@@ -50,6 +50,7 @@ struct SettingsView: View {
             }
             .themeSettingsList()
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showDebug) {
                 NavigationStack {
                     DebugScreen(schemaLoadResult: schemaLoadResult)
@@ -89,7 +90,6 @@ struct SettingsView: View {
                 await cloudSyncStatus.refresh()
             }
         }
-        .themeSettingsScreen()
     }
 
     // MARK: - Ebb+
