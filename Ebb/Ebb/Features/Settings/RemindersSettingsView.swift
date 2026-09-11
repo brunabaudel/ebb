@@ -79,12 +79,11 @@ struct RemindersSettingsView: View {
                             .foregroundStyle(theme.muted)
                     }
                 }
+                .tint(theme.ok)
                 .themeListRow()
                 .onChange(of: reminderPreferences.pauseDuringMigraine) { _, _ in
                     rescheduleReminders()
                 }
-            } header: {
-                Text("Mid-migraine")
             }
 
             #if DEBUG
