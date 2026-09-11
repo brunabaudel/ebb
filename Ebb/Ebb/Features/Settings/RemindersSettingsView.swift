@@ -43,7 +43,8 @@ struct RemindersSettingsView: View {
                     )
                 }
                 .padding(.vertical, 4)
-                .themeListRow()
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
             }
 
