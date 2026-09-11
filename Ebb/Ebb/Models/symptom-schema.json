@@ -68,18 +68,6 @@
       ]
     },
     {
-      "key": "associated_symptoms",
-      "label": "Other symptoms",
-      "type": "multi_enum",
-      "values": [
-        { "key": "nausea",            "label": "Nausea",            "synonyms": ["nausea", "queasy", "sick to my stomach"] },
-        { "key": "vomiting",          "label": "Vomiting",          "synonyms": ["vomiting", "threw up", "puked"] },
-        { "key": "light_sensitivity", "label": "Light sensitivity", "synonyms": ["light hurts", "sensitive to light", "photophobia", "light is killing me"] },
-        { "key": "sound_sensitivity", "label": "Sound sensitivity", "synonyms": ["sound hurts", "noise", "phonophobia"] },
-        { "key": "smell_sensitivity", "label": "Smell sensitivity", "synonyms": ["smells", "odors", "sensitive to smell"] }
-      ]
-    },
-    {
       "key": "relief_taken",
       "label": "Medication / relief",
       "type": "multi_enum",
@@ -146,6 +134,18 @@
       "type": "scale",
       "range": [0, 5],
       "labels": { "0": "none", "1": "barely there", "2": "mild", "3": "moderate", "4": "severe", "5": "disabling" }
+    },
+    {
+      "key": "associated_symptoms",
+      "label": "Other symptoms",
+      "type": "multi_enum",
+      "values": [
+        { "key": "nausea",            "label": "Nausea",            "synonyms": ["nausea", "queasy", "sick to my stomach"] },
+        { "key": "vomiting",          "label": "Vomiting",          "synonyms": ["vomiting", "threw up", "puked"] },
+        { "key": "light_sensitivity", "label": "Light sensitivity", "synonyms": ["light hurts", "sensitive to light", "photophobia", "light is killing me"] },
+        { "key": "sound_sensitivity", "label": "Sound sensitivity", "synonyms": ["sound hurts", "noise", "phonophobia"] },
+        { "key": "smell_sensitivity", "label": "Smell sensitivity", "synonyms": ["smells", "odors", "sensitive to smell"] }
+      ]
     }
   ],
   "freeNote": {

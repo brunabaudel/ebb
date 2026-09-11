@@ -94,6 +94,8 @@ struct GuidedLogFlowView: View {
             triggersStep
         case .cycleAndContext:
             cycleContextStep
+        case .associatedSymptoms:
+            associatedSymptomsStep
         case .review:
             EmptyView()
         }
@@ -235,6 +237,18 @@ struct GuidedLogFlowView: View {
             subtitle: "Select all that apply. Skip if none."
         ) {
             if let field = schema.field(forKey: "triggers") {
+                fieldPills(field: field, accent: .pain)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private var associatedSymptomsStep: some View {
+        focusShell(
+            title: schema.field(forKey: "associated_symptoms")?.label ?? "Other symptoms",
+            subtitle: "Select all that apply. Skip if none."
+        ) {
+            if let field = schema.field(forKey: "associated_symptoms") {
                 fieldPills(field: field, accent: .pain)
                     .frame(maxWidth: .infinity)
             }
@@ -467,7 +481,6 @@ struct GuidedLogFlowView: View {
     }
 
     private var nextButtonTitle: String {
-        if step == .cycleAndContext { return "Review →" }
         if step == activeSteps.dropLast().last { return "Review →" }
         return "Next →"
     }
