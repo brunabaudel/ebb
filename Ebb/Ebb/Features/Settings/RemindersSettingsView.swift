@@ -21,7 +21,7 @@ struct RemindersSettingsView: View {
                 Toggle(isOn: $reminderPreferences.periodStartNudgeEnabled) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Period starting")
-                        Text("A gentle nudge when your estimated period window begins.")
+                        Text("When your estimated period window begins.")
                             .font(.caption)
                             .foregroundStyle(theme.muted)
                     }
@@ -34,7 +34,7 @@ struct RemindersSettingsView: View {
                 Toggle(isOn: $reminderPreferences.ovulationNudgeEnabled) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Estimated ovulation")
-                        Text("A log nudge on your estimated ovulation day.")
+                        Text("On your estimated ovulation day.")
                             .font(.caption)
                             .foregroundStyle(theme.muted)
                     }
@@ -47,7 +47,7 @@ struct RemindersSettingsView: View {
                 Toggle(isOn: $reminderPreferences.lutealNudgeEnabled) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Luteal-window heads-up")
-                        Text("A gentle nudge when your higher-risk luteal phase begins.")
+                        Text("When your higher-risk luteal phase begins.")
                             .font(.caption)
                             .foregroundStyle(theme.muted)
                     }
@@ -82,13 +82,13 @@ struct RemindersSettingsView: View {
                     .themeListRow()
                 }
             } header: {
-                Text("Nudges")
+                Text("Reminders")
             }
 
             Section {
                 Toggle(isOn: $reminderPreferences.pauseDuringMigraine) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Pause nudges during a migraine")
+                        Text("Pause reminders during a migraine")
                         Text("When a migraine is logged, reminders stay quiet until it's over.")
                             .font(.caption)
                             .foregroundStyle(theme.muted)
