@@ -73,6 +73,23 @@ enum DaySummaryBuilder {
         return label.lowercased()
     }
 
+    /// Quiet cycle context for migraine-path Today rows — phase and/or bleeding, lowercased.
+    static func todayRowCycleSummary(_ entry: SymptomEntry, schema: SchemaConfig) -> String? {
+        let title = todayRowTitle(entry, schema: schema)
+        guard title == "Migraine" || title == "No migraine" else { return nil }
+
+        var parts: [String] = []
+        if let phase = entry.cyclePhase {
+            parts.append(phase.displayName.lowercased())
+        }
+        if let bleeding = choiceLabel(for: "bleeding", in: entry.fieldValues, schema: schema),
+           bleeding.lowercased() != "none" {
+            parts.append(bleeding.lowercased())
+        }
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: " · ")
+    }
+
     /// Tag chips for a Today row — pain / cycle / neutral, matching mock B markers.
     static func todayRowMarkers(_ entry: SymptomEntry, schema: SchemaConfig) -> [TodayRowMarker] {
         let values = entry.fieldValues

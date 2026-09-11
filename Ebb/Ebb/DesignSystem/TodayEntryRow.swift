@@ -21,6 +21,14 @@ struct TodayEntryRow: View {
         DaySummaryBuilder.todayRowSeverityLabel(entry, schema: schema)
     }
 
+    private var rowTitle: String {
+        DaySummaryBuilder.todayRowTitle(entry, schema: schema)
+    }
+
+    private var cycleSummary: String? {
+        DaySummaryBuilder.todayRowCycleSummary(entry, schema: schema)
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Circle()
@@ -31,7 +39,7 @@ struct TodayEntryRow: View {
                 .accessibilityHidden(true)
 
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(DaySummaryBuilder.todayRowTitle(entry, schema: schema))
+                Text(rowTitle)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(theme.text)
                     .lineLimit(2)
@@ -41,6 +49,13 @@ struct TodayEntryRow: View {
                 if let painSeverity {
                     severityIndicator(level: painSeverity)
                         .fixedSize(horizontal: true, vertical: true)
+                }
+
+                if let cycleSummary {
+                    Text(cycleSummary)
+                        .font(.caption)
+                        .foregroundStyle(theme.cycle.opacity(0.88))
+                        .lineLimit(1)
                 }
 
                 Spacer(minLength: 8)
@@ -89,9 +104,12 @@ struct TodayEntryRow: View {
     }
 
     private var accessibilityLabel: String {
-        let title = DaySummaryBuilder.todayRowTitle(entry, schema: schema)
         let time = entry.timestamp.formatted(date: .omitted, time: .shortened)
-        var parts = ["\(title), \(time)"]
+        var headline = rowTitle
+        if let cycleSummary {
+            headline += ", \(cycleSummary)"
+        }
+        var parts = ["\(headline), \(time)"]
         if let painSeverity {
             parts.append(severityAccessibilityLabel(for: painSeverity))
         }
@@ -110,7 +128,8 @@ struct TodayEntryRow: View {
             "quality": .choices(["throbbing"]),
             "associated_symptoms": .choices(["nausea"]),
             "relief_taken": .choices(["ibuprofen"]),
-        ]
+        ],
+        cyclePhase: .luteal
     )
     let spotting = SymptomEntry(
         schemaVersion: schema.schemaVersion,

@@ -88,4 +88,61 @@ struct DaySummaryBuilderTests {
                 == "Symptom log (data unreadable)"
         )
     }
+
+    @Test func todayRowCycleSummaryOnMigraineRows() {
+        let migraineLuteal = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(3),
+            ],
+            cyclePhase: .luteal
+        )
+        #expect(DaySummaryBuilder.todayRowCycleSummary(migraineLuteal, schema: schema) == "luteal")
+
+        let migraineWithBleeding = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(2),
+                "bleeding": .choice("spotting"),
+            ],
+            cyclePhase: .menstrual
+        )
+        #expect(
+            DaySummaryBuilder.todayRowCycleSummary(migraineWithBleeding, schema: schema)
+                == "menstrual · spotting"
+        )
+
+        let noMigraineLuteal = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: ["migraine_present": .boolean(false)],
+            cyclePhase: .luteal
+        )
+        #expect(DaySummaryBuilder.todayRowCycleSummary(noMigraineLuteal, schema: schema) == "luteal")
+
+        let migraineNoCycle = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(true),
+                "severity": .scale(1),
+            ]
+        )
+        #expect(DaySummaryBuilder.todayRowCycleSummary(migraineNoCycle, schema: schema) == nil)
+
+        let spotting = SymptomEntry(
+            timestamp: today,
+            schemaVersion: schema.schemaVersion,
+            fieldValues: [
+                "migraine_present": .boolean(false),
+                "bleeding": .choice("spotting"),
+            ],
+            cyclePhase: .luteal
+        )
+        #expect(DaySummaryBuilder.todayRowCycleSummary(spotting, schema: schema) == nil)
+    }
 }
