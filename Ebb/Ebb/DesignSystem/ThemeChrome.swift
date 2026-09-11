@@ -71,7 +71,6 @@ private struct ThemeSettingsScreenModifier: ViewModifier {
             .foregroundStyle(theme.text)
             .toolbarBackground(theme.base, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .preferredColorScheme(theme.isLight ? .light : .dark)
     }
 }
 

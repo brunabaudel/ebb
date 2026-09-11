@@ -11,7 +11,10 @@ struct ThemeHost<Content: View>: View {
     }
 
     var body: some View {
+        let theme = themePreferences.effectiveTheme(isEbbPlus: entitlements.isEbbPlus)
+
         content()
-            .environment(\.theme, themePreferences.effectiveTheme(isEbbPlus: entitlements.isEbbPlus))
+            .environment(\.theme, theme)
+            .preferredColorScheme(theme.isLight ? .light : .dark)
     }
 }

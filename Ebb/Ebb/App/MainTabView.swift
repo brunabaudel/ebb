@@ -43,6 +43,8 @@ struct MainTabView: View {
                 }
         }
         .tint(theme.pain)
+        .toolbarBackground(theme.base, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
         .safeAreaInset(edge: .top, spacing: 0) {
             if cloudSyncStatus.restorePhase == .restoring {
                 CloudRestoreBanner()
