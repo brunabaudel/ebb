@@ -1,15 +1,20 @@
 import SwiftUI
 
-/// Flat heat-row list item for today's logs — B timeline: node, title+severity chip+time.
+/// Flat heat-row list item for today's logs — accent node, title + severity tint, time.
 struct TodayEntryRow: View {
     let entry: SymptomEntry
     let schema: SchemaConfig
 
     @Environment(\.theme) private var theme
-    @ScaledMetric(relativeTo: .caption2) private var severityChipFontSize: CGFloat = 10
+    @ScaledMetric(relativeTo: .caption2) private var severityIndicatorWidth: CGFloat = 14
+    @ScaledMetric(relativeTo: .caption2) private var severityIndicatorHeight: CGFloat = 6
 
     private var accent: FieldAccent {
         DaySummaryBuilder.entryAccent(entry)
+    }
+
+    private var painSeverity: Int? {
+        DaySummaryBuilder.painSeverity(for: entry)
     }
 
     private var severityLabel: String? {
@@ -33,8 +38,8 @@ struct TodayEntryRow: View {
                     .multilineTextAlignment(.leading)
                     .layoutPriority(1)
 
-                if let severityLabel {
-                    severityChip(label: severityLabel)
+                if let painSeverity {
+                    severityIndicator(level: painSeverity)
                         .fixedSize(horizontal: true, vertical: true)
                 }
 
@@ -52,26 +57,43 @@ struct TodayEntryRow: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    private func severityChip(label: String) -> some View {
-        Text(label)
-            .font(.system(size: severityChipFontSize, weight: .regular, design: .monospaced))
-            .foregroundStyle(theme.pain)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(theme.painDim, in: RoundedRectangle(cornerRadius: 5))
-            .overlay {
-                RoundedRectangle(cornerRadius: 5)
-                    .strokeBorder(theme.pain.opacity(0.45), lineWidth: 1)
-            }
-            .accessibilityLabel("Severity \(label)")
+    private func severityIndicator(level: Int) -> some View {
+        let clamped = min(max(level, 1), 5)
+        let voiceOverLabel = severityAccessibilityLabel(for: clamped)
+
+        return Capsule()
+            .fill(severityColor(for: clamped))
+            .frame(width: severityIndicatorWidth, height: severityIndicatorHeight)
+            .accessibilityLabel(voiceOverLabel)
+    }
+
+    /// Soft paper pain palette — lighter for low severity, stronger `theme.pain` for high.
+    private func severityColor(for level: Int) -> Color {
+        switch level {
+        case 1, 2:
+            return theme.isLight ? theme.painDim : theme.pain.opacity(0.45)
+        case 3:
+            return theme.pain.opacity(0.72)
+        case 4:
+            return theme.pain
+        default:
+            return theme.isLight ? theme.warmInk : theme.pain
+        }
+    }
+
+    private func severityAccessibilityLabel(for level: Int) -> String {
+        if let severityLabel {
+            return "Severity \(severityLabel)"
+        }
+        return "Severity \(level) of 5"
     }
 
     private var accessibilityLabel: String {
         let title = DaySummaryBuilder.todayRowTitle(entry, schema: schema)
         let time = entry.timestamp.formatted(date: .omitted, time: .shortened)
         var parts = ["\(title), \(time)"]
-        if let severityLabel {
-            parts.append(severityLabel)
+        if let painSeverity {
+            parts.append(severityAccessibilityLabel(for: painSeverity))
         }
         return parts.joined(separator: ". ")
     }
@@ -105,6 +127,6 @@ struct TodayEntryRow: View {
         TodayEntryRow(entry: spotting, schema: schema)
     }
     .padding(.horizontal)
-    .background(Theme.plumEmber.base)
-    .environment(\.theme, .plumEmber)
+    .background(Theme.softPaper.base)
+    .environment(\.theme, .softPaper)
 }
