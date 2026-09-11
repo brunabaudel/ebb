@@ -85,15 +85,12 @@ struct CareView: View {
                         .foregroundStyle(theme.muted)
                     } else {
                         VStack(alignment: .leading, spacing: 0) {
-                            LazyVGrid(
-                                columns: [
-                                    GridItem(.flexible(), spacing: 8),
-                                    GridItem(.flexible(), spacing: 8),
-                                ],
-                                spacing: 8
-                            ) {
+                            VStack(alignment: .leading, spacing: 6) {
                                 ForEach(activeReminderItems) { item in
-                                    reminderTile(item)
+                                    Text(item.title)
+                                        .font(.footnote)
+                                        .foregroundStyle(theme.muted)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
 
@@ -151,37 +148,6 @@ struct CareView: View {
             .map(\.title)
             .joined(separator: ". ")
         return "My reminders. \(titles). \(sharedReminderTimeCaption)"
-    }
-
-    private func reminderTile(_ item: ActiveReminderItem) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: "bell")
-                .font(.caption2)
-                .foregroundStyle(theme.pain)
-                .accessibilityHidden(true)
-
-            Text(item.title)
-                .font(.footnote)
-                .foregroundStyle(theme.text)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity)
-        .aspectRatio(1, contentMode: .fit)
-        .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(alignment: .top) {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(theme.pain)
-                .frame(height: 2)
-                .mask(alignment: .top) {
-                    Rectangle().frame(height: 2)
-                }
-        }
-        .accessibilityHidden(true)
     }
 
     private var remindersSettings: some View {

@@ -18,57 +18,33 @@ struct RemindersSettingsView: View {
     var body: some View {
         List {
             Section {
-                Toggle(isOn: $reminderPreferences.periodStartNudgeEnabled) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Period starting")
-                        Text("When your estimated period window begins.")
-                            .font(.caption)
-                            .foregroundStyle(theme.muted)
-                    }
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 8),
+                        GridItem(.flexible(), spacing: 8),
+                    ],
+                    spacing: 8
+                ) {
+                    reminderTile(
+                        title: "Period starting",
+                        isOn: $reminderPreferences.periodStartNudgeEnabled
+                    )
+                    reminderTile(
+                        title: "Estimated ovulation",
+                        isOn: $reminderPreferences.ovulationNudgeEnabled
+                    )
+                    reminderTile(
+                        title: "Luteal-window heads-up",
+                        isOn: $reminderPreferences.lutealNudgeEnabled
+                    )
+                    reminderTile(
+                        title: "Daily log reminder",
+                        isOn: $reminderPreferences.dailyLogReminderEnabled
+                    )
                 }
+                .padding(.vertical, 4)
                 .themeListRow()
-                .onChange(of: reminderPreferences.periodStartNudgeEnabled) { _, _ in
-                    rescheduleReminders()
-                }
-
-                Toggle(isOn: $reminderPreferences.ovulationNudgeEnabled) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Estimated ovulation")
-                        Text("On your estimated ovulation day.")
-                            .font(.caption)
-                            .foregroundStyle(theme.muted)
-                    }
-                }
-                .themeListRow()
-                .onChange(of: reminderPreferences.ovulationNudgeEnabled) { _, _ in
-                    rescheduleReminders()
-                }
-
-                Toggle(isOn: $reminderPreferences.lutealNudgeEnabled) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Luteal-window heads-up")
-                        Text("When your higher-risk luteal phase begins.")
-                            .font(.caption)
-                            .foregroundStyle(theme.muted)
-                    }
-                }
-                .themeListRow()
-                .onChange(of: reminderPreferences.lutealNudgeEnabled) { _, _ in
-                    rescheduleReminders()
-                }
-
-                Toggle(isOn: $reminderPreferences.dailyLogReminderEnabled) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Daily log reminder")
-                        Text("Optional check-in at a time you choose.")
-                            .font(.caption)
-                            .foregroundStyle(theme.muted)
-                    }
-                }
-                .themeListRow()
-                .onChange(of: reminderPreferences.dailyLogReminderEnabled) { _, _ in
-                    rescheduleReminders()
-                }
+                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
             }
 
             if reminderPreferences.hasAnyNudgeEnabled {
@@ -121,6 +97,39 @@ struct RemindersSettingsView: View {
         .task {
             rescheduleReminders()
         }
+    }
+
+    private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
+        Button {
+            isOn.wrappedValue.toggle()
+            rescheduleReminders()
+        } label: {
+            Text(title)
+                .font(.footnote.weight(isOn.wrappedValue ? .semibold : .regular))
+                .foregroundStyle(isOn.wrappedValue ? theme.text : theme.muted)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 10)
+                .aspectRatio(1, contentMode: .fit)
+                .background(theme.painDim, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(alignment: .top) {
+                    if isOn.wrappedValue {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(theme.pain)
+                            .frame(height: 2)
+                            .mask(alignment: .top) {
+                                Rectangle().frame(height: 2)
+                            }
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn.wrappedValue ? "On" : "Off")
+        .accessibilityAddTraits(isOn.wrappedValue ? [.isSelected] : [])
     }
 
     private func rescheduleReminders() {
@@ -230,11 +239,26 @@ private struct ReminderTimePickerSheet: View {
     }
 }
 
-#Preview {
+#Preview("Default") {
     NavigationStack {
         RemindersSettingsView(
             schema: try! SchemaConfig.load(),
             reminderPreferences: ReminderPreferences()
+        )
+    }
+    .environment(\.theme, .softPaper)
+    .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
+    .modelContainer(for: SymptomEntry.self, inMemory: true)
+}
+
+#Preview("Some on") {
+    let preferences = ReminderPreferences()
+    preferences.periodStartNudgeEnabled = true
+    preferences.lutealNudgeEnabled = true
+    return NavigationStack {
+        RemindersSettingsView(
+            schema: try! SchemaConfig.load(),
+            reminderPreferences: preferences
         )
     }
     .environment(\.theme, .softPaper)
