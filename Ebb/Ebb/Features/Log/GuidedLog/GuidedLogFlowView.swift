@@ -308,10 +308,7 @@ struct GuidedLogFlowView: View {
                         Text(row.label)
                             .foregroundStyle(theme.muted)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(row.value)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(row.accent == .cycle ? theme.coolInk : theme.warmInk)
-                            .multilineTextAlignment(.trailing)
+                        ReviewDetailValue(row: row)
                     }
                     .font(.system(size: 13))
                     .padding(.vertical, 9)
@@ -554,10 +551,10 @@ struct GuidedLogFlowView: View {
                     if isSelected {
                         FlowLayout(spacing: 6) {
                             ForEach(effectField.values) { effectOption in
-                                SelectablePill(
+                                ReliefEffectPill(
                                     label: effectOption.label,
-                                    isSelected: reliefEffect(for: option.key) == effectOption.key,
-                                    accent: .pain
+                                    effectKey: effectOption.key,
+                                    isSelected: reliefEffect(for: option.key) == effectOption.key
                                 ) {
                                     toggleReliefEffect(reliefKey: option.key, effectKey: effectOption.key)
                                 }

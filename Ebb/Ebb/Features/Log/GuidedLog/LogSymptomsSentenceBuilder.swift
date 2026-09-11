@@ -6,7 +6,7 @@ struct ReviewDetailRow: Identifiable, Equatable, Sendable {
     let label: String
     let value: String
     /// When set, overview renders each line vertically instead of a single `value` string.
-    let valueLines: [String]?
+    let valueLines: [ReviewValueLine]?
     let step: LogSymptomsFlowStep
     let accent: FieldAccent
 
@@ -14,7 +14,7 @@ struct ReviewDetailRow: Identifiable, Equatable, Sendable {
         id: String,
         label: String,
         value: String,
-        valueLines: [String]? = nil,
+        valueLines: [ReviewValueLine]? = nil,
         step: LogSymptomsFlowStep,
         accent: FieldAccent
     ) {
@@ -280,12 +280,12 @@ enum LogSymptomsSentenceBuilder {
             )
         case ReliefEffects.takenFieldKey:
             guard hasHeadache == true else { return nil }
-            let reliefParts = perReliefSummaryParts(values: values, schema: schema)
+            let reliefParts = perReliefSummaryLines(values: values, schema: schema)
             guard !reliefParts.isEmpty else { return nil }
             return ReviewDetailRow(
                 id: key,
                 label: fieldLabel(key, schema: schema, fallback: "Relief"),
-                value: reliefParts.joined(separator: ", "),
+                value: reliefParts.map(\.displayText).joined(separator: ", "),
                 valueLines: reliefParts,
                 step: .relief,
                 accent: .pain
@@ -391,10 +391,10 @@ enum LogSymptomsSentenceBuilder {
         schema.field(forKey: key)?.label ?? fallback
     }
 
-    private static func perReliefSummaryParts(
+    private static func perReliefSummaryLines(
         values: [String: FieldValue],
         schema: SchemaConfig
-    ) -> [String] {
+    ) -> [ReviewValueLine] {
         guard let takenField = schema.field(forKey: ReliefEffects.takenFieldKey),
               case .choices(let takenKeys)? = values[ReliefEffects.takenFieldKey],
               !takenKeys.isEmpty else {
@@ -406,9 +406,9 @@ enum LogSymptomsSentenceBuilder {
             guard let effectKey = ReliefEffects.effect(for: key, in: values),
                   let effectLabel = choiceLabel(.choice(effectKey), fieldKey: ReliefEffects.legacyEffectFieldKey, schema: schema)
             else {
-                return label
+                return ReviewValueLine(prefix: label, effectLabel: nil, reliefEffectKey: nil)
             }
-            return "\(label) · \(effectLabel)"
+            return ReviewValueLine(prefix: label, effectLabel: effectLabel, reliefEffectKey: effectKey)
         }
     }
 

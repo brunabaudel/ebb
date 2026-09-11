@@ -248,10 +248,11 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         XCTAssertTrue(relief.contains("Some relief"))
         XCTAssertTrue(relief.contains("Rest"))
         XCTAssertTrue(relief.contains("Full relief"))
-        XCTAssertEqual(reliefRow?.valueLines, [
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.displayText), [
             "Ibuprofen · Some relief",
             "Rest / dark room · Full relief",
         ])
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.reliefEffectKey), ["partial", "full"])
     }
 
     func testLegacySingleReliefEffectAppliesToAllTaken() {
@@ -265,10 +266,11 @@ final class LogSymptomsSentenceBuilderTests: XCTestCase {
         let relief = reliefRow?.value ?? ""
         XCTAssertTrue(relief.contains("Ibuprofen · Some relief"))
         XCTAssertTrue(relief.contains("Naproxen · Some relief"))
-        XCTAssertEqual(reliefRow?.valueLines, [
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.displayText), [
             "Ibuprofen · Some relief",
             "Naproxen · Some relief",
         ])
+        XCTAssertEqual(reliefRow?.valueLines?.map(\.reliefEffectKey), ["partial", "partial"])
     }
 
     func testFilledDetailRowsWithoutHeadacheOmitsPainFields() {
