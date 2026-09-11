@@ -178,35 +178,19 @@ struct TodayView: View {
                 .accessibilityLabel("Browse calendar history")
             }
             Spacer(minLength: 12)
-            HStack(spacing: 8) {
-                Button { showCalendar = true } label: {
-                    Image(systemName: "square.grid.2x2")
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(theme.cycle)
-                        .frame(width: 34, height: 34)
-                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 10))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .strokeBorder(theme.cycleDim, lineWidth: 1)
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Browse calendar history")
-
-                Button { showTapLog = true } label: {
-                    Image(systemName: "plus")
-                        .font(.title2.weight(.light))
-                        .foregroundStyle(theme.text)
-                        .frame(width: 34, height: 34)
-                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 10))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .strokeBorder(theme.line, lineWidth: 1)
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Log symptoms")
+            Button { showTapLog = true } label: {
+                Image(systemName: "plus")
+                    .font(.title2.weight(.light))
+                    .foregroundStyle(theme.text)
+                    .frame(width: 34, height: 34)
+                    .background(theme.surface, in: RoundedRectangle(cornerRadius: 10))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(theme.line, lineWidth: 1)
+                    }
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Log symptoms")
         }
     }
 
