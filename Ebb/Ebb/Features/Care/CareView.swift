@@ -10,6 +10,7 @@ struct CareView: View {
     @Environment(CycleService.self) private var cycleService
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
+    @State private var selectedTab: CareTab = .doctor
     @State private var showTimePicker = false
 
     var body: some View {
@@ -22,17 +23,19 @@ struct CareView: View {
                     header
                         .padding(.bottom, 24)
 
-                    VStack(spacing: 14) {
-                        bringToDoctorSection
-
-                        myMedicationsSection(
-                            medicationPreferences: medicationPreferences
-                        )
-
-                        myRemindersSection(
-                            reminderPreferences: reminderPreferences
-                        )
+                    Picker("Care section", selection: $selectedTab) {
+                        ForEach(CareTab.allCases) { tab in
+                            Text(tab.title).tag(tab)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .tint(theme.pain)
+                    .padding(.bottom, 14)
+
+                    selectedTabContent(
+                        reminderPreferences: reminderPreferences,
+                        medicationPreferences: medicationPreferences
+                    )
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -54,24 +57,32 @@ struct CareView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Care")
-                .font(.system(.title, design: .serif))
-            Text("A note for your doctor, medications, and reminders.")
-                .font(.footnote)
-                .foregroundStyle(theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
+        Text("Care")
+            .font(.system(.title, design: .serif))
+    }
+
+    @ViewBuilder
+    private func selectedTabContent(
+        reminderPreferences: ReminderPreferences,
+        medicationPreferences: MedicationPreferences
+    ) -> some View {
+        switch selectedTab {
+        case .doctor:
+            DoctorExportContent(schema: schema)
+        case .medications:
+            MedicationTileGrid(
+                schema: schema,
+                medicationPreferences: medicationPreferences
+            )
+        case .reminders:
+            remindersContent(reminderPreferences: reminderPreferences)
         }
     }
 
-    private func myRemindersSection(
+    private func remindersContent(
         reminderPreferences: ReminderPreferences
     ) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("My reminders")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(theme.text)
-
             ReminderTileGrid(preferences: reminderPreferences) {
                 rescheduleReminders()
             }
@@ -92,37 +103,28 @@ struct CareView: View {
         }
     }
 
-    private func myMedicationsSection(
-        medicationPreferences: MedicationPreferences
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("My medications")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(theme.text)
-
-            MedicationTileGrid(
-                schema: schema,
-                medicationPreferences: medicationPreferences
-            )
-        }
-    }
-
-    private var bringToDoctorSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Bring to your doctor")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(theme.text)
-
-            DoctorExportContent(schema: schema)
-        }
-    }
-
     private func rescheduleReminders() {
         ReminderScheduling.reschedule(
             preferences: reminderPreferences,
             cycleService: cycleService,
             entries: entries
         )
+    }
+}
+
+private enum CareTab: String, CaseIterable, Identifiable {
+    case doctor
+    case medications
+    case reminders
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .doctor: "Doctor"
+        case .medications: "Medications"
+        case .reminders: "Reminders"
+        }
     }
 }
 
