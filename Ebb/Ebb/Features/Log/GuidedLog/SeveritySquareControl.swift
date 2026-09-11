@@ -9,6 +9,16 @@ struct SeveritySquareControl: View {
 
     @Environment(\.theme) private var theme
 
+    private var hasVisibleCaption: Bool {
+        guard let selection else { return false }
+        return labels[selection] != nil
+    }
+
+    private var captionText: String {
+        guard let selection, let caption = labels[selection] else { return " " }
+        return caption
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 5) {
@@ -19,12 +29,13 @@ struct SeveritySquareControl: View {
             }
             .frame(maxWidth: .infinity)
 
-            if let selection, let caption = labels[selection] {
-                Text(caption)
-                    .font(.system(size: 13))
-                    .foregroundStyle(theme.muted)
-                    .accessibilityHidden(true)
-            }
+            Text(captionText)
+                .font(.system(size: 13))
+                .foregroundStyle(theme.muted)
+                .opacity(hasVisibleCaption ? 1 : 0)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 18)
+                .accessibilityHidden(true)
         }
         .accessibilityElement(children: .contain)
     }
