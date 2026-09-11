@@ -84,12 +84,12 @@ struct EntryOverviewView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(entry.timestamp.formatted(date: .abbreviated, time: .shortened))
-                        .font(.footnote.monospaced())
+                        .font(.caption.monospaced())
                         .foregroundStyle(theme.muted)
 
                     if let phase = entry.cyclePhase {
                         Text(phase.displayName)
-                            .font(.footnote.weight(.semibold))
+                            .font(.caption.weight(.semibold))
                             .foregroundStyle(theme.cycle)
                     }
                 }
@@ -114,7 +114,7 @@ struct EntryOverviewView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     detailValue(for: row)
                 }
-                .font(.subheadline)
+                .font(.system(size: 13))
                 .padding(.vertical, 9)
             }
         }
@@ -156,7 +156,7 @@ struct EntryOverviewView: View {
     private func noteSection(_ note: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("You said")
-                .font(.footnote.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(theme.muted)
             Text(TranscriptFormatting.forDisplay(note))
                 .font(.subheadline)
