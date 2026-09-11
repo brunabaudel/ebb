@@ -34,17 +34,10 @@ struct DoctorExportContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("A clean summary of your pattern, generated on your phone. Nothing is uploaded.")
-                .font(.subheadline)
-                .foregroundStyle(theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-
             if report.hasEnoughData {
                 reportCard
-                    .padding(.top, 18)
             } else {
                 emptyCard
-                    .padding(.top, 18)
             }
 
             exportButton
