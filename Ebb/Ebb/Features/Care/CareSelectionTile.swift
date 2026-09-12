@@ -13,10 +13,11 @@ enum CareTileShape {
 
 struct CareSelectionTile: View {
     let title: String
+    /// Alarm time (e.g. "9:00 AM") — rendered as the primary rose moment below the name.
     var subtitle: String?
-    /// Second alarm line (e.g. repeat preset) shown below `subtitle`.
+    /// Repeat preset (e.g. "Daily") — composed with `footnote` on one meta line.
     var detail: String?
-    /// Third alarm line (e.g. ongoing or end date) shown below `detail`.
+    /// Duration (e.g. "Ongoing") — composed with `detail` on one meta line.
     var footnote: String?
     let isSelected: Bool
     var tileWidth: CGFloat = CareTileLayout.size
@@ -43,6 +44,45 @@ struct CareSelectionTile: View {
 
     private var alarmLineCount: Int {
         [subtitle, detail, footnote].compactMap { $0 }.count
+    }
+
+    /// Repeat + duration on one secondary line (e.g. "Daily · Ongoing").
+    private var alarmMetaLine: String? {
+        switch (detail, footnote) {
+        case let (repeat?, duration?):
+            "\(repeat) · \(duration)"
+        case let (repeat?, nil):
+            repeat
+        case let (nil, duration?):
+            duration
+        case (nil, nil):
+            nil
+        }
+    }
+
+    private var alarmTitleFont: Font {
+        .system(.caption, design: .serif).weight(.semibold)
+    }
+
+    private var reminderTitleFont: Font {
+        .footnote.weight(isSelected ? .semibold : .regular)
+    }
+
+    private var alarmTitleColor: Color {
+        isSelected ? theme.text : theme.inkSoft
+    }
+
+    private var reminderTitleColor: Color {
+        isSelected ? theme.text : theme.muted
+    }
+
+    /// Rose alarm moment — stronger when the tile is on, quiet when off.
+    private var alarmTimeColor: Color {
+        isSelected ? theme.pain : theme.pain.opacity(0.78)
+    }
+
+    private var alarmMetaColor: Color {
+        theme.isLight ? theme.faint : theme.muted.opacity(0.72)
     }
 
     var body: some View {
@@ -76,39 +116,28 @@ struct CareSelectionTile: View {
     @ViewBuilder
     private func tileContent(cornerRadius: CGFloat) -> some View {
         let hasAlarmLines = alarmLineCount > 0
-        let titleFont: Font = hasAlarmLines
-            ? .caption.weight(isSelected ? .semibold : .regular)
-            : .footnote.weight(isSelected ? .semibold : .regular)
-        let titleLineLimit = alarmLineCount >= 3 ? 1 : 2
 
-        VStack(spacing: 1) {
+        VStack(spacing: hasAlarmLines ? 2 : 1) {
             Text(title)
-                .font(titleFont)
-                .foregroundStyle(isSelected ? theme.text : theme.muted)
+                .font(hasAlarmLines ? alarmTitleFont : reminderTitleFont)
+                .foregroundStyle(hasAlarmLines ? alarmTitleColor : reminderTitleColor)
                 .multilineTextAlignment(.center)
-                .lineLimit(titleLineLimit)
+                .lineLimit(hasAlarmLines ? 1 : 2)
                 .minimumScaleFactor(0.8)
 
             if let subtitle {
                 Text(subtitle)
-                    .font(.caption2)
-                    .foregroundStyle(isSelected ? theme.muted : theme.muted.opacity(0.85))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(alarmTimeColor)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .minimumScaleFactor(0.8)
             }
 
-            if let detail {
-                Text(detail)
+            if let alarmMetaLine {
+                Text(alarmMetaLine)
                     .font(.caption2)
-                    .foregroundStyle(isSelected ? theme.muted.opacity(0.9) : theme.muted.opacity(0.75))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-            }
-
-            if let footnote {
-                Text(footnote)
-                    .font(.caption2)
-                    .foregroundStyle(isSelected ? theme.muted.opacity(0.85) : theme.muted.opacity(0.7))
+                    .foregroundStyle(alarmMetaColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
