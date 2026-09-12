@@ -74,6 +74,14 @@ final class MedicationPreferences {
         reliefAlarmSchedules[key]?.formattedTime()
     }
 
+    func formattedAlarmRepeat(for key: String) -> String? {
+        reliefAlarmSchedules[key]?.formattedRepeat()
+    }
+
+    func formattedAlarmDuration(for key: String) -> String? {
+        reliefAlarmSchedules[key]?.formattedDuration()
+    }
+
     func setAlarmSchedule(for key: String, schedule: ReliefAlarmSchedule) {
         reliefAlarmSchedules[key] = schedule
     }

@@ -279,10 +279,14 @@ struct MedicationPreferencesTests {
         preferences.setAlarmSchedule(for: "ibuprofen", schedule: schedule)
         #expect(preferences.alarmSchedule(for: "ibuprofen") == schedule)
         #expect(preferences.formattedAlarmTime(for: "ibuprofen")?.isEmpty == false)
+        #expect(preferences.formattedAlarmRepeat(for: "ibuprofen") == "Weekdays")
+        #expect(preferences.formattedAlarmDuration(for: "ibuprofen") == "Ongoing")
 
         preferences.clearAlarm(for: "ibuprofen")
         #expect(preferences.alarmSchedule(for: "ibuprofen") == nil)
         #expect(preferences.formattedAlarmTime(for: "ibuprofen") == nil)
+        #expect(preferences.formattedAlarmRepeat(for: "ibuprofen") == nil)
+        #expect(preferences.formattedAlarmDuration(for: "ibuprofen") == nil)
 
         let reloaded = MedicationPreferences(defaults: defaults)
         #expect(reloaded.alarmSchedule(for: "ibuprofen") == nil)

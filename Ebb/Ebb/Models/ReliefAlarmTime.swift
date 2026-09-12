@@ -41,6 +41,65 @@ struct ReliefAlarmSchedule: Codable, Equatable, Sendable {
         guard let date = calendar.date(from: components) else { return "" }
         return date.formatted(date: .omitted, time: .shortened)
     }
+
+    func formattedRepeat(calendar: Calendar = .current) -> String {
+        switch repeatPreset {
+        case .daily, .weekdays:
+            return repeatPreset.title
+        case .custom:
+            return Self.formattedCustomWeekdays(weekdays, calendar: calendar)
+        }
+    }
+
+    func formattedDuration(calendar: Calendar = .current) -> String {
+        guard let endDate else { return "Ongoing" }
+        let formattedEnd = endDate.formatted(
+            .dateTime
+                .day()
+                .month(.abbreviated)
+                .locale(calendar.locale ?? .current)
+        )
+        return "Until \(formattedEnd)"
+    }
+
+    private static func formattedCustomWeekdays(_ weekdays: Set<Int>, calendar: Calendar) -> String {
+        let ordered = orderedWeekdays(from: weekdays, calendar: calendar)
+        let useVeryShortSymbols = ordered.count > 3
+        return ordered.map { weekday in
+            weekdaySymbol(
+                for: weekday,
+                style: useVeryShortSymbols ? .veryShort : .abbreviated,
+                calendar: calendar
+            )
+        }
+        .joined(separator: " ")
+    }
+
+    private static func orderedWeekdays(from weekdays: Set<Int>, calendar: Calendar) -> [Int] {
+        (0..<7).compactMap { offset in
+            let weekday = ((calendar.firstWeekday - 1 + offset) % 7) + 1
+            return weekdays.contains(weekday) ? weekday : nil
+        }
+    }
+
+    private enum WeekdaySymbolStyle {
+        case abbreviated
+        case veryShort
+    }
+
+    private static func weekdaySymbol(
+        for weekday: Int,
+        style: WeekdaySymbolStyle,
+        calendar: Calendar
+    ) -> String {
+        switch style {
+        case .abbreviated:
+            calendar.shortWeekdaySymbols[weekday - 1]
+        case .veryShort:
+            let index = (weekday - calendar.firstWeekday + 7) % 7
+            return calendar.veryShortWeekdaySymbols[index].uppercased()
+        }
+    }
 }
 
 enum ReliefRepeatPreset: String, CaseIterable, Identifiable {

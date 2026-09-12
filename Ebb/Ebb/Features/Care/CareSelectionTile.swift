@@ -14,6 +14,10 @@ enum CareTileShape {
 struct CareSelectionTile: View {
     let title: String
     var subtitle: String?
+    /// Second alarm line (e.g. repeat preset) shown below `subtitle`.
+    var detail: String?
+    /// Third alarm line (e.g. ongoing or end date) shown below `detail`.
+    var footnote: String?
     let isSelected: Bool
     var tileWidth: CGFloat = CareTileLayout.size
     var tileHeight: CGFloat = CareTileLayout.size
@@ -22,6 +26,24 @@ struct CareSelectionTile: View {
     var action: () -> Void
 
     @Environment(\.theme) private var theme
+
+    private var accessibilityLabel: String {
+        var parts = [title]
+        if let subtitle {
+            parts.append("alarm \(subtitle)")
+        }
+        if let detail {
+            parts.append(detail)
+        }
+        if let footnote {
+            parts.append(footnote)
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    private var alarmLineCount: Int {
+        [subtitle, detail, footnote].compactMap { $0 }.count
+    }
 
     var body: some View {
         let cornerRadius = max(CareTileLayout.cornerRadius, theme.cardCornerRadius)
@@ -46,29 +68,47 @@ struct CareSelectionTile: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(subtitle.map { "\(title), alarm \($0)" } ?? title)
+        .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(isSelected ? "On" : "Off")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
     @ViewBuilder
     private func tileContent(cornerRadius: CGFloat) -> some View {
-        let titleFont: Font = subtitle == nil
-            ? .footnote.weight(isSelected ? .semibold : .regular)
-            : .caption.weight(isSelected ? .semibold : .regular)
+        let hasAlarmLines = alarmLineCount > 0
+        let titleFont: Font = hasAlarmLines
+            ? .caption.weight(isSelected ? .semibold : .regular)
+            : .footnote.weight(isSelected ? .semibold : .regular)
+        let titleLineLimit = alarmLineCount >= 3 ? 1 : 2
 
-        VStack(spacing: 2) {
+        VStack(spacing: 1) {
             Text(title)
                 .font(titleFont)
                 .foregroundStyle(isSelected ? theme.text : theme.muted)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
+                .lineLimit(titleLineLimit)
                 .minimumScaleFactor(0.8)
 
             if let subtitle {
                 Text(subtitle)
                     .font(.caption2)
                     .foregroundStyle(isSelected ? theme.muted : theme.muted.opacity(0.85))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+
+            if let detail {
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(isSelected ? theme.muted.opacity(0.9) : theme.muted.opacity(0.75))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+
+            if let footnote {
+                Text(footnote)
+                    .font(.caption2)
+                    .foregroundStyle(isSelected ? theme.muted.opacity(0.85) : theme.muted.opacity(0.7))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }

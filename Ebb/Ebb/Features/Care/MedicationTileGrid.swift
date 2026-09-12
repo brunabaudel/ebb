@@ -106,6 +106,8 @@ struct MedicationTileGrid: View {
             CareSelectionTile(
                 title: option.label,
                 subtitle: medicationPreferences.formattedAlarmTime(for: option.key),
+                detail: medicationPreferences.formattedAlarmRepeat(for: option.key),
+                footnote: medicationPreferences.formattedAlarmDuration(for: option.key),
                 isSelected: medicationPreferences.isSaved(option.key),
                 tileWidth: tileSize,
                 tileHeight: tileSize,
