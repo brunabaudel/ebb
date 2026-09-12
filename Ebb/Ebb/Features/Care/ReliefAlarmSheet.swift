@@ -137,18 +137,13 @@ struct ReliefAlarmSheet: View {
     }
 
     private var timeSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Time")
-            DatePicker(
-                "Alarm time",
-                selection: $draft.selectedTime,
-                displayedComponents: .hourAndMinute
-            )
-            .datePickerStyle(.wheel)
-            .labelsHidden()
-            .frame(maxWidth: .infinity)
-        }
-        .themeCard(padding: 12, cornerRadius: theme.cardCornerRadius)
+        DatePicker(
+            "Alarm time",
+            selection: $draft.selectedTime,
+            displayedComponents: .hourAndMinute
+        )
+        .datePickerStyle(.compact)
+        .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
     }
 
     private var repeatSection: some View {
