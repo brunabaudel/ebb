@@ -72,54 +72,37 @@ enum ReminderScheduling {
     }
 }
 
+private enum ReminderTileGridLayout {
+    static let columnCount = 2
+}
+
 struct ReminderTileGrid: View {
     @Bindable var preferences: ReminderPreferences
     var onToggle: () -> Void
 
-    @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let rowVerticalPadding: CGFloat = 13
-
     var body: some View {
-        VStack(spacing: 0) {
-            reminderRow(
+        CareTileGrid(columnCount: ReminderTileGridLayout.columnCount) {
+            ReminderToggleTile(
                 title: "Period starting",
-                isOn: $preferences.periodStartNudgeEnabled
+                isOn: animatedBinding($preferences.periodStartNudgeEnabled)
             )
-            reminderHairline
-            reminderRow(
+            ReminderToggleTile(
                 title: "Estimated ovulation",
-                isOn: $preferences.ovulationNudgeEnabled
+                isOn: animatedBinding($preferences.ovulationNudgeEnabled)
             )
-            reminderHairline
-            reminderRow(
-                title: "Luteal-window heads-up",
-                isOn: $preferences.lutealNudgeEnabled
+            ReminderToggleTile(
+                title: "Luteal-window",
+                accessibilityTitle: "Luteal-window heads-up",
+                isOn: animatedBinding($preferences.lutealNudgeEnabled)
             )
-            reminderHairline
-            reminderRow(
-                title: "Daily log reminder",
-                isOn: $preferences.dailyLogReminderEnabled
+            ReminderToggleTile(
+                title: "Daily log",
+                accessibilityTitle: "Daily log reminder",
+                isOn: animatedBinding($preferences.dailyLogReminderEnabled)
             )
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var reminderHairline: some View {
-        Rectangle()
-            .fill(theme.pain.opacity(0.35))
-            .frame(height: 1)
-    }
-
-    private func reminderRow(title: String, isOn: Binding<Bool>) -> some View {
-        Toggle(isOn: animatedBinding(isOn)) {
-            Text(title)
-                .font(.body)
-                .foregroundStyle(isOn.wrappedValue ? theme.text : theme.muted)
-        }
-        .tint(theme.ok)
-        .padding(.vertical, rowVerticalPadding)
     }
 
     private func animatedBinding(_ isOn: Binding<Bool>) -> Binding<Bool> {
@@ -139,6 +122,101 @@ struct ReminderTileGrid: View {
                 }
             }
         )
+    }
+}
+
+private struct ReminderToggleTile: View {
+    let title: String
+    var accessibilityTitle: String?
+    @Binding var isOn: Bool
+
+    @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var label: String {
+        accessibilityTitle ?? title
+    }
+
+    var body: some View {
+        let cornerRadius = max(CareTileLayout.cornerRadius, theme.cardCornerRadius)
+
+        Button {
+            isOn.toggle()
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(isOn ? theme.text : theme.muted)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Spacer(minLength: 4)
+
+                HStack(spacing: 8) {
+                    Text(isOn ? "On" : "Off")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(isOn ? theme.warmInk : theme.muted)
+
+                    Spacer(minLength: 0)
+
+                    Toggle("", isOn: $isOn)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                        .tint(theme.ok)
+                }
+            }
+            .padding(.top, 12)
+            .padding(.horizontal, 13)
+            .padding(.bottom, 11)
+            .frame(maxWidth: .infinity)
+            .frame(height: CareTileLayout.reminderTileHeight)
+            .background {
+                if isOn {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(
+                            LinearGradient(
+                                colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(theme.surface)
+                }
+            }
+            .overlay {
+                if isOn {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .inset(by: 0.5)
+                        .stroke(
+                            LinearGradient(
+                                colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 1
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .strokeBorder(theme.line, lineWidth: 1)
+                }
+            }
+            .shadow(color: isOn ? theme.pain.opacity(0.32) : .clear, radius: 10, y: 3)
+            .shadow(color: isOn ? theme.pain.opacity(0.12) : .clear, radius: 2, y: 1)
+        }
+        .buttonStyle(.plain)
+        .animation(
+            reduceMotion ? nil : .smooth(duration: 0.28),
+            value: isOn
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(label)
+        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
     }
 }
 
@@ -261,8 +339,13 @@ struct ReminderTimePickerSheet: View {
     }
 }
 
-#Preview("Reminder journal rows") {
-    ReminderTileGrid(preferences: ReminderPreferences()) {}
+#Preview("Reminder landscape cards") {
+    let preferences = ReminderPreferences()
+    preferences.periodStartNudgeEnabled = true
+    preferences.ovulationNudgeEnabled = false
+    preferences.lutealNudgeEnabled = true
+    preferences.dailyLogReminderEnabled = false
+    return ReminderTileGrid(preferences: preferences) {}
         .padding(20)
         .background(Theme.softPaper.base)
         .environment(\.theme, .softPaper)
