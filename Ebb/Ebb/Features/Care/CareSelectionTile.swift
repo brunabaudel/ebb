@@ -112,40 +112,39 @@ struct CareSelectionTile: View {
             shape: shape
         ))
         .background {
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(theme.surface)
-        }
-        .background {
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(
-                    LinearGradient(
-                        colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
-                        startPoint: .top,
-                        endPoint: .bottom
+            if isSelected {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                     )
-                )
-                .opacity(isSelected ? 1 : 0)
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(theme.surface)
+            }
         }
         .overlay {
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .strokeBorder(theme.line, lineWidth: 1)
-                .opacity(isSelected ? 0 : 1)
+            if isSelected {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .inset(by: 0.5)
+                    .stroke(
+                        LinearGradient(
+                            colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
+                            startPoint: .top,
+                            endPoint: .center
+                        ),
+                        lineWidth: 1
+                    )
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(theme.line, lineWidth: 1)
+            }
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .inset(by: 0.5)
-                .stroke(
-                    LinearGradient(
-                        colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
-                        startPoint: .top,
-                        endPoint: .center
-                    ),
-                    lineWidth: 1
-                )
-                .opacity(isSelected ? 1 : 0)
-        }
-        .shadow(color: theme.pain.opacity(isSelected ? 0.32 : 0), radius: 10, y: 3)
-        .shadow(color: theme.pain.opacity(isSelected ? 0.12 : 0), radius: 2, y: 1)
+        .shadow(color: isSelected ? theme.pain.opacity(0.32) : .clear, radius: 10, y: 3)
+        .shadow(color: isSelected ? theme.pain.opacity(0.12) : .clear, radius: 2, y: 1)
         .animation(
             reduceMotion ? nil : .smooth(duration: 0.28),
             value: isSelected
