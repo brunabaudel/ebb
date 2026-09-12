@@ -74,27 +74,33 @@ struct CareView: View {
         switch selectedTab {
         case .doctor:
             DoctorExportContent(schema: schema)
-        case .reminders, .medications:
-            remindersContent(
-                reminderPreferences: reminderPreferences,
-                medicationPreferences: medicationPreferences
-            )
+        case .medications:
+            reliefContent(medicationPreferences: medicationPreferences)
+        case .reminders:
+            remindersContent(reminderPreferences: reminderPreferences)
         case .cycle:
             CycleInfoControls(preferences: cyclePreferences)
         }
     }
 
-    private func remindersContent(
-        reminderPreferences: ReminderPreferences,
-        medicationPreferences: MedicationPreferences
-    ) -> some View {
+    private func reliefContent(medicationPreferences: MedicationPreferences) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             MedicationTileGrid(
                 schema: schema,
                 medicationPreferences: medicationPreferences,
-                onAlarmChange: rescheduleAllReminders
+                onAlarmChange: rescheduleReliefAlarms
             )
 
+            ReliefPauseDuringMigraineToggle(
+                medicationPreferences: medicationPreferences,
+                onChange: rescheduleReliefAlarms
+            )
+            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+        }
+    }
+
+    private func remindersContent(reminderPreferences: ReminderPreferences) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
             ReminderTileGrid(preferences: reminderPreferences) {
                 rescheduleAllReminders()
             }
@@ -124,6 +130,15 @@ struct CareView: View {
             entries: entries
         )
     }
+
+    private func rescheduleReliefAlarms() {
+        ReminderScheduling.rescheduleReliefAlarms(
+            schema: schema,
+            medicationPreferences: medicationPreferences,
+            preferences: reminderPreferences,
+            entries: entries
+        )
+    }
 }
 
 private enum CareTab: String, CaseIterable, Identifiable {
@@ -132,8 +147,7 @@ private enum CareTab: String, CaseIterable, Identifiable {
     case reminders
     case cycle
 
-    /// Segmented control tabs on My care (Relief lives inside Reminders).
-    static let segmentedTabs: [CareTab] = [.doctor, .reminders, .cycle]
+    static let segmentedTabs: [CareTab] = [.doctor, .medications, .reminders, .cycle]
 
     var id: String { rawValue }
 
@@ -170,10 +184,19 @@ private enum CareTab: String, CaseIterable, Identifiable {
         .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
 
-#Preview("Reminders with medications") {
+#Preview("Relief with alarms") {
     let medications = MedicationPreferences()
     medications.setSaved("ibuprofen", isSaved: true)
-    medications.setSaved("triptan", isSaved: true)
+    medications.setAlarmSchedule(
+        for: "ibuprofen",
+        schedule: ReliefAlarmSchedule(
+            hour: 9,
+            minute: 0,
+            weekdays: ReliefAlarmSchedule.allWeekdays,
+            startDate: .now,
+            endDate: nil
+        )
+    )
     return CareView(schema: try! SchemaConfig.load())
         .environment(\.theme, .softPaper)
         .environment(medications)

@@ -131,20 +131,41 @@ struct ReminderTimeRow: View {
     }
 }
 
-struct ReminderPauseDuringMigraineToggle: View {
-    @Bindable var preferences: ReminderPreferences
+struct PauseDuringMigraineToggle: View {
+    @Binding var isOn: Bool
     var onChange: () -> Void
 
     @Environment(\.theme) private var theme
 
     var body: some View {
-        Toggle(isOn: $preferences.pauseDuringMigraine) {
+        Toggle(isOn: $isOn) {
             Text("Quiet during a migraine")
         }
         .tint(theme.ok)
-        .onChange(of: preferences.pauseDuringMigraine) { _, _ in
+        .onChange(of: isOn) { _, _ in
             onChange()
         }
+    }
+}
+
+struct ReminderPauseDuringMigraineToggle: View {
+    @Bindable var preferences: ReminderPreferences
+    var onChange: () -> Void
+
+    var body: some View {
+        PauseDuringMigraineToggle(isOn: $preferences.pauseDuringMigraine, onChange: onChange)
+    }
+}
+
+struct ReliefPauseDuringMigraineToggle: View {
+    @Bindable var medicationPreferences: MedicationPreferences
+    var onChange: () -> Void
+
+    var body: some View {
+        PauseDuringMigraineToggle(
+            isOn: $medicationPreferences.pauseAlarmsDuringMigraine,
+            onChange: onChange
+        )
     }
 }
 

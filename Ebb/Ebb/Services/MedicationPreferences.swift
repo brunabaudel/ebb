@@ -22,12 +22,18 @@ final class MedicationPreferences {
         didSet { persist() }
     }
 
+    /// When on, relief alarms stay quiet while a migraine is active today.
+    var pauseAlarmsDuringMigraine: Bool {
+        didSet { defaults.set(pauseAlarmsDuringMigraine, forKey: Keys.pauseAlarmsDuringMigraine) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         savedReliefKeys = defaults.stringArray(forKey: Keys.savedReliefKeys) ?? []
         customReliefs = Self.loadCustomReliefs(from: defaults)
         hiddenReliefKeys = defaults.stringArray(forKey: Keys.hiddenReliefKeys) ?? []
         reliefAlarmSchedules = Self.loadReliefAlarmSchedules(from: defaults)
+        pauseAlarmsDuringMigraine = defaults.object(forKey: Keys.pauseAlarmsDuringMigraine) as? Bool ?? true
     }
 
     func isSaved(_ key: String) -> Bool {
@@ -108,6 +114,7 @@ final class MedicationPreferences {
         customReliefs = []
         hiddenReliefKeys = []
         reliefAlarmSchedules = [:]
+        pauseAlarmsDuringMigraine = true
     }
 
     // MARK: - Private
@@ -117,6 +124,7 @@ final class MedicationPreferences {
         static let customReliefs = "ebb.medications.customReliefs"
         static let hiddenReliefKeys = "ebb.medications.hiddenReliefKeys"
         static let reliefAlarmSchedules = "ebb.medications.reliefAlarmSchedules"
+        static let pauseAlarmsDuringMigraine = "ebb.medications.pauseAlarmsDuringMigraine"
         static let legacyReliefAlarmTimes = "ebb.medications.reliefAlarmTimes"
     }
 
