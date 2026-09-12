@@ -89,6 +89,7 @@ final class MedicationPreferences {
 
     func setAlarmSchedule(for key: String, schedule: ReliefAlarmSchedule) {
         reliefAlarmSchedules[key] = schedule
+        setSaved(key, isSaved: true)
     }
 
     func clearAlarm(for key: String) {
