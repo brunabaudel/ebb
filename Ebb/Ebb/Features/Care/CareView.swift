@@ -90,6 +90,7 @@ struct CareView: View {
                 onChange: rescheduleReliefAlarms
             )
             .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+            .padding(.bottom, 10)
 
             MedicationTileGrid(
                 schema: schema,
@@ -106,6 +107,7 @@ struct CareView: View {
                 onChange: rescheduleAllReminders
             )
             .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+            .padding(.bottom, 10)
 
             ReminderTileGrid(preferences: reminderPreferences) {
                 rescheduleAllReminders()
