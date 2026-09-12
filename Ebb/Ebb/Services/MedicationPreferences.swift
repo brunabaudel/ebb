@@ -94,6 +94,7 @@ final class MedicationPreferences {
 
     func clearAlarm(for key: String) {
         reliefAlarmSchedules.removeValue(forKey: key)
+        setSaved(key, isSaved: false)
     }
 
     /// Removes a medication from the grid. Custom reliefs are deleted; built-in schema options are hidden.

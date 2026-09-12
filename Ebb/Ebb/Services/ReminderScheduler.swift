@@ -178,6 +178,14 @@ enum ReminderScheduler {
         "\(reliefAlarmIDPrefix)\(key).\(weekday)"
     }
 
+    /// Whether a relief alarm should be scheduled for this key (selected tile with a stored schedule).
+    static func shouldArmReliefAlarm(
+        key: String,
+        medicationPreferences: MedicationPreferences
+    ) -> Bool {
+        medicationPreferences.isSaved(key) && medicationPreferences.alarmSchedule(for: key) != nil
+    }
+
     @MainActor
     static func rescheduleReliefAlarms(input: ReliefAlarmScheduleInput) async {
         let center = UNUserNotificationCenter.current()
@@ -200,6 +208,10 @@ enum ReminderScheduler {
         let calendar = Calendar.ebbCalendar
 
         for (key, schedule) in input.medicationPreferences.reliefAlarmSchedules {
+            guard shouldArmReliefAlarm(key: key, medicationPreferences: input.medicationPreferences) else {
+                continue
+            }
+
             guard ReliefAlarmScheduling.isScheduleActive(schedule, now: input.now, calendar: calendar) else {
                 continue
             }

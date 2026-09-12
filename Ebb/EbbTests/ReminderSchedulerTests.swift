@@ -140,6 +140,68 @@ struct ReminderSchedulerTests {
         #expect(ReminderScheduler.reliefAlarmNotificationID(for: "custom_abc", weekday: 5) == "ebb.relief.alarm.custom_abc.5")
     }
 
+    @Test func shouldArmReliefAlarmWhenSavedAndScheduled() throws {
+        let defaults = makeDefaults()
+        let preferences = MedicationPreferences(defaults: defaults)
+        let calendar = Calendar.ebbCalendar
+        let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        preferences.setSaved("ibuprofen", isSaved: true)
+        preferences.setAlarmSchedule(
+            for: "ibuprofen",
+            schedule: ReliefAlarmSchedule(
+                hour: 8,
+                minute: 0,
+                weekdays: ReliefAlarmSchedule.weekdayPreset,
+                startDate: start,
+                endDate: nil
+            )
+        )
+
+        #expect(
+            ReminderScheduler.shouldArmReliefAlarm(
+                key: "ibuprofen",
+                medicationPreferences: preferences
+            )
+        )
+    }
+
+    @Test func shouldNotArmReliefAlarmWhenUnsavedButScheduled() throws {
+        let defaults = makeDefaults()
+        let preferences = MedicationPreferences(defaults: defaults)
+        let calendar = Calendar.ebbCalendar
+        let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        preferences.setAlarmSchedule(
+            for: "ibuprofen",
+            schedule: ReliefAlarmSchedule(
+                hour: 8,
+                minute: 0,
+                weekdays: ReliefAlarmSchedule.weekdayPreset,
+                startDate: start,
+                endDate: nil
+            )
+        )
+
+        #expect(
+            !ReminderScheduler.shouldArmReliefAlarm(
+                key: "ibuprofen",
+                medicationPreferences: preferences
+            )
+        )
+    }
+
+    @Test func shouldNotArmReliefAlarmWhenSavedButNotScheduled() {
+        let defaults = makeDefaults()
+        let preferences = MedicationPreferences(defaults: defaults)
+        preferences.setSaved("ibuprofen", isSaved: true)
+
+        #expect(
+            !ReminderScheduler.shouldArmReliefAlarm(
+                key: "ibuprofen",
+                medicationPreferences: preferences
+            )
+        )
+    }
+
     @Test func cycleRemindersPauseDuringMigraineButReliefIDsStayStable() {
         let preferences = ReminderPreferences(defaults: makeDefaults())
         let medications = MedicationPreferences(defaults: makeDefaults())
