@@ -15,9 +15,19 @@ enum ReminderScheduler {
         dailyLogNotificationID,
     ]
 
+    static let reliefAlarmIDPrefix = "ebb.relief.alarm."
+
     struct ScheduleInput {
         let preferences: ReminderPreferences
         let overlay: CalendarCycleOverlay
+        let entries: [SymptomEntry]
+        let now: Date
+    }
+
+    struct ReliefAlarmScheduleInput {
+        let medicationPreferences: MedicationPreferences
+        let schema: SchemaConfig
+        let preferences: ReminderPreferences
         let entries: [SymptomEntry]
         let now: Date
     }
@@ -153,6 +163,57 @@ enum ReminderScheduler {
         }
     }
 
+    static func reliefAlarmNotificationID(for key: String, weekday: Int) -> String {
+        "\(reliefAlarmIDPrefix)\(key).\(weekday)"
+    }
+
+    @MainActor
+    static func rescheduleReliefAlarms(input: ReliefAlarmScheduleInput) async {
+        let center = UNUserNotificationCenter.current()
+        let pending = await center.pendingNotificationRequests()
+        let reliefIdentifiers = pending
+            .map(\.identifier)
+            .filter { $0.hasPrefix(reliefAlarmIDPrefix) }
+        center.removePendingNotificationRequests(withIdentifiers: reliefIdentifiers)
+
+        guard !shouldPauseReminders(
+            entries: input.entries,
+            preferences: input.preferences,
+            now: input.now
+        ) else {
+            return
+        }
+
+        let calendar = Calendar.ebbCalendar
+
+        for (key, schedule) in input.medicationPreferences.reliefAlarmSchedules {
+            guard ReliefAlarmScheduling.isScheduleActive(schedule, now: input.now, calendar: calendar) else {
+                continue
+            }
+
+            let label = ReliefOptions.label(
+                for: key,
+                schema: input.schema,
+                customReliefs: input.medicationPreferences.customReliefs
+            ) ?? key
+
+            for weekday in ReliefAlarmScheduling.scheduledWeekdays(
+                in: schedule,
+                now: input.now,
+                calendar: calendar
+            ) {
+                await scheduleWeeklyReliefAlarm(
+                    center: center,
+                    identifier: reliefAlarmNotificationID(for: key, weekday: weekday),
+                    label: label,
+                    weekday: weekday,
+                    hour: schedule.hour,
+                    minute: schedule.minute
+                )
+            }
+        }
+    }
+
     static func requestAuthorization() async -> Bool {
         let center = UNUserNotificationCenter.current()
         do {
@@ -209,5 +270,29 @@ enum ReminderScheduler {
         components.hour = hour
         components.minute = minute
         return components
+    }
+
+    @MainActor
+    private static func scheduleWeeklyReliefAlarm(
+        center: UNUserNotificationCenter,
+        identifier: String,
+        label: String,
+        weekday: Int,
+        hour: Int,
+        minute: Int
+    ) async {
+        var components = DateComponents()
+        components.weekday = weekday
+        components.hour = hour
+        components.minute = minute
+
+        let content = UNMutableNotificationContent()
+        content.title = "Time for \(label)"
+        content.body = "A quick reminder to take your relief."
+        content.sound = .default
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        try? await center.add(request)
     }
 }

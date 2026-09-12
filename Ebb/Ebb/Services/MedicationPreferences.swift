@@ -17,11 +17,17 @@ final class MedicationPreferences {
         didSet { persist() }
     }
 
+    /// Per-relief medication reminder schedules, keyed by relief option id.
+    var reliefAlarmSchedules: [String: ReliefAlarmSchedule] {
+        didSet { persist() }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         savedReliefKeys = defaults.stringArray(forKey: Keys.savedReliefKeys) ?? []
         customReliefs = Self.loadCustomReliefs(from: defaults)
         hiddenReliefKeys = defaults.stringArray(forKey: Keys.hiddenReliefKeys) ?? []
+        reliefAlarmSchedules = Self.loadReliefAlarmSchedules(from: defaults)
     }
 
     func isSaved(_ key: String) -> Bool {
@@ -60,9 +66,26 @@ final class MedicationPreferences {
         return key
     }
 
+    func alarmSchedule(for key: String) -> ReliefAlarmSchedule? {
+        reliefAlarmSchedules[key]
+    }
+
+    func formattedAlarmTime(for key: String) -> String? {
+        reliefAlarmSchedules[key]?.formattedTime()
+    }
+
+    func setAlarmSchedule(for key: String, schedule: ReliefAlarmSchedule) {
+        reliefAlarmSchedules[key] = schedule
+    }
+
+    func clearAlarm(for key: String) {
+        reliefAlarmSchedules.removeValue(forKey: key)
+    }
+
     /// Removes a medication from the grid. Custom reliefs are deleted; built-in schema options are hidden.
     func removeRelief(key: String) {
         setSaved(key, isSaved: false)
+        clearAlarm(for: key)
 
         if key.hasPrefix("custom_") {
             customReliefs.removeAll { $0.key == key }
@@ -76,6 +99,7 @@ final class MedicationPreferences {
         savedReliefKeys = []
         customReliefs = []
         hiddenReliefKeys = []
+        reliefAlarmSchedules = [:]
     }
 
     // MARK: - Private
@@ -84,6 +108,8 @@ final class MedicationPreferences {
         static let savedReliefKeys = "ebb.medications.savedReliefKeys"
         static let customReliefs = "ebb.medications.customReliefs"
         static let hiddenReliefKeys = "ebb.medications.hiddenReliefKeys"
+        static let reliefAlarmSchedules = "ebb.medications.reliefAlarmSchedules"
+        static let legacyReliefAlarmTimes = "ebb.medications.reliefAlarmTimes"
     }
 
     private let defaults: UserDefaults
@@ -96,6 +122,11 @@ final class MedicationPreferences {
         } else {
             defaults.removeObject(forKey: Keys.customReliefs)
         }
+        if let data = try? JSONEncoder().encode(reliefAlarmSchedules) {
+            defaults.set(data, forKey: Keys.reliefAlarmSchedules)
+        } else {
+            defaults.removeObject(forKey: Keys.reliefAlarmSchedules)
+        }
     }
 
     private static func loadCustomReliefs(from defaults: UserDefaults) -> [CustomReliefOption] {
@@ -104,5 +135,28 @@ final class MedicationPreferences {
             return []
         }
         return decoded
+    }
+
+    private static func loadReliefAlarmSchedules(from defaults: UserDefaults) -> [String: ReliefAlarmSchedule] {
+        if let data = defaults.data(forKey: Keys.reliefAlarmSchedules),
+           let decoded = try? JSONDecoder().decode([String: ReliefAlarmSchedule].self, from: data) {
+            return decoded
+        }
+
+        guard let data = defaults.data(forKey: Keys.legacyReliefAlarmTimes),
+              let legacy = try? JSONDecoder().decode([String: ReliefAlarmTime].self, from: data) else {
+            return [:]
+        }
+
+        let today = Calendar.ebbCalendar.startOfDay(for: .now)
+        return legacy.mapValues { time in
+            ReliefAlarmSchedule(
+                hour: time.hour,
+                minute: time.minute,
+                weekdays: ReliefAlarmSchedule.allWeekdays,
+                startDate: today,
+                endDate: nil
+            )
+        }
     }
 }

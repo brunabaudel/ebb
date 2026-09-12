@@ -25,9 +25,11 @@ private struct MedicationGridWidthKey: PreferenceKey {
 struct MedicationTileGrid: View {
     let schema: SchemaConfig
     @Bindable var medicationPreferences: MedicationPreferences
+    var onAlarmChange: () -> Void = {}
 
     @State private var gridWidth: CGFloat = 0
     @State private var showAddRelief = false
+    @State private var reliefAlarmSheetItem: ReliefAlarmSheetItem?
 
     private var reliefOptions: [FieldValueOption] {
         ReliefOptions.gridOptions(
@@ -87,6 +89,14 @@ struct MedicationTileGrid: View {
             }
             .presentationDetents([.medium])
         }
+        .sheet(item: $reliefAlarmSheetItem) { item in
+            ReliefAlarmSheet(
+                item: item,
+                medicationPreferences: medicationPreferences,
+                onSave: onAlarmChange,
+                onRemoveMedicine: onAlarmChange
+            )
+        }
     }
 
     @ViewBuilder
@@ -95,6 +105,7 @@ struct MedicationTileGrid: View {
             let option = reliefOptions[index]
             CareSelectionTile(
                 title: option.label,
+                subtitle: medicationPreferences.formattedAlarmTime(for: option.key),
                 isSelected: medicationPreferences.isSaved(option.key),
                 tileWidth: tileSize,
                 tileHeight: tileSize
@@ -104,10 +115,11 @@ struct MedicationTileGrid: View {
                     isSaved: !medicationPreferences.isSaved(option.key)
                 )
             }
-            .contextMenu {
-                Button("Remove", role: .destructive) {
-                    medicationPreferences.removeRelief(key: option.key)
-                }
+            .onLongPressGesture(minimumDuration: 0.5) {
+                reliefAlarmSheetItem = ReliefAlarmSheetItem(
+                    key: option.key,
+                    label: option.label
+                )
             }
         } else if index == reliefOptions.count {
             Button {

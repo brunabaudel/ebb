@@ -8,6 +8,7 @@ struct RemindersSettingsView: View {
     @Environment(\.theme) private var theme
     @Environment(\.modelContext) private var modelContext
     @Environment(CycleService.self) private var cycleService
+    @Environment(MedicationPreferences.self) private var medicationPreferences
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
     @State private var showTimePicker = false
@@ -65,7 +66,9 @@ struct RemindersSettingsView: View {
     }
 
     private func rescheduleReminders() {
-        ReminderScheduling.reschedule(
+        ReminderScheduling.rescheduleAll(
+            schema: schema,
+            medicationPreferences: medicationPreferences,
             preferences: reminderPreferences,
             cycleService: cycleService,
             entries: entries
@@ -124,6 +127,7 @@ struct RemindersSettingsView: View {
         )
     }
     .environment(\.theme, .softPaper)
+    .environment(MedicationPreferences())
     .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
     .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
@@ -139,6 +143,7 @@ struct RemindersSettingsView: View {
         )
     }
     .environment(\.theme, .softPaper)
+    .environment(MedicationPreferences())
     .environment(CycleService(provider: MockCycleDataProvider.lutealSample()))
     .modelContainer(for: SymptomEntry.self, inMemory: true)
 }

@@ -135,6 +135,26 @@ struct ReminderSchedulerTests {
         #expect(!preferences.dailyLogReminderEnabled)
     }
 
+    @Test func reliefAlarmNotificationIDUsesReliefKeyAndWeekday() {
+        #expect(ReminderScheduler.reliefAlarmNotificationID(for: "ibuprofen", weekday: 2) == "ebb.relief.alarm.ibuprofen.2")
+        #expect(ReminderScheduler.reliefAlarmNotificationID(for: "custom_abc", weekday: 5) == "ebb.relief.alarm.custom_abc.5")
+    }
+
+    @Test func reliefAlarmsHonorMigrainePause() {
+        let preferences = ReminderPreferences(defaults: makeDefaults())
+        let entry = SymptomEntry(
+            timestamp: .now,
+            schemaVersion: "test",
+            fieldValues: ["migraine_present": .boolean(true)]
+        )
+        #expect(
+            ReminderScheduler.shouldPauseReminders(
+                entries: [entry],
+                preferences: preferences
+            )
+        )
+    }
+
     @Test func reminderPreferencesResetToDefaults() {
         let defaults = makeDefaults()
         let preferences = ReminderPreferences(defaults: defaults)
@@ -241,6 +261,67 @@ struct MedicationPreferencesTests {
 
         let reloaded = MedicationPreferences(defaults: defaults)
         #expect(reloaded.hiddenReliefKeys == ["ibuprofen"])
+    }
+
+    @Test func storesAndClearsReliefAlarmSchedules() throws {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.alarms.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        let calendar = Calendar.ebbCalendar
+        let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        let schedule = ReliefAlarmSchedule(
+            hour: 8,
+            minute: 15,
+            weekdays: ReliefAlarmSchedule.weekdayPreset,
+            startDate: start,
+            endDate: nil
+        )
+
+        preferences.setAlarmSchedule(for: "ibuprofen", schedule: schedule)
+        #expect(preferences.alarmSchedule(for: "ibuprofen") == schedule)
+        #expect(preferences.formattedAlarmTime(for: "ibuprofen")?.isEmpty == false)
+
+        preferences.clearAlarm(for: "ibuprofen")
+        #expect(preferences.alarmSchedule(for: "ibuprofen") == nil)
+        #expect(preferences.formattedAlarmTime(for: "ibuprofen") == nil)
+
+        let reloaded = MedicationPreferences(defaults: defaults)
+        #expect(reloaded.alarmSchedule(for: "ibuprofen") == nil)
+    }
+
+    @Test func removeReliefClearsAlarm() throws {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.removeAlarm.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        let calendar = Calendar.ebbCalendar
+        let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
+        preferences.setAlarmSchedule(
+            for: "ibuprofen",
+            schedule: ReliefAlarmSchedule(
+                hour: 9,
+                minute: 0,
+                weekdays: ReliefAlarmSchedule.allWeekdays,
+                startDate: start,
+                endDate: nil
+            )
+        )
+
+        preferences.removeRelief(key: "ibuprofen")
+
+        #expect(preferences.alarmSchedule(for: "ibuprofen") == nil)
+        #expect(preferences.hiddenReliefKeys == ["ibuprofen"])
+    }
+
+    @Test func migratesLegacyDailyAlarmTimes() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.migrate.\(UUID().uuidString)")!
+        let legacy = ["ibuprofen": ReliefAlarmTime(hour: 7, minute: 30)]
+        let data = try! JSONEncoder().encode(legacy)
+        defaults.set(data, forKey: "ebb.medications.reliefAlarmTimes")
+
+        let preferences = MedicationPreferences(defaults: defaults)
+        let schedule = preferences.alarmSchedule(for: "ibuprofen")
+        #expect(schedule?.hour == 7)
+        #expect(schedule?.minute == 30)
+        #expect(schedule?.weekdays == ReliefAlarmSchedule.allWeekdays)
+        #expect(schedule?.endDate == nil)
     }
 
     @Test func reAddingHiddenSchemaOptionUnhidesIt() {

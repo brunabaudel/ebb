@@ -12,6 +12,7 @@ struct MainTabView: View {
     @Environment(CycleService.self) private var cycleService
     @Environment(OnboardingPreferences.self) private var onboardingPreferences
     @Environment(ReminderPreferences.self) private var reminderPreferences
+    @Environment(MedicationPreferences.self) private var medicationPreferences
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
     @State private var selectedTab = AppTab.today
     @State private var onboardingViewModel = OnboardingViewModel()
@@ -108,6 +109,15 @@ struct MainTabView: View {
             input: ReminderScheduler.ScheduleInput(
                 preferences: reminderPreferences,
                 overlay: overlay,
+                entries: entries,
+                now: .now
+            )
+        )
+        await ReminderScheduler.rescheduleReliefAlarms(
+            input: ReminderScheduler.ReliefAlarmScheduleInput(
+                medicationPreferences: medicationPreferences,
+                schema: schema,
+                preferences: reminderPreferences,
                 entries: entries,
                 now: .now
             )
