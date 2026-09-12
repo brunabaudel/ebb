@@ -47,6 +47,28 @@ struct ReliefAlarmSchedulingTests {
         )
     }
 
+    @Test func scheduledWeekdaysIncludesTodayWhenAlarmIsLaterToday() throws {
+        let calendar = Calendar.ebbCalendar
+        let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 7)))
+        let reference = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 6, day: 7, hour: 8, minute: 0))
+        )
+        let schedule = ReliefAlarmSchedule(
+            hour: 9,
+            minute: 30,
+            weekdays: [1],
+            startDate: start,
+            endDate: nil
+        )
+
+        let weekdays = ReliefAlarmScheduling.scheduledWeekdays(
+            in: schedule,
+            now: reference,
+            calendar: calendar
+        )
+        #expect(weekdays == [1])
+    }
+
     @Test func scheduledWeekdaysReturnsOnlyEligibleDays() throws {
         let calendar = Calendar.ebbCalendar
         let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))

@@ -159,7 +159,7 @@ enum ReminderScheduler {
                 content: content,
                 trigger: trigger
             )
-            try? await center.add(request)
+            await addNotificationRequest(center: center, request)
         }
     }
 
@@ -176,13 +176,7 @@ enum ReminderScheduler {
             .filter { $0.hasPrefix(reliefAlarmIDPrefix) }
         center.removePendingNotificationRequests(withIdentifiers: reliefIdentifiers)
 
-        guard !shouldPauseReminders(
-            entries: input.entries,
-            preferences: input.preferences,
-            now: input.now
-        ) else {
-            return
-        }
+        guard await isAuthorizedForScheduling() else { return }
 
         let calendar = Calendar.ebbCalendar
 
@@ -229,8 +223,31 @@ enum ReminderScheduler {
         _ = await requestAuthorization()
     }
 
+    /// Requests notification permission when saving a schedule that must fire locally.
+    static func requestAuthorizationForScheduling() async -> Bool {
+        switch await authorizationStatus() {
+        case .authorized, .provisional, .ephemeral:
+            return true
+        case .notDetermined:
+            return await requestAuthorization()
+        case .denied:
+            return false
+        @unknown default:
+            return false
+        }
+    }
+
     static func authorizationStatus() async -> UNAuthorizationStatus {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
+    static func isAuthorizedForScheduling() async -> Bool {
+        switch await authorizationStatus() {
+        case .authorized, .provisional, .ephemeral:
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: - Private
@@ -257,7 +274,7 @@ enum ReminderScheduler {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: fireComponents, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        try? await center.add(request)
+        await addNotificationRequest(center: center, request)
     }
 
     private static func dateComponents(
@@ -293,6 +310,20 @@ enum ReminderScheduler {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        try? await center.add(request)
+        await addNotificationRequest(center: center, request)
+    }
+
+    @MainActor
+    private static func addNotificationRequest(
+        center: UNUserNotificationCenter,
+        _ request: UNNotificationRequest
+    ) async {
+        do {
+            try await center.add(request)
+        } catch {
+            NSLog(
+                "Ebb: failed to schedule notification \(request.identifier): \(error.localizedDescription)"
+            )
+        }
     }
 }

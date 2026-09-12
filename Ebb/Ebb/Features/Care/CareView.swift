@@ -25,7 +25,7 @@ struct CareView: View {
                         .padding(.bottom, 24)
 
                     Picker("Section", selection: $selectedTab) {
-                        ForEach(CareTab.allCases) { tab in
+                        ForEach(CareTab.segmentedTabs) { tab in
                             Text(tab.title).tag(tab)
                         }
                     }
@@ -74,23 +74,27 @@ struct CareView: View {
         switch selectedTab {
         case .doctor:
             DoctorExportContent(schema: schema)
-        case .medications:
-            MedicationTileGrid(
-                schema: schema,
-                medicationPreferences: medicationPreferences,
-                onAlarmChange: rescheduleAllReminders
+        case .reminders, .medications:
+            remindersContent(
+                reminderPreferences: reminderPreferences,
+                medicationPreferences: medicationPreferences
             )
-        case .reminders:
-            remindersContent(reminderPreferences: reminderPreferences)
         case .cycle:
             CycleInfoControls(preferences: cyclePreferences)
         }
     }
 
     private func remindersContent(
-        reminderPreferences: ReminderPreferences
+        reminderPreferences: ReminderPreferences,
+        medicationPreferences: MedicationPreferences
     ) -> some View {
         VStack(alignment: .leading, spacing: 14) {
+            MedicationTileGrid(
+                schema: schema,
+                medicationPreferences: medicationPreferences,
+                onAlarmChange: rescheduleAllReminders
+            )
+
             ReminderTileGrid(preferences: reminderPreferences) {
                 rescheduleAllReminders()
             }
@@ -128,6 +132,9 @@ private enum CareTab: String, CaseIterable, Identifiable {
     case reminders
     case cycle
 
+    /// Segmented control tabs on My care (Relief lives inside Reminders).
+    static let segmentedTabs: [CareTab] = [.doctor, .reminders, .cycle]
+
     var id: String { rawValue }
 
     var title: String {
@@ -163,7 +170,7 @@ private enum CareTab: String, CaseIterable, Identifiable {
         .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
 
-#Preview("Saved medications") {
+#Preview("Reminders with medications") {
     let medications = MedicationPreferences()
     medications.setSaved("ibuprofen", isSaved: true)
     medications.setSaved("triptan", isSaved: true)
