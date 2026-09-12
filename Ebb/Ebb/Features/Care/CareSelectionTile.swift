@@ -8,6 +8,7 @@ enum CareTileLayout {
 }
 
 enum CareTileShape {
+    case flexibleSquare
     case landscape(height: CGFloat = CareTileLayout.reminderTileHeight)
 }
 
@@ -211,6 +212,7 @@ struct CareSelectionTile: View {
 struct CareAddReliefTile: View {
     var tileWidth: CGFloat = CareTileLayout.size
     var tileHeight: CGFloat = CareTileLayout.size
+    var shape: CareTileShape?
 
     @Environment(\.theme) private var theme
 
@@ -220,7 +222,11 @@ struct CareAddReliefTile: View {
         Image(systemName: "plus")
             .font(.title3.weight(.semibold))
             .foregroundStyle(theme.muted)
-            .frame(width: tileWidth, height: tileHeight)
+            .modifier(CareTileFrameModifier(
+                tileWidth: tileWidth,
+                tileHeight: tileHeight,
+                shape: shape
+            ))
             .background(theme.surface, in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius)
@@ -290,6 +296,10 @@ private struct CareTileFrameModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         switch shape {
+        case .flexibleSquare:
+            content
+                .frame(maxWidth: .infinity)
+                .aspectRatio(1, contentMode: .fit)
         case .landscape(let height):
             content
                 .frame(maxWidth: .infinity)
