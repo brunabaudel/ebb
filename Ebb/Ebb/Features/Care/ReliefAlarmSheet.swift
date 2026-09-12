@@ -241,7 +241,7 @@ struct ReliefAlarmSheet: View {
 
     private func saveSchedule() {
         Task {
-            await ReminderScheduler.requestAuthorizationIfNeeded()
+            _ = await ReminderScheduler.requestAuthorizationForScheduling()
             medicationPreferences.setAlarmSchedule(
                 for: item.key,
                 schedule: draft.makeSchedule()

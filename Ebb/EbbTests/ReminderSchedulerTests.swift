@@ -140,7 +140,7 @@ struct ReminderSchedulerTests {
         #expect(ReminderScheduler.reliefAlarmNotificationID(for: "custom_abc", weekday: 5) == "ebb.relief.alarm.custom_abc.5")
     }
 
-    @Test func reliefAlarmsHonorMigrainePause() {
+    @Test func cycleRemindersPauseDuringMigraineButReliefIDsStayStable() {
         let preferences = ReminderPreferences(defaults: makeDefaults())
         let entry = SymptomEntry(
             timestamp: .now,
@@ -152,6 +152,10 @@ struct ReminderSchedulerTests {
                 entries: [entry],
                 preferences: preferences
             )
+        )
+        #expect(
+            ReminderScheduler.reliefAlarmNotificationID(for: "ibuprofen", weekday: 2)
+                == "ebb.relief.alarm.ibuprofen.2"
         )
     }
 

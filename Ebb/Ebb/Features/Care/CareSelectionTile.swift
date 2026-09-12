@@ -49,10 +49,10 @@ struct CareSelectionTile: View {
     /// Repeat + duration on one secondary line (e.g. "Daily · Ongoing").
     private var alarmMetaLine: String? {
         switch (detail, footnote) {
-        case let (repeat?, duration?):
-            "\(repeat) · \(duration)"
-        case let (repeat?, nil):
-            repeat
+        case let (repeatLabel?, duration?):
+            "\(repeatLabel) · \(duration)"
+        case let (repeatLabel?, nil):
+            repeatLabel
         case let (nil, duration?):
             duration
         case (nil, nil):
