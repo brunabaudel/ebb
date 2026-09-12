@@ -24,12 +24,14 @@ struct CareView: View {
                     header
                         .padding(.bottom, 24)
 
-                    SoftPaperSegmentedControl(
-                        segments: CareTab.allCases.map { tab in
-                            .init(id: tab, title: tab.title)
-                        },
-                        selection: $selectedTab
-                    )
+                    Picker("Section", selection: $selectedTab) {
+                        ForEach(CareTab.allCases) { tab in
+                            Text(tab.title).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .tint(theme.pain)
                     .padding(.bottom, 14)
 
                     selectedTabContent(
