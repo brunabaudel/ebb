@@ -142,6 +142,7 @@ struct ReminderSchedulerTests {
 
     @Test func cycleRemindersPauseDuringMigraineButReliefIDsStayStable() {
         let preferences = ReminderPreferences(defaults: makeDefaults())
+        let medications = MedicationPreferences(defaults: makeDefaults())
         let entry = SymptomEntry(
             timestamp: .now,
             schemaVersion: "test",
@@ -154,8 +155,46 @@ struct ReminderSchedulerTests {
             )
         )
         #expect(
+            ReminderScheduler.shouldPauseReliefAlarms(
+                entries: [entry],
+                medicationPreferences: medications
+            )
+        )
+        #expect(
             ReminderScheduler.reliefAlarmNotificationID(for: "ibuprofen", weekday: 2)
                 == "ebb.relief.alarm.ibuprofen.2"
+        )
+    }
+
+    @Test func reliefAndCyclePauseFlagsAreIndependent() {
+        let reminderDefaults = makeDefaults()
+        let medicationDefaults = makeDefaults()
+        let reminders = ReminderPreferences(defaults: reminderDefaults)
+        let medications = MedicationPreferences(defaults: medicationDefaults)
+        let entry = SymptomEntry(
+            timestamp: .now,
+            schemaVersion: "test",
+            fieldValues: ["migraine_present": .boolean(true)]
+        )
+
+        reminders.pauseDuringMigraine = true
+        medications.pauseAlarmsDuringMigraine = false
+        #expect(ReminderScheduler.shouldPauseReminders(entries: [entry], preferences: reminders))
+        #expect(
+            !ReminderScheduler.shouldPauseReliefAlarms(
+                entries: [entry],
+                medicationPreferences: medications
+            )
+        )
+
+        reminders.pauseDuringMigraine = false
+        medications.pauseAlarmsDuringMigraine = true
+        #expect(!ReminderScheduler.shouldPauseReminders(entries: [entry], preferences: reminders))
+        #expect(
+            ReminderScheduler.shouldPauseReliefAlarms(
+                entries: [entry],
+                medicationPreferences: medications
+            )
         )
     }
 
@@ -316,6 +355,16 @@ struct MedicationPreferencesTests {
 
         #expect(preferences.alarmSchedule(for: "ibuprofen") == nil)
         #expect(preferences.hiddenReliefKeys == ["ibuprofen"])
+    }
+
+    @Test func pauseAlarmsDuringMigraineDefaultsOn() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.pause.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        #expect(preferences.pauseAlarmsDuringMigraine)
+
+        preferences.pauseAlarmsDuringMigraine = false
+        let reloaded = MedicationPreferences(defaults: defaults)
+        #expect(!reloaded.pauseAlarmsDuringMigraine)
     }
 
     @Test func migratesLegacyDailyAlarmTimes() {

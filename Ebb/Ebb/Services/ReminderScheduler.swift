@@ -32,7 +32,7 @@ enum ReminderScheduler {
         let now: Date
     }
 
-    /// Whether reminders should stay quiet while a migraine is active.
+    /// Whether cycle reminders should stay quiet while a migraine is active.
     static func shouldPauseReminders(
         entries: [SymptomEntry],
         preferences: ReminderPreferences,
@@ -40,6 +40,17 @@ enum ReminderScheduler {
         calendar: Calendar = .ebbCalendar
     ) -> Bool {
         guard preferences.pauseDuringMigraine else { return false }
+        return hasActiveMigraine(entries: entries, now: now, calendar: calendar)
+    }
+
+    /// Whether relief alarms should stay quiet while a migraine is active.
+    static func shouldPauseReliefAlarms(
+        entries: [SymptomEntry],
+        medicationPreferences: MedicationPreferences,
+        now: Date = .now,
+        calendar: Calendar = .ebbCalendar
+    ) -> Bool {
+        guard medicationPreferences.pauseAlarmsDuringMigraine else { return false }
         return hasActiveMigraine(entries: entries, now: now, calendar: calendar)
     }
 
@@ -177,6 +188,14 @@ enum ReminderScheduler {
         center.removePendingNotificationRequests(withIdentifiers: reliefIdentifiers)
 
         guard await isAuthorizedForScheduling() else { return }
+
+        guard !shouldPauseReliefAlarms(
+            entries: input.entries,
+            medicationPreferences: input.medicationPreferences,
+            now: input.now
+        ) else {
+            return
+        }
 
         let calendar = Calendar.ebbCalendar
 

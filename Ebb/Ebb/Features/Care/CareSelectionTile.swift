@@ -42,17 +42,13 @@ struct CareSelectionTile: View {
         return parts.joined(separator: ", ")
     }
 
-    private var alarmLineCount: Int {
-        [subtitle, detail, footnote].compactMap { $0 }.count
-    }
-
     /// Repeat + duration on one secondary line (e.g. "Daily · Ongoing").
     private var alarmMetaLine: String? {
         switch (detail, footnote) {
-        case let (repeatLabel?, duration?):
-            "\(repeatLabel) · \(duration)"
-        case let (repeatLabel?, nil):
-            repeatLabel
+        case let (scheduleLabel?, duration?):
+            "\(scheduleLabel) · \(duration)"
+        case let (scheduleLabel?, nil):
+            scheduleLabel
         case let (nil, duration?):
             duration
         case (nil, nil):
@@ -60,29 +56,32 @@ struct CareSelectionTile: View {
         }
     }
 
-    private var alarmTitleFont: Font {
-        .system(.caption, design: .serif).weight(.semibold)
-    }
-
     private var reminderTitleFont: Font {
         .footnote.weight(isSelected ? .semibold : .regular)
-    }
-
-    private var alarmTitleColor: Color {
-        isSelected ? theme.text : theme.inkSoft
     }
 
     private var reminderTitleColor: Color {
         isSelected ? theme.text : theme.muted
     }
 
-    /// Rose alarm moment — stronger when the tile is on, quiet when off.
-    private var alarmTimeColor: Color {
-        isSelected ? theme.pain : theme.pain.opacity(0.78)
+    private var alarmNameFont: Font {
+        .caption.weight(isSelected ? .semibold : .medium)
+    }
+
+    private var alarmNameColor: Color {
+        isSelected ? theme.text : theme.muted
+    }
+
+    private var alarmChipFill: Color {
+        theme.pain.opacity(isSelected ? 0.16 : 0.13)
+    }
+
+    private var alarmChipTextColor: Color {
+        isSelected ? theme.pain : theme.inkSoft
     }
 
     private var alarmMetaColor: Color {
-        theme.isLight ? theme.faint : theme.muted.opacity(0.72)
+        theme.faint
     }
 
     var body: some View {
@@ -115,34 +114,15 @@ struct CareSelectionTile: View {
 
     @ViewBuilder
     private func tileContent(cornerRadius: CGFloat) -> some View {
-        let hasAlarmLines = alarmLineCount > 0
+        let hasAlarm = subtitle != nil
 
-        VStack(spacing: hasAlarmLines ? 2 : 1) {
-            Text(title)
-                .font(hasAlarmLines ? alarmTitleFont : reminderTitleFont)
-                .foregroundStyle(hasAlarmLines ? alarmTitleColor : reminderTitleColor)
-                .multilineTextAlignment(.center)
-                .lineLimit(hasAlarmLines ? 1 : 2)
-                .minimumScaleFactor(0.8)
-
-            if let subtitle {
-                Text(subtitle)
-                    .font(.subheadline.weight(.semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(alarmTimeColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-
-            if let alarmMetaLine {
-                Text(alarmMetaLine)
-                    .font(.caption2)
-                    .foregroundStyle(alarmMetaColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+        Group {
+            if hasAlarm {
+                alarmTileInterior
+            } else {
+                defaultTileInterior
             }
         }
-        .padding(.horizontal, 6)
         .modifier(CareTileFrameModifier(
             tileWidth: tileWidth,
             tileHeight: tileHeight,
@@ -182,6 +162,55 @@ struct CareSelectionTile: View {
         }
         .shadow(color: isSelected ? theme.pain.opacity(0.32) : .clear, radius: 10, y: 3)
         .shadow(color: isSelected ? theme.pain.opacity(0.12) : .clear, radius: 2, y: 1)
+    }
+
+    private var defaultTileInterior: some View {
+        VStack(spacing: 1) {
+            Text(title)
+                .font(reminderTitleFont)
+                .foregroundStyle(reminderTitleColor)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, 6)
+    }
+
+    private var alarmTileInterior: some View {
+        VStack(spacing: 0) {
+            Text(title)
+                .font(alarmNameFont)
+                .foregroundStyle(alarmNameColor)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity, alignment: .top)
+
+            Spacer(minLength: 4)
+
+            VStack(spacing: 3) {
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption2.weight(.regular))
+                        .monospacedDigit()
+                        .foregroundStyle(alarmChipTextColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(alarmChipFill, in: Capsule(style: .continuous))
+                }
+
+                if let alarmMetaLine {
+                    Text(alarmMetaLine)
+                        .font(.caption2)
+                        .foregroundStyle(alarmMetaColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+            }
+        }
+        .padding(10)
     }
 }
 
@@ -223,6 +252,41 @@ struct CareTileGrid<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+#Preview("Relief alarm tile") {
+    HStack(spacing: 10) {
+        CareSelectionTile(
+            title: "Ibuprofen",
+            subtitle: "9:00 AM",
+            detail: "Daily",
+            footnote: "Ongoing",
+            isSelected: true,
+            onLongPress: {}
+        ) {}
+        CareSelectionTile(
+            title: "Sumatriptan",
+            subtitle: "7:30 AM",
+            detail: "Mon Wed Fri",
+            footnote: "Until Sep 30",
+            isSelected: false,
+            onLongPress: {}
+        ) {}
+    }
+    .padding()
+    .background(Color(hex: 0xF7F2EB))
+    .environment(\.theme, .softPaper)
+}
+
+#Preview("Reminder landscape tile") {
+    CareSelectionTile(
+        title: "Daily log reminder",
+        isSelected: true,
+        shape: .landscape()
+    ) {}
+    .padding()
+    .background(Color(hex: 0xF7F2EB))
+    .environment(\.theme, .softPaper)
 }
 
 private struct CareTileFrameModifier: ViewModifier {
