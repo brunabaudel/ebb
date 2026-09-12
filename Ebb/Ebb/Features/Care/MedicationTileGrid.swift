@@ -112,16 +112,17 @@ struct MedicationTileGrid: View {
                 tileWidth: tileSize,
                 tileHeight: tileSize,
                 onLongPress: {
-                    reliefAlarmSheetItem = ReliefAlarmSheetItem(
-                        key: option.key,
-                        label: option.label
-                    )
+                    openReliefAlarmSheet(for: option)
                 }
             ) {
-                medicationPreferences.setSaved(
-                    option.key,
-                    isSaved: !medicationPreferences.isSaved(option.key)
-                )
+                if hasAlarm(for: option.key) {
+                    medicationPreferences.setSaved(
+                        option.key,
+                        isSaved: !medicationPreferences.isSaved(option.key)
+                    )
+                } else {
+                    openReliefAlarmSheet(for: option)
+                }
             }
         } else if index == reliefOptions.count {
             Button {
@@ -142,5 +143,16 @@ struct MedicationTileGrid: View {
         guard remainder != 0 else { return false }
         let lastRowIndex = gridItemCount / columnCount
         return rowIndex == lastRowIndex && index >= gridItemCount
+    }
+
+    private func hasAlarm(for key: String) -> Bool {
+        medicationPreferences.formattedAlarmTime(for: key) != nil
+    }
+
+    private func openReliefAlarmSheet(for option: FieldValueOption) {
+        reliefAlarmSheetItem = ReliefAlarmSheetItem(
+            key: option.key,
+            label: option.label
+        )
     }
 }
