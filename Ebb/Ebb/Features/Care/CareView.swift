@@ -85,22 +85,28 @@ struct CareView: View {
 
     private func reliefContent(medicationPreferences: MedicationPreferences) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            MedicationTileGrid(
-                schema: schema,
-                medicationPreferences: medicationPreferences,
-                onAlarmChange: rescheduleReliefAlarms
-            )
-
             ReliefPauseDuringMigraineToggle(
                 medicationPreferences: medicationPreferences,
                 onChange: rescheduleReliefAlarms
             )
             .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+
+            MedicationTileGrid(
+                schema: schema,
+                medicationPreferences: medicationPreferences,
+                onAlarmChange: rescheduleReliefAlarms
+            )
         }
     }
 
     private func remindersContent(reminderPreferences: ReminderPreferences) -> some View {
         VStack(alignment: .leading, spacing: 14) {
+            ReminderPauseDuringMigraineToggle(
+                preferences: reminderPreferences,
+                onChange: rescheduleAllReminders
+            )
+            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
+
             ReminderTileGrid(preferences: reminderPreferences) {
                 rescheduleAllReminders()
             }
@@ -112,12 +118,6 @@ struct CareView: View {
                 )
                 .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
             }
-
-            ReminderPauseDuringMigraineToggle(
-                preferences: reminderPreferences,
-                onChange: rescheduleAllReminders
-            )
-            .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
         }
     }
 
