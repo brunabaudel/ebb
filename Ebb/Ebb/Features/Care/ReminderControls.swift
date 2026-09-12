@@ -132,13 +132,27 @@ struct ReminderTimeRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            LabeledContent("Reminder time") {
-                Text(preferences.reminderTimeFormatted)
+            VStack(alignment: .leading, spacing: 10) {
+                Rectangle()
+                    .fill(theme.pain.opacity(0.35))
+                    .frame(height: 1)
+
+                Text("Remind at")
+                    .font(.caption)
                     .foregroundStyle(theme.muted)
+
+                Text(preferences.reminderTimeFormatted)
+                    .font(.title3)
+                    .fontWeight(.medium)
+                    .monospacedDigit()
+                    .foregroundStyle(theme.warmInk)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Remind at \(preferences.reminderTimeFormatted)")
+        .accessibilityHint("Opens reminder time picker")
     }
 }
 
@@ -200,15 +214,15 @@ struct ReminderTimePickerSheet: View {
     var body: some View {
         NavigationStack {
             DatePicker(
-                "Reminder time",
+                "",
                 selection: $selectedTime,
                 displayedComponents: .hourAndMinute
             )
             .datePickerStyle(.wheel)
             .labelsHidden()
-            .padding()
-            .navigationTitle("Reminder time")
-            .navigationBarTitleDisplayMode(.inline)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal)
+            .padding(.bottom, 8)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -227,4 +241,16 @@ struct ReminderTimePickerSheet: View {
         .themeSettingsScreen()
         .presentationDetents([.medium])
     }
+}
+
+#Preview("Reminder time row") {
+    ReminderTimeRow(preferences: ReminderPreferences()) {}
+        .padding(20)
+        .background(Theme.softPaper.base)
+        .environment(\.theme, .softPaper)
+}
+
+#Preview("Reminder time picker") {
+    ReminderTimePickerSheet(preferences: ReminderPreferences()) {}
+        .environment(\.theme, .softPaper)
 }
