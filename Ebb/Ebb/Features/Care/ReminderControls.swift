@@ -165,6 +165,7 @@ private struct ReminderToggleTile: View {
                         .labelsHidden()
                         .controlSize(.mini)
                         .tint(theme.ok)
+                        .allowsHitTesting(false)
                 }
             }
             .padding(.top, 12)
