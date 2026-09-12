@@ -80,6 +80,8 @@ struct ReminderTileGrid: View {
     @Bindable var preferences: ReminderPreferences
     var onToggle: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         CareTileGrid(columnCount: ReminderTileGridLayout.columnCount) {
             reminderTile(
@@ -107,8 +109,17 @@ struct ReminderTileGrid: View {
             isSelected: isOn.wrappedValue,
             shape: .landscape()
         ) {
-            isOn.wrappedValue.toggle()
-            onToggle()
+            let toggle = {
+                isOn.wrappedValue.toggle()
+                onToggle()
+            }
+            if reduceMotion {
+                toggle()
+            } else {
+                withAnimation(.smooth(duration: 0.28)) {
+                    toggle()
+                }
+            }
         }
     }
 }

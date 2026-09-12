@@ -25,6 +25,8 @@ struct MedicationTileGrid: View {
     @Bindable var medicationPreferences: MedicationPreferences
     var onAlarmChange: () -> Void = {}
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @State private var gridWidth: CGFloat = 0
     @State private var showAddRelief = false
     @State private var reliefAlarmSheetItem: ReliefAlarmSheetItem?
@@ -124,11 +126,20 @@ struct MedicationTileGrid: View {
                 }
             ) {
                 if hasAlarm(for: option.key) {
-                    medicationPreferences.setSaved(
-                        option.key,
-                        isSaved: !medicationPreferences.isSaved(option.key)
-                    )
-                    onAlarmChange()
+                    let toggle = {
+                        medicationPreferences.setSaved(
+                            option.key,
+                            isSaved: !medicationPreferences.isSaved(option.key)
+                        )
+                        onAlarmChange()
+                    }
+                    if reduceMotion {
+                        toggle()
+                    } else {
+                        withAnimation(.smooth(duration: 0.28)) {
+                            toggle()
+                        }
+                    }
                 } else {
                     openReliefAlarmSheet(for: option)
                 }
