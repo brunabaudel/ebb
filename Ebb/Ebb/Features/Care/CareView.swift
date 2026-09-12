@@ -126,7 +126,6 @@ struct CareView: View {
                     preferences: reminderPreferences,
                     onTap: { showTimePicker = true }
                 )
-                .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
             }
         }
     }
