@@ -120,6 +120,7 @@ struct MedicationTileGrid: View {
                         option.key,
                         isSaved: !medicationPreferences.isSaved(option.key)
                     )
+                    onAlarmChange()
                 } else {
                     openReliefAlarmSheet(for: option)
                 }
