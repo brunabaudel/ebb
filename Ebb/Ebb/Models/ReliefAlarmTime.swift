@@ -94,7 +94,7 @@ struct ReliefAlarmSchedule: Codable, Equatable, Sendable {
     ) -> String {
         switch style {
         case .abbreviated:
-            calendar.shortWeekdaySymbols[weekday - 1]
+            return calendar.shortWeekdaySymbols[weekday - 1]
         case .veryShort:
             let index = (weekday - calendar.firstWeekday + 7) % 7
             return calendar.veryShortWeekdaySymbols[index].uppercased()
