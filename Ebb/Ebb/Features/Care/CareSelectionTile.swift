@@ -13,6 +13,7 @@ enum CareTileShape {
 
 struct CareSelectionTile: View {
     let title: String
+    var subtitle: String?
     let isSelected: Bool
     var tileWidth: CGFloat = CareTileLayout.size
     var tileHeight: CGFloat = CareTileLayout.size
@@ -23,20 +24,33 @@ struct CareSelectionTile: View {
 
     var body: some View {
         let cornerRadius = max(CareTileLayout.cornerRadius, theme.cardCornerRadius)
+        let titleFont: Font = subtitle == nil
+            ? .footnote.weight(isSelected ? .semibold : .regular)
+            : .caption.weight(isSelected ? .semibold : .regular)
 
         Button(action: action) {
-            Text(title)
-                .font(.footnote.weight(isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? theme.text : theme.muted)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .padding(.horizontal, 8)
-                .modifier(CareTileFrameModifier(
-                    tileWidth: tileWidth,
-                    tileHeight: tileHeight,
-                    shape: shape
-                ))
+            VStack(spacing: 2) {
+                Text(title)
+                    .font(titleFont)
+                    .foregroundStyle(isSelected ? theme.text : theme.muted)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundStyle(isSelected ? theme.muted : theme.muted.opacity(0.85))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+            }
+            .padding(.horizontal, 6)
+            .modifier(CareTileFrameModifier(
+                tileWidth: tileWidth,
+                tileHeight: tileHeight,
+                shape: shape
+            ))
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: cornerRadius)
@@ -73,7 +87,7 @@ struct CareSelectionTile: View {
                 .shadow(color: isSelected ? theme.pain.opacity(0.12) : .clear, radius: 2, y: 1)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(title)
+        .accessibilityLabel(subtitle.map { "\(title), alarm \($0)" } ?? title)
         .accessibilityValue(isSelected ? "On" : "Off")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }

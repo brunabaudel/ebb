@@ -163,8 +163,8 @@ enum ReminderScheduler {
         }
     }
 
-    static func reliefAlarmNotificationID(for key: String) -> String {
-        reliefAlarmIDPrefix + key
+    static func reliefAlarmNotificationID(for key: String, weekday: Int) -> String {
+        "\(reliefAlarmIDPrefix)\(key).\(weekday)"
     }
 
     @MainActor
@@ -184,20 +184,33 @@ enum ReminderScheduler {
             return
         }
 
-        for (key, alarmTime) in input.medicationPreferences.reliefAlarmTimes {
+        let calendar = Calendar.ebbCalendar
+
+        for (key, schedule) in input.medicationPreferences.reliefAlarmSchedules {
+            guard ReliefAlarmScheduling.isScheduleActive(schedule, now: input.now, calendar: calendar) else {
+                continue
+            }
+
             let label = ReliefOptions.label(
                 for: key,
                 schema: input.schema,
                 customReliefs: input.medicationPreferences.customReliefs
             ) ?? key
 
-            await scheduleDailyReliefAlarm(
-                center: center,
-                identifier: reliefAlarmNotificationID(for: key),
-                label: label,
-                hour: alarmTime.hour,
-                minute: alarmTime.minute
-            )
+            for weekday in ReliefAlarmScheduling.scheduledWeekdays(
+                in: schedule,
+                now: input.now,
+                calendar: calendar
+            ) {
+                await scheduleWeeklyReliefAlarm(
+                    center: center,
+                    identifier: reliefAlarmNotificationID(for: key, weekday: weekday),
+                    label: label,
+                    weekday: weekday,
+                    hour: schedule.hour,
+                    minute: schedule.minute
+                )
+            }
         }
     }
 
@@ -260,14 +273,16 @@ enum ReminderScheduler {
     }
 
     @MainActor
-    private static func scheduleDailyReliefAlarm(
+    private static func scheduleWeeklyReliefAlarm(
         center: UNUserNotificationCenter,
         identifier: String,
         label: String,
+        weekday: Int,
         hour: Int,
         minute: Int
     ) async {
         var components = DateComponents()
+        components.weekday = weekday
         components.hour = hour
         components.minute = minute
 

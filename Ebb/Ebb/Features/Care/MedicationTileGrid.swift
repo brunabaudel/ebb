@@ -105,6 +105,7 @@ struct MedicationTileGrid: View {
             let option = reliefOptions[index]
             CareSelectionTile(
                 title: option.label,
+                subtitle: medicationPreferences.formattedAlarmTime(for: option.key),
                 isSelected: medicationPreferences.isSaved(option.key),
                 tileWidth: tileSize,
                 tileHeight: tileSize

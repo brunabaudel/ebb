@@ -17,8 +17,8 @@ final class MedicationPreferences {
         didSet { persist() }
     }
 
-    /// Per-relief daily alarm times (hour/minute), keyed by relief option id.
-    var reliefAlarmTimes: [String: ReliefAlarmTime] {
+    /// Per-relief medication reminder schedules, keyed by relief option id.
+    var reliefAlarmSchedules: [String: ReliefAlarmSchedule] {
         didSet { persist() }
     }
 
@@ -27,7 +27,7 @@ final class MedicationPreferences {
         savedReliefKeys = defaults.stringArray(forKey: Keys.savedReliefKeys) ?? []
         customReliefs = Self.loadCustomReliefs(from: defaults)
         hiddenReliefKeys = defaults.stringArray(forKey: Keys.hiddenReliefKeys) ?? []
-        reliefAlarmTimes = Self.loadReliefAlarmTimes(from: defaults)
+        reliefAlarmSchedules = Self.loadReliefAlarmSchedules(from: defaults)
     }
 
     func isSaved(_ key: String) -> Bool {
@@ -66,16 +66,20 @@ final class MedicationPreferences {
         return key
     }
 
-    func alarmTime(for key: String) -> ReliefAlarmTime? {
-        reliefAlarmTimes[key]
+    func alarmSchedule(for key: String) -> ReliefAlarmSchedule? {
+        reliefAlarmSchedules[key]
     }
 
-    func setAlarmTime(for key: String, hour: Int, minute: Int) {
-        reliefAlarmTimes[key] = ReliefAlarmTime(hour: hour, minute: minute)
+    func formattedAlarmTime(for key: String) -> String? {
+        reliefAlarmSchedules[key]?.formattedTime()
+    }
+
+    func setAlarmSchedule(for key: String, schedule: ReliefAlarmSchedule) {
+        reliefAlarmSchedules[key] = schedule
     }
 
     func clearAlarm(for key: String) {
-        reliefAlarmTimes.removeValue(forKey: key)
+        reliefAlarmSchedules.removeValue(forKey: key)
     }
 
     /// Removes a medication from the grid. Custom reliefs are deleted; built-in schema options are hidden.
@@ -95,7 +99,7 @@ final class MedicationPreferences {
         savedReliefKeys = []
         customReliefs = []
         hiddenReliefKeys = []
-        reliefAlarmTimes = [:]
+        reliefAlarmSchedules = [:]
     }
 
     // MARK: - Private
@@ -104,7 +108,8 @@ final class MedicationPreferences {
         static let savedReliefKeys = "ebb.medications.savedReliefKeys"
         static let customReliefs = "ebb.medications.customReliefs"
         static let hiddenReliefKeys = "ebb.medications.hiddenReliefKeys"
-        static let reliefAlarmTimes = "ebb.medications.reliefAlarmTimes"
+        static let reliefAlarmSchedules = "ebb.medications.reliefAlarmSchedules"
+        static let legacyReliefAlarmTimes = "ebb.medications.reliefAlarmTimes"
     }
 
     private let defaults: UserDefaults
@@ -117,10 +122,10 @@ final class MedicationPreferences {
         } else {
             defaults.removeObject(forKey: Keys.customReliefs)
         }
-        if let data = try? JSONEncoder().encode(reliefAlarmTimes) {
-            defaults.set(data, forKey: Keys.reliefAlarmTimes)
+        if let data = try? JSONEncoder().encode(reliefAlarmSchedules) {
+            defaults.set(data, forKey: Keys.reliefAlarmSchedules)
         } else {
-            defaults.removeObject(forKey: Keys.reliefAlarmTimes)
+            defaults.removeObject(forKey: Keys.reliefAlarmSchedules)
         }
     }
 
@@ -132,11 +137,26 @@ final class MedicationPreferences {
         return decoded
     }
 
-    private static func loadReliefAlarmTimes(from defaults: UserDefaults) -> [String: ReliefAlarmTime] {
-        guard let data = defaults.data(forKey: Keys.reliefAlarmTimes),
-              let decoded = try? JSONDecoder().decode([String: ReliefAlarmTime].self, from: data) else {
+    private static func loadReliefAlarmSchedules(from defaults: UserDefaults) -> [String: ReliefAlarmSchedule] {
+        if let data = defaults.data(forKey: Keys.reliefAlarmSchedules),
+           let decoded = try? JSONDecoder().decode([String: ReliefAlarmSchedule].self, from: data) {
+            return decoded
+        }
+
+        guard let data = defaults.data(forKey: Keys.legacyReliefAlarmTimes),
+              let legacy = try? JSONDecoder().decode([String: ReliefAlarmTime].self, from: data) else {
             return [:]
         }
-        return decoded
+
+        let today = Calendar.ebbCalendar.startOfDay(for: .now)
+        return legacy.mapValues { time in
+            ReliefAlarmSchedule(
+                hour: time.hour,
+                minute: time.minute,
+                weekdays: ReliefAlarmSchedule.allWeekdays,
+                startDate: today,
+                endDate: nil
+            )
+        }
     }
 }
