@@ -145,7 +145,6 @@ struct ReminderSchedulerTests {
         let preferences = MedicationPreferences(defaults: defaults)
         let calendar = Calendar.ebbCalendar
         let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
-        preferences.setSaved("ibuprofen", isSaved: true)
         preferences.setAlarmSchedule(
             for: "ibuprofen",
             schedule: ReliefAlarmSchedule(
@@ -157,32 +156,9 @@ struct ReminderSchedulerTests {
             )
         )
 
+        #expect(preferences.isSaved("ibuprofen"))
         #expect(
             ReminderScheduler.shouldArmReliefAlarm(
-                key: "ibuprofen",
-                medicationPreferences: preferences
-            )
-        )
-    }
-
-    @Test func shouldNotArmReliefAlarmWhenUnsavedButScheduled() throws {
-        let defaults = makeDefaults()
-        let preferences = MedicationPreferences(defaults: defaults)
-        let calendar = Calendar.ebbCalendar
-        let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 1)))
-        preferences.setAlarmSchedule(
-            for: "ibuprofen",
-            schedule: ReliefAlarmSchedule(
-                hour: 8,
-                minute: 0,
-                weekdays: ReliefAlarmSchedule.weekdayPreset,
-                startDate: start,
-                endDate: nil
-            )
-        )
-
-        #expect(
-            !ReminderScheduler.shouldArmReliefAlarm(
                 key: "ibuprofen",
                 medicationPreferences: preferences
             )
@@ -399,12 +375,14 @@ struct MedicationPreferencesTests {
 
         preferences.setAlarmSchedule(for: "ibuprofen", schedule: schedule)
         #expect(preferences.alarmSchedule(for: "ibuprofen") == schedule)
+        #expect(preferences.isSaved("ibuprofen"))
         #expect(preferences.formattedAlarmTime(for: "ibuprofen")?.isEmpty == false)
         #expect(preferences.formattedAlarmRepeat(for: "ibuprofen") == "Weekdays")
         #expect(preferences.formattedAlarmDuration(for: "ibuprofen") == "Ongoing")
 
         preferences.clearAlarm(for: "ibuprofen")
         #expect(preferences.alarmSchedule(for: "ibuprofen") == nil)
+        #expect(!preferences.isSaved("ibuprofen"))
         #expect(preferences.formattedAlarmTime(for: "ibuprofen") == nil)
         #expect(preferences.formattedAlarmRepeat(for: "ibuprofen") == nil)
         #expect(preferences.formattedAlarmDuration(for: "ibuprofen") == nil)
