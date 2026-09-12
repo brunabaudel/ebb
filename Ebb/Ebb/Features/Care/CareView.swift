@@ -90,7 +90,11 @@ struct CareView: View {
                 onChange: rescheduleReliefAlarms
             )
             .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
-            .padding(.bottom, 10)
+
+            Text("Set a time on a medicine. A highlighted tile means that alarm is on.")
+                .font(.subheadline)
+                .foregroundStyle(theme.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             MedicationTileGrid(
                 schema: schema,
@@ -107,7 +111,11 @@ struct CareView: View {
                 onChange: rescheduleAllReminders
             )
             .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
-            .padding(.bottom, 10)
+
+            Text("Turn on the days you want a reminder. They all fire at the time below.")
+                .font(.subheadline)
+                .foregroundStyle(theme.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             ReminderTileGrid(preferences: reminderPreferences) {
                 rescheduleAllReminders()
