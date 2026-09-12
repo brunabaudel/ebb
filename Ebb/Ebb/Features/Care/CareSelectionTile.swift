@@ -13,7 +13,7 @@ enum CareTileShape {
 
 struct CareSelectionTile: View {
     let title: String
-    /// Alarm time (e.g. "9:00 AM") — rendered as the primary rose moment below the name.
+    /// Alarm time (e.g. "9:00 AM") — warm tabular type at the bottom of the tile.
     var subtitle: String?
     /// Repeat preset (e.g. "Daily") — composed with `footnote` on one meta line.
     var detail: String?
@@ -72,11 +72,7 @@ struct CareSelectionTile: View {
         isSelected ? theme.text : theme.muted
     }
 
-    private var alarmChipFill: Color {
-        theme.pain.opacity(isSelected ? 0.16 : 0.13)
-    }
-
-    private var alarmChipTextColor: Color {
+    private var alarmTimeColor: Color {
         isSelected ? theme.pain : theme.inkSoft
     }
 
@@ -177,28 +173,24 @@ struct CareSelectionTile: View {
     }
 
     private var alarmTileInterior: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(title)
                 .font(alarmNameFont)
                 .foregroundStyle(alarmNameColor)
-                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.leading)
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Spacer(minLength: 4)
 
-            VStack(spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 if let subtitle {
                     Text(subtitle)
-                        .font(.caption2.weight(.regular))
+                        .font(.caption.weight(.medium))
                         .monospacedDigit()
-                        .foregroundStyle(alarmChipTextColor)
+                        .foregroundStyle(alarmTimeColor)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(alarmChipFill, in: Capsule(style: .continuous))
                 }
 
                 if let alarmMetaLine {
@@ -209,8 +201,11 @@ struct CareSelectionTile: View {
                         .minimumScaleFactor(0.75)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(10)
+        .padding(.top, 14)
+        .padding(.horizontal, 13)
+        .padding(.bottom, 12)
     }
 }
 
