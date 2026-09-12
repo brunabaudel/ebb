@@ -108,17 +108,17 @@ struct MedicationTileGrid: View {
                 subtitle: medicationPreferences.formattedAlarmTime(for: option.key),
                 isSelected: medicationPreferences.isSaved(option.key),
                 tileWidth: tileSize,
-                tileHeight: tileSize
+                tileHeight: tileSize,
+                onLongPress: {
+                    reliefAlarmSheetItem = ReliefAlarmSheetItem(
+                        key: option.key,
+                        label: option.label
+                    )
+                }
             ) {
                 medicationPreferences.setSaved(
                     option.key,
                     isSaved: !medicationPreferences.isSaved(option.key)
-                )
-            }
-            .onLongPressGesture(minimumDuration: 0.5) {
-                reliefAlarmSheetItem = ReliefAlarmSheetItem(
-                    key: option.key,
-                    label: option.label
                 )
             }
         } else if index == reliefOptions.count {
