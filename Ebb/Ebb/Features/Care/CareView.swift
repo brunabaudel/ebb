@@ -48,11 +48,11 @@ struct CareView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showTimePicker) {
                 ReminderTimePickerSheet(preferences: reminderPreferences) {
-                    rescheduleReminders()
+                    rescheduleAllReminders()
                 }
             }
             .task {
-                rescheduleReminders()
+                rescheduleAllReminders()
             }
         }
     }
@@ -75,7 +75,8 @@ struct CareView: View {
         case .medications:
             MedicationTileGrid(
                 schema: schema,
-                medicationPreferences: medicationPreferences
+                medicationPreferences: medicationPreferences,
+                onAlarmChange: rescheduleAllReminders
             )
         case .reminders:
             remindersContent(reminderPreferences: reminderPreferences)
@@ -89,7 +90,7 @@ struct CareView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             ReminderTileGrid(preferences: reminderPreferences) {
-                rescheduleReminders()
+                rescheduleAllReminders()
             }
 
             if reminderPreferences.hasAnyNudgeEnabled {
@@ -102,14 +103,16 @@ struct CareView: View {
 
             ReminderPauseDuringMigraineToggle(
                 preferences: reminderPreferences,
-                onChange: rescheduleReminders
+                onChange: rescheduleAllReminders
             )
             .themeCard(padding: 16, cornerRadius: theme.cardCornerRadius)
         }
     }
 
-    private func rescheduleReminders() {
-        ReminderScheduling.reschedule(
+    private func rescheduleAllReminders() {
+        ReminderScheduling.rescheduleAll(
+            schema: schema,
+            medicationPreferences: medicationPreferences,
             preferences: reminderPreferences,
             cycleService: cycleService,
             entries: entries

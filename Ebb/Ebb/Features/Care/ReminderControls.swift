@@ -20,6 +20,56 @@ enum ReminderScheduling {
             )
         }
     }
+
+    @MainActor
+    static func rescheduleReliefAlarms(
+        schema: SchemaConfig,
+        medicationPreferences: MedicationPreferences,
+        preferences: ReminderPreferences,
+        entries: [SymptomEntry]
+    ) {
+        Task { @MainActor in
+            await ReminderScheduler.rescheduleReliefAlarms(
+                input: ReminderScheduler.ReliefAlarmScheduleInput(
+                    medicationPreferences: medicationPreferences,
+                    schema: schema,
+                    preferences: preferences,
+                    entries: entries,
+                    now: .now
+                )
+            )
+        }
+    }
+
+    @MainActor
+    static func rescheduleAll(
+        schema: SchemaConfig,
+        medicationPreferences: MedicationPreferences,
+        preferences: ReminderPreferences,
+        cycleService: CycleService,
+        entries: [SymptomEntry]
+    ) {
+        Task { @MainActor in
+            let overlay = cycleService.makeOverlay(from: entries)
+            await ReminderScheduler.reschedule(
+                input: ReminderScheduler.ScheduleInput(
+                    preferences: preferences,
+                    overlay: overlay,
+                    entries: entries,
+                    now: .now
+                )
+            )
+            await ReminderScheduler.rescheduleReliefAlarms(
+                input: ReminderScheduler.ReliefAlarmScheduleInput(
+                    medicationPreferences: medicationPreferences,
+                    schema: schema,
+                    preferences: preferences,
+                    entries: entries,
+                    now: .now
+                )
+            )
+        }
+    }
 }
 
 private enum ReminderTileGridLayout {

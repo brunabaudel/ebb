@@ -135,6 +135,26 @@ struct ReminderSchedulerTests {
         #expect(!preferences.dailyLogReminderEnabled)
     }
 
+    @Test func reliefAlarmNotificationIDUsesReliefKey() {
+        #expect(ReminderScheduler.reliefAlarmNotificationID(for: "ibuprofen") == "ebb.relief.alarm.ibuprofen")
+        #expect(ReminderScheduler.reliefAlarmNotificationID(for: "custom_abc") == "ebb.relief.alarm.custom_abc")
+    }
+
+    @Test func reliefAlarmsHonorMigrainePause() {
+        let preferences = ReminderPreferences(defaults: makeDefaults())
+        let entry = SymptomEntry(
+            timestamp: .now,
+            schemaVersion: "test",
+            fieldValues: ["migraine_present": .boolean(true)]
+        )
+        #expect(
+            ReminderScheduler.shouldPauseReminders(
+                entries: [entry],
+                preferences: preferences
+            )
+        )
+    }
+
     @Test func reminderPreferencesResetToDefaults() {
         let defaults = makeDefaults()
         let preferences = ReminderPreferences(defaults: defaults)
@@ -241,6 +261,31 @@ struct MedicationPreferencesTests {
 
         let reloaded = MedicationPreferences(defaults: defaults)
         #expect(reloaded.hiddenReliefKeys == ["ibuprofen"])
+    }
+
+    @Test func storesAndClearsReliefAlarmTimes() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.alarms.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+
+        preferences.setAlarmTime(for: "ibuprofen", hour: 8, minute: 15)
+        #expect(preferences.alarmTime(for: "ibuprofen") == ReliefAlarmTime(hour: 8, minute: 15))
+
+        preferences.clearAlarm(for: "ibuprofen")
+        #expect(preferences.alarmTime(for: "ibuprofen") == nil)
+
+        let reloaded = MedicationPreferences(defaults: defaults)
+        #expect(reloaded.alarmTime(for: "ibuprofen") == nil)
+    }
+
+    @Test func removeReliefClearsAlarm() {
+        let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.removeAlarm.\(UUID().uuidString)")!
+        let preferences = MedicationPreferences(defaults: defaults)
+        preferences.setAlarmTime(for: "ibuprofen", hour: 9, minute: 0)
+
+        preferences.removeRelief(key: "ibuprofen")
+
+        #expect(preferences.alarmTime(for: "ibuprofen") == nil)
+        #expect(preferences.hiddenReliefKeys == ["ibuprofen"])
     }
 
     @Test func reAddingHiddenSchemaOptionUnhidesIt() {

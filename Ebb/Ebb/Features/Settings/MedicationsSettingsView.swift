@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct MedicationsSettingsView: View {
@@ -5,6 +6,9 @@ struct MedicationsSettingsView: View {
     @Bindable var medicationPreferences: MedicationPreferences
 
     @Environment(\.theme) private var theme
+    @Environment(ReminderPreferences.self) private var reminderPreferences
+    @Environment(CycleService.self) private var cycleService
+    @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var entries: [SymptomEntry]
 
     var body: some View {
         List {
@@ -18,7 +22,8 @@ struct MedicationsSettingsView: View {
             Section {
                 MedicationTileGrid(
                     schema: schema,
-                    medicationPreferences: medicationPreferences
+                    medicationPreferences: medicationPreferences,
+                    onAlarmChange: rescheduleReliefAlarms
                 )
                 .padding(.vertical, 4)
             }
@@ -31,6 +36,15 @@ struct MedicationsSettingsView: View {
         .navigationTitle("My medications")
         .navigationBarTitleDisplayMode(.inline)
     }
+
+    private func rescheduleReliefAlarms() {
+        ReminderScheduling.rescheduleReliefAlarms(
+            schema: schema,
+            medicationPreferences: medicationPreferences,
+            preferences: reminderPreferences,
+            entries: entries
+        )
+    }
 }
 
 #Preview {
@@ -41,4 +55,7 @@ struct MedicationsSettingsView: View {
         )
     }
     .environment(\.theme, .softPaper)
+    .environment(ReminderPreferences())
+    .environment(CycleService(provider: MockCycleDataProvider()))
+    .modelContainer(for: SymptomEntry.self, inMemory: true)
 }
