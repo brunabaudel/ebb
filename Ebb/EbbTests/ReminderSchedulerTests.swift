@@ -296,7 +296,7 @@ struct MedicationPreferencesTests {
         #expect(reloaded.savedReliefKeys == ["triptan"])
     }
 
-    @Test func addsCustomReliefAndSelectsIt() {
+    @Test func addsCustomReliefUnselected() {
         let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.custom.\(UUID().uuidString)")!
         let preferences = MedicationPreferences(defaults: defaults)
 
@@ -304,21 +304,37 @@ struct MedicationPreferencesTests {
         #expect(key?.hasPrefix("custom_") == true)
         #expect(preferences.customReliefs.count == 1)
         #expect(preferences.customReliefs.first?.label == "Magnesium")
-        #expect(preferences.isSaved(key!))
+        #expect(!preferences.isSaved(key!))
+        #expect(preferences.alarmSchedule(for: key!) == nil)
+        #expect(
+            ReliefOptions.gridOptions(
+                from: schema,
+                customReliefs: preferences.customReliefs,
+                hiddenReliefKeys: preferences.hiddenReliefKeys
+            ).map(\.key).contains(key!)
+        )
 
         let reloaded = MedicationPreferences(defaults: defaults)
         #expect(reloaded.customReliefs == preferences.customReliefs)
-        #expect(reloaded.savedReliefKeys == [key!])
+        #expect(reloaded.savedReliefKeys.isEmpty)
     }
 
-    @Test func duplicateLabelSelectsExistingSchemaOption() {
+    @Test func duplicateLabelUnhidesExistingSchemaOption() {
         let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.dup.\(UUID().uuidString)")!
         let preferences = MedicationPreferences(defaults: defaults)
 
         let key = preferences.addCustomRelief(label: "Ibuprofen", schema: schema)
         #expect(key == "ibuprofen")
         #expect(preferences.customReliefs.isEmpty)
-        #expect(preferences.isSaved("ibuprofen"))
+        #expect(!preferences.isSaved("ibuprofen"))
+        #expect(preferences.alarmSchedule(for: "ibuprofen") == nil)
+        #expect(
+            ReliefOptions.gridOptions(
+                from: schema,
+                customReliefs: preferences.customReliefs,
+                hiddenReliefKeys: preferences.hiddenReliefKeys
+            ).map(\.key).contains("ibuprofen")
+        )
     }
 
     @Test func emptyLabelDoesNotAdd() {
@@ -333,7 +349,7 @@ struct MedicationPreferencesTests {
         let defaults = UserDefaults(suiteName: "MedicationPreferencesTests.removeCustom.\(UUID().uuidString)")!
         let preferences = MedicationPreferences(defaults: defaults)
         let key = preferences.addCustomRelief(label: "Magnesium", schema: schema)!
-        #expect(preferences.isSaved(key))
+        preferences.setSaved(key, isSaved: true)
 
         preferences.removeRelief(key: key)
 
@@ -452,7 +468,7 @@ struct MedicationPreferencesTests {
         let key = preferences.addCustomRelief(label: "Ibuprofen", schema: schema)
         #expect(key == "ibuprofen")
         #expect(preferences.hiddenReliefKeys.isEmpty)
-        #expect(preferences.isSaved("ibuprofen"))
+        #expect(!preferences.isSaved("ibuprofen"))
         #expect(preferences.customReliefs.isEmpty)
         #expect(
             ReliefOptions.gridOptions(
