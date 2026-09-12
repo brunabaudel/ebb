@@ -274,7 +274,7 @@ struct CareTileGrid<Content: View>: View {
         ) {}
     }
     .padding()
-    .background(Color(hex: 0xF7F2EB))
+    .background(Theme.softPaper.base)
     .environment(\.theme, .softPaper)
 }
 
@@ -285,7 +285,7 @@ struct CareTileGrid<Content: View>: View {
         shape: .landscape()
     ) {}
     .padding()
-    .background(Color(hex: 0xF7F2EB))
+    .background(Theme.softPaper.base)
     .environment(\.theme, .softPaper)
 }
 
