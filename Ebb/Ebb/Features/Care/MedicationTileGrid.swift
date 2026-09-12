@@ -5,10 +5,8 @@ private enum MedicationTileGridLayout {
 
     static func tileSize(forContentWidth contentWidth: CGFloat) -> CGFloat {
         let gutter = CareTileLayout.gutter
-        let preferredSize = CareTileLayout.size
-        let requiredWidth = CGFloat(columnCount) * preferredSize + CGFloat(columnCount - 1) * gutter
-        guard requiredWidth > contentWidth, contentWidth > 0 else {
-            return preferredSize
+        guard contentWidth > 0 else {
+            return CareTileLayout.size
         }
         return floor((contentWidth - CGFloat(columnCount - 1) * gutter) / CGFloat(columnCount))
     }
@@ -58,27 +56,21 @@ struct MedicationTileGrid: View {
     }
 
     var body: some View {
-        Grid(
-            horizontalSpacing: CareTileLayout.gutter,
-            verticalSpacing: CareTileLayout.gutter
-        ) {
-            ForEach(rowIndices, id: \.self) { rowIndex in
-                GridRow {
-                    ForEach(0..<columnCount, id: \.self) { columnIndex in
-                        cell(at: rowIndex * columnCount + columnIndex, in: rowIndex)
+        VStack(alignment: .leading, spacing: 0) {
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: 0)
+                .background {
+                    GeometryReader { geometry in
+                        Color.clear.preference(
+                            key: MedicationGridWidthKey.self,
+                            value: geometry.size.width
+                        )
                     }
                 }
-            }
+
+            reliefGrid
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .background {
-            GeometryReader { geometry in
-                Color.clear.preference(
-                    key: MedicationGridWidthKey.self,
-                    value: geometry.size.width
-                )
-            }
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .onPreferenceChange(MedicationGridWidthKey.self) { gridWidth = $0 }
         .sheet(isPresented: $showAddRelief) {
             NavigationStack {
@@ -97,6 +89,22 @@ struct MedicationTileGrid: View {
                 onRemoveMedicine: onAlarmChange
             )
         }
+    }
+
+    private var reliefGrid: some View {
+        Grid(
+            horizontalSpacing: CareTileLayout.gutter,
+            verticalSpacing: CareTileLayout.gutter
+        ) {
+            ForEach(rowIndices, id: \.self) { rowIndex in
+                GridRow {
+                    ForEach(0..<columnCount, id: \.self) { columnIndex in
+                        cell(at: rowIndex * columnCount + columnIndex, in: rowIndex)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
