@@ -59,11 +59,11 @@ struct CareSelectionTile: View {
     }
 
     private var alarmTimeColor: Color {
-        isSelected ? theme.pain : theme.inkSoft
+        theme.warmInk
     }
 
     private var alarmMetaColor: Color {
-        theme.faint
+        theme.muted
     }
 
     var body: some View {
