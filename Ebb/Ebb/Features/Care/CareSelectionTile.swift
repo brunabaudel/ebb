@@ -23,7 +23,6 @@ struct CareSelectionTile: View {
     var tileWidth: CGFloat = CareTileLayout.size
     var tileHeight: CGFloat = CareTileLayout.size
     var shape: CareTileShape?
-    var onLongPress: (() -> Void)? = nil
     var action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -70,23 +69,10 @@ struct CareSelectionTile: View {
         let cornerRadius = max(CareTileLayout.cornerRadius, theme.cardCornerRadius)
         let tile = tileContent(cornerRadius: cornerRadius)
 
-        Group {
-            if let onLongPress {
-                tile
-                    .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
-                    .gesture(
-                        LongPressGesture(minimumDuration: 0.5)
-                            .onEnded { _ in onLongPress() }
-                            .exclusively(before: TapGesture().onEnded { action() })
-                    )
-                    .accessibilityAction(named: "Alarm", onLongPress)
-            } else {
-                Button(action: action) {
-                    tile
-                }
-                .buttonStyle(.plain)
-            }
+        Button(action: action) {
+            tile
         }
+        .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
@@ -250,16 +236,14 @@ struct CareTileGrid<Content: View>: View {
             subtitle: "9:00",
             detail: "Daily",
             footnote: "Ongoing",
-            isSelected: true,
-            onLongPress: {}
+            isSelected: true
         ) {}
         CareSelectionTile(
             title: "Triptan",
             subtitle: "21:00",
             detail: "Mon Wed Fri",
             footnote: "Until Sep 30",
-            isSelected: false,
-            onLongPress: {}
+            isSelected: false
         ) {}
     }
     .padding()

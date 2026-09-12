@@ -110,17 +110,11 @@ struct MedicationTileGrid: View {
                 footnote: medicationPreferences.formattedAlarmDuration(for: option.key),
                 isSelected: medicationPreferences.isSaved(option.key),
                 tileWidth: tileSize,
-                tileHeight: tileSize,
-                onLongPress: {
-                    reliefAlarmSheetItem = ReliefAlarmSheetItem(
-                        key: option.key,
-                        label: option.label
-                    )
-                }
+                tileHeight: tileSize
             ) {
-                medicationPreferences.setSaved(
-                    option.key,
-                    isSaved: !medicationPreferences.isSaved(option.key)
+                reliefAlarmSheetItem = ReliefAlarmSheetItem(
+                    key: option.key,
+                    label: option.label
                 )
             }
         } else if index == reliefOptions.count {
