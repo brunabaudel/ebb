@@ -15,9 +15,9 @@ struct CareSelectionTile: View {
     let title: String
     /// Alarm time (e.g. "9:00 AM") — warm tabular type at the bottom of the tile.
     var subtitle: String?
-    /// Repeat preset (e.g. "Daily") — composed with `footnote` on one meta line.
+    /// Repeat preset (e.g. "Daily") — faint line below the time.
     var detail: String?
-    /// Duration (e.g. "Ongoing") — composed with `detail` on one meta line.
+    /// Duration (e.g. "Ongoing") — faint line below frequency.
     var footnote: String?
     let isSelected: Bool
     var tileWidth: CGFloat = CareTileLayout.size
@@ -40,20 +40,6 @@ struct CareSelectionTile: View {
             parts.append(footnote)
         }
         return parts.joined(separator: ", ")
-    }
-
-    /// Repeat + duration on one secondary line (e.g. "Daily · Ongoing").
-    private var alarmMetaLine: String? {
-        switch (detail, footnote) {
-        case let (scheduleLabel?, duration?):
-            "\(scheduleLabel) · \(duration)"
-        case let (scheduleLabel?, nil):
-            scheduleLabel
-        case let (nil, duration?):
-            duration
-        case (nil, nil):
-            nil
-        }
     }
 
     private var reminderTitleFont: Font {
@@ -193,8 +179,16 @@ struct CareSelectionTile: View {
                         .lineLimit(1)
                 }
 
-                if let alarmMetaLine {
-                    Text(alarmMetaLine)
+                if let detail {
+                    Text(detail)
+                        .font(.caption2)
+                        .foregroundStyle(alarmMetaColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+
+                if let footnote {
+                    Text(footnote)
                         .font(.caption2)
                         .foregroundStyle(alarmMetaColor)
                         .lineLimit(1)
@@ -253,15 +247,15 @@ struct CareTileGrid<Content: View>: View {
     HStack(spacing: 10) {
         CareSelectionTile(
             title: "Ibuprofen",
-            subtitle: "9:00 AM",
+            subtitle: "9:00",
             detail: "Daily",
             footnote: "Ongoing",
             isSelected: true,
             onLongPress: {}
         ) {}
         CareSelectionTile(
-            title: "Sumatriptan",
-            subtitle: "7:30 AM",
+            title: "Triptan",
+            subtitle: "21:00",
             detail: "Mon Wed Fri",
             footnote: "Until Sep 30",
             isSelected: false,
