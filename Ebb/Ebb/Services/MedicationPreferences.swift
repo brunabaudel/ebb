@@ -49,7 +49,8 @@ final class MedicationPreferences {
         }
     }
 
-    /// Adds a custom relief or selects an existing schema/custom match by label.
+    /// Adds a custom relief or unhides an existing schema/custom match by label.
+    /// New tiles appear on the grid unselected; the user turns them on explicitly.
     @discardableResult
     func addCustomRelief(label: String, schema: SchemaConfig) -> String? {
         let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -61,14 +62,12 @@ final class MedicationPreferences {
             customReliefs: customReliefs
         ) {
             hiddenReliefKeys.removeAll { $0 == existingKey }
-            setSaved(existingKey, isSaved: true)
             return existingKey
         }
 
         let reserved = ReliefOptions.allowedKeys(from: schema, customReliefs: customReliefs)
         let key = ReliefOptions.makeCustomKey(reservedKeys: reserved)
         customReliefs.append(CustomReliefOption(key: key, label: trimmed))
-        setSaved(key, isSaved: true)
         return key
     }
 
