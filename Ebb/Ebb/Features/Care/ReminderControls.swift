@@ -72,55 +72,73 @@ enum ReminderScheduling {
     }
 }
 
-private enum ReminderTileGridLayout {
-    static let columnCount = 2
-}
-
 struct ReminderTileGrid: View {
     @Bindable var preferences: ReminderPreferences
     var onToggle: () -> Void
 
+    @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private let rowVerticalPadding: CGFloat = 13
+
     var body: some View {
-        CareTileGrid(columnCount: ReminderTileGridLayout.columnCount) {
-            reminderTile(
+        VStack(spacing: 0) {
+            reminderRow(
                 title: "Period starting",
                 isOn: $preferences.periodStartNudgeEnabled
             )
-            reminderTile(
+            reminderHairline
+            reminderRow(
                 title: "Estimated ovulation",
                 isOn: $preferences.ovulationNudgeEnabled
             )
-            reminderTile(
+            reminderHairline
+            reminderRow(
                 title: "Luteal-window heads-up",
                 isOn: $preferences.lutealNudgeEnabled
             )
-            reminderTile(
+            reminderHairline
+            reminderRow(
                 title: "Daily log reminder",
                 isOn: $preferences.dailyLogReminderEnabled
             )
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func reminderTile(title: String, isOn: Binding<Bool>) -> some View {
-        CareSelectionTile(
-            title: title,
-            isSelected: isOn.wrappedValue,
-            shape: .landscape()
-        ) {
-            let toggle = {
-                isOn.wrappedValue.toggle()
-                onToggle()
-            }
-            if reduceMotion {
-                toggle()
-            } else {
-                withAnimation(.smooth(duration: 0.28)) {
-                    toggle()
+    private var reminderHairline: some View {
+        Rectangle()
+            .fill(theme.pain.opacity(0.35))
+            .frame(height: 1)
+    }
+
+    private func reminderRow(title: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: animatedBinding(isOn)) {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(isOn.wrappedValue ? theme.text : theme.muted)
+        }
+        .tint(theme.ok)
+        .padding(.vertical, rowVerticalPadding)
+    }
+
+    private func animatedBinding(_ isOn: Binding<Bool>) -> Binding<Bool> {
+        Binding(
+            get: { isOn.wrappedValue },
+            set: { newValue in
+                let apply = {
+                    isOn.wrappedValue = newValue
+                    onToggle()
+                }
+                if reduceMotion {
+                    apply()
+                } else {
+                    withAnimation(.smooth(duration: 0.28)) {
+                        apply()
+                    }
                 }
             }
-        }
+        )
     }
 }
 
@@ -241,6 +259,13 @@ struct ReminderTimePickerSheet: View {
         .themeSettingsScreen()
         .presentationDetents([.medium])
     }
+}
+
+#Preview("Reminder journal rows") {
+    ReminderTileGrid(preferences: ReminderPreferences()) {}
+        .padding(20)
+        .background(Theme.softPaper.base)
+        .environment(\.theme, .softPaper)
 }
 
 #Preview("Reminder time row") {
