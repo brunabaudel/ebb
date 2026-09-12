@@ -153,15 +153,19 @@ struct CareSelectionTile: View {
     }
 
     private var defaultTileInterior: some View {
-        VStack(spacing: 1) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(title)
-                .font(reminderTitleFont)
-                .foregroundStyle(reminderTitleColor)
-                .multilineTextAlignment(.center)
+                .font(alarmNameFont)
+                .foregroundStyle(alarmNameColor)
+                .multilineTextAlignment(.leading)
                 .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.top, 14)
+        .padding(.horizontal, 13)
+        .padding(.bottom, 12)
     }
 
     private var alarmTileInterior: some View {
@@ -222,6 +226,7 @@ struct CareAddReliefTile: View {
         Image(systemName: "plus")
             .font(.title3.weight(.semibold))
             .foregroundStyle(theme.muted)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .modifier(CareTileFrameModifier(
                 tileWidth: tileWidth,
                 tileHeight: tileHeight,
@@ -252,6 +257,25 @@ struct CareTileGrid<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+#Preview("Relief empty tile") {
+    HStack(spacing: 10) {
+        CareSelectionTile(
+            title: "Ibuprofen",
+            isSelected: false,
+            shape: .flexibleSquare
+        ) {}
+        CareSelectionTile(
+            title: "Magnesium",
+            isSelected: true,
+            shape: .flexibleSquare
+        ) {}
+        CareAddReliefTile(shape: .flexibleSquare)
+    }
+    .padding()
+    .background(Theme.softPaper.base)
+    .environment(\.theme, .softPaper)
 }
 
 #Preview("Relief alarm tile") {
@@ -298,8 +322,9 @@ private struct CareTileFrameModifier: ViewModifier {
         switch shape {
         case .flexibleSquare:
             content
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity)
         case .landscape(let height):
             content
                 .frame(maxWidth: .infinity)
