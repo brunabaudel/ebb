@@ -27,6 +27,7 @@ struct CareSelectionTile: View {
     var action: () -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var accessibilityLabel: String {
         var parts = [title]
@@ -111,39 +112,44 @@ struct CareSelectionTile: View {
             shape: shape
         ))
         .background {
-            if isSelected {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(
-                        LinearGradient(
-                            colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(theme.surface)
+        }
+        .background {
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(
+                    LinearGradient(
+                        colors: [theme.pain.opacity(0.18), theme.pain.opacity(0.36)],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
-            } else {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(theme.surface)
-            }
+                )
+                .opacity(isSelected ? 1 : 0)
         }
         .overlay {
-            if isSelected {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .inset(by: 0.5)
-                    .stroke(
-                        LinearGradient(
-                            colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
-                            startPoint: .top,
-                            endPoint: .center
-                        ),
-                        lineWidth: 1
-                    )
-            } else {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .strokeBorder(theme.line, lineWidth: 1)
-            }
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .strokeBorder(theme.line, lineWidth: 1)
+                .opacity(isSelected ? 0 : 1)
         }
-        .shadow(color: isSelected ? theme.pain.opacity(0.32) : .clear, radius: 10, y: 3)
-        .shadow(color: isSelected ? theme.pain.opacity(0.12) : .clear, radius: 2, y: 1)
+        .overlay {
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .inset(by: 0.5)
+                .stroke(
+                    LinearGradient(
+                        colors: [theme.surface.opacity(0.45), theme.surface.opacity(0)],
+                        startPoint: .top,
+                        endPoint: .center
+                    ),
+                    lineWidth: 1
+                )
+                .opacity(isSelected ? 1 : 0)
+        }
+        .shadow(color: theme.pain.opacity(isSelected ? 0.32 : 0), radius: 10, y: 3)
+        .shadow(color: theme.pain.opacity(isSelected ? 0.12 : 0), radius: 2, y: 1)
+        .animation(
+            reduceMotion ? nil : .smooth(duration: 0.28),
+            value: isSelected
+        )
     }
 
     private var defaultTileInterior: some View {
